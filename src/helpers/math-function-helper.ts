@@ -1,37 +1,33 @@
-import ts, {factory, FunctionDeclaration, ParameterDeclaration} from "typescript";
-import {FunctionSchematic} from "../models/typings";
-import {PrimitiveGenerator} from "../helpers/primitive-generator";
+import {
+    factory,
+    FunctionDeclaration,
+    Identifier,
+    ParameterDeclaration,
+    ReturnStatement
+} from "typescript";
+import {PrimitiveHelper} from "./primitive-helper";
 
-export class FunctionGenerator {
-    // making this private to prevent duplicate instantiation
-    private constructor() {
-    }
 
-    public static GenerateBinaryFunction(obj: FunctionSchematic): FunctionDeclaration {
-        const {name, genRetType, args} = obj;
-        const parameters: Array<ParameterDeclaration> = args.length === 0 ? args : args.map((d) => {
-            return ts.factory.createParameterDeclaration(
+export class MathFunctionHelper {
+    public static GenerateMathFunction(name: string, args: Array<Identifier>, statements: Array<ReturnStatement>): FunctionDeclaration {
+        const parameters: Array<ParameterDeclaration> = args.length === 0 ? [] : args.map
+        ((identifier: Identifier) => factory.createParameterDeclaration(
                 undefined,
                 undefined,
-                d,
+                identifier,
                 undefined,
-                PrimitiveGenerator.Number,
+                PrimitiveHelper.Number,
                 undefined
-            );
-        })
+            )
+        );
         return factory.createFunctionDeclaration(
             undefined,
             undefined,
-            name,
+            factory.createIdentifier(name),
             undefined,
             parameters,
-            PrimitiveGenerator.Number,
-            factory.createBlock(
-                [],
-                true
-            )
+            PrimitiveHelper.Number,
+            factory.createBlock(statements, true),
         );
     }
-
-    private static
 }
