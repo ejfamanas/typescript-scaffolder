@@ -8,8 +8,18 @@ export class MathCodegen {
         const b = factory.createIdentifier(arg2);
         return MathFunctionHelper.GenerateMathFunction(
             name,
-            [a,b],
-            [factory.createReturnStatement(BinaryExpressionHelper.Add(a,b))]
-        )
+            [a, b],
+            [factory.createReturnStatement(BinaryExpressionHelper.Add(a, b))]
+        );
+    }
+
+    public static MinusFunction(name: string, arg1: string, arg2: string): FunctionDeclaration {
+        const a = factory.createIdentifier(arg1);
+        const b = factory.createIdentifier(arg2);
+        return MathFunctionHelper.GenerateMathFunction(
+            name,
+            [a, b],
+            [factory.createReturnStatement(BinaryExpressionHelper.Minus(a, b))]
+        );
     }
 }
