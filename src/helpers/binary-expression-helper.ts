@@ -22,6 +22,29 @@ export class BinaryExpressionHelper {
         );
     }
 
+    public static Subtract(left: Identifier, right: Identifier): BinaryExpression {
+        return factory.createBinaryExpression(
+            left,
+            this.Selector(SyntaxKind.MinusToken),
+            right
+        );
+    }
+
+    public static Multiply(left: Identifier, right: Identifier): BinaryExpression {
+        return factory.createBinaryExpression(
+            left,
+            this.Selector(SyntaxKind.AsteriskToken),
+            right
+        );
+    }
+
+    public static Divide(left: Identifier, right: Identifier): BinaryExpression {
+        return factory.createBinaryExpression(
+            left,
+            this.Selector(SyntaxKind.SlashToken),
+            right
+        );
+    }
     /**
      * Returns a given PunctuationSyntaxKind selector and returns a PunctuationToken of the same type
      * @param selector
