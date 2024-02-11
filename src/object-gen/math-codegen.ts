@@ -13,13 +13,33 @@ export class MathCodegen {
         );
     }
 
-    public static MinusFunction(name: string, arg1: string, arg2: string): FunctionDeclaration {
+    public static SubtractFunction(name: string, arg1: string, arg2: string): FunctionDeclaration {
         const a = factory.createIdentifier(arg1);
         const b = factory.createIdentifier(arg2);
         return MathFunctionHelper.GenerateMathFunction(
             name,
             [a, b],
-            [factory.createReturnStatement(BinaryExpressionHelper.Minus(a, b))]
+            [factory.createReturnStatement(BinaryExpressionHelper.Subtract(a, b))]
+        );
+    }
+
+    public static MultiplyFunction(name: string, arg1: string, arg2: string): FunctionDeclaration {
+        const a = factory.createIdentifier(arg1);
+        const b = factory.createIdentifier(arg2);
+        return MathFunctionHelper.GenerateMathFunction(
+            name,
+            [a, b],
+            [factory.createReturnStatement(BinaryExpressionHelper.Multiply(a, b))]
+        );
+    }
+
+    public static DivideFunction(name: string, arg1: string, arg2: string): FunctionDeclaration {
+        const a = factory.createIdentifier(arg1);
+        const b = factory.createIdentifier(arg2);
+        return MathFunctionHelper.GenerateMathFunction(
+            name,
+            [a, b],
+            [factory.createReturnStatement(BinaryExpressionHelper.Divide(a, b))]
         );
     }
 }
