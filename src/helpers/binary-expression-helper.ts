@@ -22,6 +22,12 @@ export class BinaryExpressionHelper {
         );
     }
 
+    /**
+     * Returns a subtraction expression given a left and right argument, passed in as the Identifier type
+     * @param left
+     * @param right
+     * @constructor
+     */
     public static Subtract(left: Identifier, right: Identifier): BinaryExpression {
         return factory.createBinaryExpression(
             left,
@@ -30,6 +36,12 @@ export class BinaryExpressionHelper {
         );
     }
 
+    /**
+     * Returns a multiplication expression given a left and right argument, passed in as the Identifier type
+     * @param left
+     * @param right
+     * @constructor
+     */
     public static Multiply(left: Identifier, right: Identifier): BinaryExpression {
         return factory.createBinaryExpression(
             left,
@@ -38,6 +50,12 @@ export class BinaryExpressionHelper {
         );
     }
 
+    /**
+     * Returns a division expression given a left and right argument, passed in as the Identifier type
+     * @param left
+     * @param right
+     * @constructor
+     */
     public static Divide(left: Identifier, right: Identifier): BinaryExpression {
         return factory.createBinaryExpression(
             left,
