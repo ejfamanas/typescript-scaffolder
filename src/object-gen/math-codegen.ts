@@ -1,6 +1,7 @@
 import {factory, FunctionDeclaration} from "typescript";
-import {MathFunctionHelper} from "../helpers/math-function-helper";
+import {BaseFunctionHelper, IParameter} from "../helpers/base-function-helper";
 import {BinaryExpressionHelper} from "../helpers/binary-expression-helper";
+import {KeywordTypeHelper} from "../helpers/keyword-type-helper";
 
 export class MathCodegen {
     /**
@@ -11,12 +12,14 @@ export class MathCodegen {
      * @constructor
      */
     public static AddFunction(name: string, arg1: string, arg2: string): FunctionDeclaration {
-        const a = factory.createIdentifier(arg1);
-        const b = factory.createIdentifier(arg2);
-        return MathFunctionHelper.GenerateMathFunction(
+        const [a,b]: Array<IParameter> = [
+            {identifier: factory.createIdentifier(arg1), keyword: KeywordTypeHelper.Number},
+            {identifier: factory.createIdentifier(arg2), keyword: KeywordTypeHelper.Number}
+        ];
+        return BaseFunctionHelper.GenerateMathFunction(
             name,
             [a, b],
-            [factory.createReturnStatement(BinaryExpressionHelper.Add(a, b))]
+            [factory.createReturnStatement(BinaryExpressionHelper.Add(a.identifier, b.identifier))]
         );
     }
 
@@ -28,12 +31,14 @@ export class MathCodegen {
      * @constructor
      */
     public static SubtractFunction(name: string, arg1: string, arg2: string): FunctionDeclaration {
-        const a = factory.createIdentifier(arg1);
-        const b = factory.createIdentifier(arg2);
-        return MathFunctionHelper.GenerateMathFunction(
+        const [a,b]: Array<IParameter> = [
+            {identifier: factory.createIdentifier(arg1), keyword: KeywordTypeHelper.Number},
+            {identifier: factory.createIdentifier(arg2), keyword: KeywordTypeHelper.Number}
+        ];
+        return BaseFunctionHelper.GenerateMathFunction(
             name,
             [a, b],
-            [factory.createReturnStatement(BinaryExpressionHelper.Subtract(a, b))]
+            [factory.createReturnStatement(BinaryExpressionHelper.Subtract(a.identifier, b.identifier))]
         );
     }
 
@@ -45,12 +50,14 @@ export class MathCodegen {
      * @constructor
      */
     public static MultiplyFunction(name: string, arg1: string, arg2: string): FunctionDeclaration {
-        const a = factory.createIdentifier(arg1);
-        const b = factory.createIdentifier(arg2);
-        return MathFunctionHelper.GenerateMathFunction(
+        const [a,b]: Array<IParameter> = [
+            {identifier: factory.createIdentifier(arg1), keyword: KeywordTypeHelper.Number},
+            {identifier: factory.createIdentifier(arg2), keyword: KeywordTypeHelper.Number}
+        ];
+        return BaseFunctionHelper.GenerateMathFunction(
             name,
             [a, b],
-            [factory.createReturnStatement(BinaryExpressionHelper.Multiply(a, b))]
+            [factory.createReturnStatement(BinaryExpressionHelper.Multiply(a.identifier, b.identifier))]
         );
     }
 
@@ -62,12 +69,14 @@ export class MathCodegen {
      * @constructor
      */
     public static DivideFunction(name: string, arg1: string, arg2: string): FunctionDeclaration {
-        const a = factory.createIdentifier(arg1);
-        const b = factory.createIdentifier(arg2);
-        return MathFunctionHelper.GenerateMathFunction(
+        const [a,b]: Array<IParameter> = [
+            {identifier: factory.createIdentifier(arg1), keyword: KeywordTypeHelper.Number},
+            {identifier: factory.createIdentifier(arg2), keyword: KeywordTypeHelper.Number}
+        ];
+        return BaseFunctionHelper.GenerateMathFunction(
             name,
             [a, b],
-            [factory.createReturnStatement(BinaryExpressionHelper.Divide(a, b))]
+            [factory.createReturnStatement(BinaryExpressionHelper.Divide(a.identifier, b.identifier))]
         );
     }
 }

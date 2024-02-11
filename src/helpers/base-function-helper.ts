@@ -5,10 +5,17 @@ import {
     ParameterDeclaration,
     ReturnStatement
 } from "typescript";
-import {PrimitiveHelper} from "./primitive-helper";
+import {KeywordTypeHelper} from "./keyword-type-helper";
 
 
 export class MathFunctionHelper {
+    /**
+     * Generates a pure function that takes in at least two numbers and returns a number
+     * @param name
+     * @param args
+     * @param statements
+     * @constructor
+     */
     public static GenerateMathFunction(name: string, args: Array<Identifier>, statements: Array<ReturnStatement>): FunctionDeclaration {
         const parameters: Array<ParameterDeclaration> = args.length === 0 ? [] : args.map
         ((identifier: Identifier) => factory.createParameterDeclaration(
@@ -16,7 +23,7 @@ export class MathFunctionHelper {
                 undefined,
                 identifier,
                 undefined,
-                PrimitiveHelper.Number,
+                KeywordTypeHelper.Number,
                 undefined
             )
         );
@@ -26,7 +33,7 @@ export class MathFunctionHelper {
             factory.createIdentifier(name),
             undefined,
             parameters,
-            PrimitiveHelper.Number,
+            KeywordTypeHelper.Number,
             factory.createBlock(statements, true),
         );
     }
