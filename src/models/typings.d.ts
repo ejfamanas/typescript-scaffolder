@@ -1,9 +1,8 @@
-import {Identifier} from "typescript";
+import {Identifier, KeywordTypeNode} from "typescript";
+import {ReferenceType} from "../helpers/type-helpers/reference-type-helper";
 
-export type GenReturnType = "Void" | "Number" | "String";
-
-export type FunctionSchematic = {
-    name: string,
-    genRetType: GenReturnType,
-    args: Array<Identifier>
+export interface ITypedIdentifier {
+    readonly identifier: Identifier,
+    readonly referenceType?: ReferenceType,
+    readonly keyword?: KeywordTypeNode,
 }

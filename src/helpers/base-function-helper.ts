@@ -1,16 +1,13 @@
 import {
     factory,
     FunctionDeclaration,
-    Identifier, KeywordTypeNode,
+    Identifier,
+    KeywordTypeNode,
     ParameterDeclaration,
     ReturnStatement
 } from "typescript";
-import {KeywordTypeHelper} from "./keyword-type-helper";
-
-export interface IParameter {
-    readonly identifier: Identifier,
-    readonly keyword: KeywordTypeNode,
-}
+import {KeywordTypeHelper} from "./type-helpers/keyword-type-helper";
+import {ITypedIdentifier} from "../models/typings";
 
 export class BaseFunctionHelper {
     /**
@@ -20,7 +17,7 @@ export class BaseFunctionHelper {
      * @param statements
      * @constructor
      */
-    public static GenerateMathFunction(name: string, identifiers: Array<IParameter>, statements: Array<ReturnStatement>): FunctionDeclaration {
+    public static GenerateMathFunction(name: string, identifiers: Array<ITypedIdentifier>, statements: Array<ReturnStatement>): FunctionDeclaration {
         return this.GenerateFunction(name, identifiers, statements, KeywordTypeHelper.Number);
     }
 
@@ -36,13 +33,13 @@ export class BaseFunctionHelper {
      * @param keyword
      * @constructor
      */
-    public static GenerateFunction(name: string, identifiers: Array<IParameter>, statements: Array<ReturnStatement>, keyword: KeywordTypeNode | undefined = undefined): FunctionDeclaration {
+    public static GenerateFunction(name: string, identifiers: Array<ITypedIdentifier>, statements: Array<ReturnStatement>, keyword: KeywordTypeNode | undefined = undefined): FunctionDeclaration {
         return factory.createFunctionDeclaration(
             undefined,
             undefined,
             factory.createIdentifier(name),
             undefined,
-            identifiers.map((p: IParameter) => this.CreateParameter(p.identifier, p.keyword)),
+            identifiers.map((p: ITypedIdentifier) => this.CreateParameter(p.identifier, p.keyword)),
             keyword,
             factory.createBlock(statements, true)
         );
