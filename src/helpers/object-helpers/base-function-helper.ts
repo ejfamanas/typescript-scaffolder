@@ -6,8 +6,8 @@ import {
     ParameterDeclaration,
     ReturnStatement
 } from "typescript";
-import {KeywordTypeHelper} from "./type-helpers/keyword-type-helper";
-import {ITypedIdentifier} from "../models/typings";
+import {KeywordTypeHelper} from "../type-helpers/keyword-type-helper";
+import {ITypedIdentifier} from "../../models/typings";
 
 export class BaseFunctionHelper {
     /**

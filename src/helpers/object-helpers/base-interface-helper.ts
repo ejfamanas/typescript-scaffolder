@@ -1,6 +1,6 @@
-import {ITypedIdentifier} from "../models/typings";
+import {ITypedIdentifier} from "../../models/typings";
 import {factory, InterfaceDeclaration, ModifierLike} from "typescript";
-import {ReferenceTypeHelper} from "./type-helpers/reference-type-helper";
+import {ReferenceTypeHelper} from "../type-helpers/reference-type-helper";
 
 export class BaseInterfaceHelper {
     public static GenerateInterface(
