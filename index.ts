@@ -14,4 +14,9 @@ function print(nodes: any) {
     console.log(printer.printList(ts.ListFormat.MultiLine, nodes, resultFile));
 }
 
-print([MathCodegen.AddFunction("testFunction", "a", "b")]);
+print([
+    MathCodegen.AddFunction("test", "a", "b"),
+    MathCodegen.SubtractFunction("test", "a", "b"),
+    MathCodegen.MultiplyFunction("test", "a", "b"),
+    MathCodegen.DivideFunction("test", "a", "b"),
+])
