@@ -6,20 +6,9 @@ import {
     ParameterDeclaration,
     ReturnStatement
 } from "typescript";
-import {KeywordTypeHelper} from "./type-helpers/keyword-type-helper";
-import {ITypedIdentifier} from "../models/typings";
+import {ITypedIdentifier} from "../../models/typings";
 
 export class BaseFunctionHelper {
-    /**
-     * Generates a pure function that takes in at least two numbers and returns a number
-     * @param name
-     * @param identifiers
-     * @param statements
-     * @constructor
-     */
-    public static GenerateMathFunction(name: string, identifiers: Array<ITypedIdentifier>, statements: Array<ReturnStatement>): FunctionDeclaration {
-        return this.GenerateFunction(name, identifiers, statements, KeywordTypeHelper.Number);
-    }
 
     /**
      * Creates a basic function that takes an input and creates a function with a specified return type.

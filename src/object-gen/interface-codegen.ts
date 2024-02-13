@@ -1,6 +1,6 @@
 import {ITypedIdentifier} from "../models/typings";
 import {factory, InterfaceDeclaration, SyntaxKind} from "typescript";
-import {BaseInterfaceHelper} from "../helpers/base-interface-helper";
+import {BaseInterfaceHelper} from "../helpers/object-helpers/base-interface-helper";
 
 export class InterfaceCodegen {
     /**

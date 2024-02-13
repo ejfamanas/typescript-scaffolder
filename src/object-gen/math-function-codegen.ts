@@ -1,10 +1,10 @@
-import {factory, FunctionDeclaration} from "typescript";
-import {BaseFunctionHelper} from "../helpers/base-function-helper";
-import {BinaryExpressionHelper} from "../helpers/binary-expression-helper";
+import {factory, FunctionDeclaration, ReturnStatement} from "typescript";
+import {BinaryExpressionHelper} from "../helpers/expression-helpers/binary-expression-helper";
 import {KeywordTypeHelper} from "../helpers/type-helpers/keyword-type-helper";
 import {ITypedIdentifier} from "../models/typings";
+import {BaseFunctionHelper} from "../helpers/object-helpers/base-function-helper";
 
-export class MathCodegen {
+export class MathFunctionCodegen {
     /**
      * Returns a named function declaration which performs an addition operation
      * @param name
@@ -17,7 +17,7 @@ export class MathCodegen {
             {identifier: factory.createIdentifier(arg1), keyword: KeywordTypeHelper.Number},
             {identifier: factory.createIdentifier(arg2), keyword: KeywordTypeHelper.Number}
         ];
-        return BaseFunctionHelper.GenerateMathFunction(
+        return this.GenerateMathFunction(
             name,
             [a, b],
             [factory.createReturnStatement(BinaryExpressionHelper.Add(a.identifier, b.identifier))]
@@ -36,7 +36,7 @@ export class MathCodegen {
             {identifier: factory.createIdentifier(arg1), keyword: KeywordTypeHelper.Number},
             {identifier: factory.createIdentifier(arg2), keyword: KeywordTypeHelper.Number}
         ];
-        return BaseFunctionHelper.GenerateMathFunction(
+        return this.GenerateMathFunction(
             name,
             [a, b],
             [factory.createReturnStatement(BinaryExpressionHelper.Subtract(a.identifier, b.identifier))]
@@ -55,7 +55,7 @@ export class MathCodegen {
             {identifier: factory.createIdentifier(arg1), keyword: KeywordTypeHelper.Number},
             {identifier: factory.createIdentifier(arg2), keyword: KeywordTypeHelper.Number}
         ];
-        return BaseFunctionHelper.GenerateMathFunction(
+        return this.GenerateMathFunction(
             name,
             [a, b],
             [factory.createReturnStatement(BinaryExpressionHelper.Multiply(a.identifier, b.identifier))]
@@ -74,10 +74,20 @@ export class MathCodegen {
             {identifier: factory.createIdentifier(arg1), keyword: KeywordTypeHelper.Number},
             {identifier: factory.createIdentifier(arg2), keyword: KeywordTypeHelper.Number}
         ];
-        return BaseFunctionHelper.GenerateMathFunction(
+        return this.GenerateMathFunction(
             name,
             [a, b],
             [factory.createReturnStatement(BinaryExpressionHelper.Divide(a.identifier, b.identifier))]
         );
+    }
+    /**
+     * Generates a pure function that takes in at least two numbers and returns a number
+     * @param name
+     * @param identifiers
+     * @param statements
+     * @constructor
+     */
+    public static GenerateMathFunction(name: string, identifiers: Array<ITypedIdentifier>, statements: Array<ReturnStatement>): FunctionDeclaration {
+        return BaseFunctionHelper.GenerateFunction(name, identifiers, statements, KeywordTypeHelper.Number);
     }
 }
