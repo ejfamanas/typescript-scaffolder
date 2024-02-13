@@ -1,8 +1,9 @@
 import ts, {factory} from "typescript";
-import {MathCodegen} from "./src/object-gen/math-codegen";
+import {MathFunctionCodegen} from "./src/object-gen/math-function-codegen";
 import {ITypedIdentifier} from "./src/models/typings";
 import {ReferenceType} from "./src/helpers/type-helpers/reference-type-helper";
 import {InterfaceCodegen} from "./src/object-gen/interface-codegen";
+import {ClassCodegen} from "./src/object-gen/class-codegen";
 
 function print(nodes: any) {
     const printer = ts.createPrinter({newLine: ts.NewLineKind.LineFeed});
@@ -16,16 +17,21 @@ function print(nodes: any) {
 
     console.log(printer.printList(ts.ListFormat.MultiLine, nodes, resultFile));
 }
-
-print([
-    MathCodegen.AddFunction("test", "a", "b"),
-    MathCodegen.SubtractFunction("test", "a", "b"),
-    MathCodegen.MultiplyFunction("test", "a", "b"),
-    MathCodegen.DivideFunction("test", "a", "b"),
-    InterfaceCodegen.ExportableInterface("test", [1, 1, 1, 1].map((el: number): ITypedIdentifier => {
+const obj = {
+    name: "test",
+    identifiers: [1,2,3,4].map((el:number): ITypedIdentifier => {
         return {
             identifier: factory.createIdentifier(el.toString()),
             referenceType: ReferenceType.Number
         }
-    }))
+    })
+}
+
+print([
+    MathFunctionCodegen.AddFunction("test", "a", "b"),
+    MathFunctionCodegen.SubtractFunction("test", "a", "b"),
+    MathFunctionCodegen.MultiplyFunction("test", "a", "b"),
+    MathFunctionCodegen.DivideFunction("test", "a", "b"),
+    InterfaceCodegen.ExportableInterface(obj.name, obj.identifiers),
+    ClassCodegen.ExportableClass(obj.name, obj.identifiers)
 ]);
