@@ -32,6 +32,4 @@ print([
     MathFunctionCodegen.SubtractFunction("test", "a", "b"),
     MathFunctionCodegen.MultiplyFunction("test", "a", "b"),
     MathFunctionCodegen.DivideFunction("test", "a", "b"),
-    InterfaceCodegen.ExportableInterface(obj.name, obj.identifiers),
-    ClassCodegen.ExportableClass(obj)
 ]);
