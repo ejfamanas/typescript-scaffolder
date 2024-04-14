@@ -89,6 +89,12 @@ export class MathFunctionCodegen {
      * @constructor
      */
     public static GenerateMathFunction(name: string, identifiers: Array<ITypedIdentifier>, statements: Array<ReturnStatement>): FunctionDeclaration {
-        return BaseFunctionHelper.GenerateFunction(name, identifiers, statements, KeywordTypeHelper.Number, []);
+        return BaseFunctionHelper.GenerateFunction({
+            name,
+            identifiers,
+            statements,
+            keyword: KeywordTypeHelper.Number,
+            modifiers: []
+        });
     }
 }

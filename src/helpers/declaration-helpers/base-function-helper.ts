@@ -13,25 +13,8 @@ import {IBaseFunction} from "./models";
 
 export class BaseFunctionHelper {
 
-    /**
-     * Creates a basic function that takes an input and creates a function with a specified return type.
-     * To keep the parameter field empty, pass in an empty array for @param identifiers
-     * To keep the function body empty, pass in an empty array for @param statements
-     * To not declare a return type, do not send a value for @param keyword
-     * @param name
-     * @param identifiers
-     * @param statements
-     * @param keyword
-     * @param modifiers
-     * @constructor
-     */
-    public static GenerateFunction(
-        name: string,
-        identifiers: Array<ITypedIdentifier>,
-        statements: Array<Statement>,
-        keyword: KeywordTypeNode,
-        modifiers: Array<ModifierLike>
-    ): FunctionDeclaration {
+    public static GenerateFunction(baseFunction: IBaseFunction): FunctionDeclaration {
+        const {modifiers, name, identifiers, keyword, statements} = baseFunction;
         return factory.createFunctionDeclaration(
             modifiers,
             undefined,
