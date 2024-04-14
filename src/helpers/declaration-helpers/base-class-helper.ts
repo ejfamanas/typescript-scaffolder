@@ -1,15 +1,19 @@
-import {ITypedIdentifier} from "../../models/typings";
+import {ITypedIdentifier} from "../models/typings";
 import {ClassDeclaration, factory, ModifierLike} from "typescript";
 import {ReferenceTypeHelper} from "../type-helpers/reference-type-helper";
+export interface IBaseClass {
+    readonly name: string;
+    readonly identifiers: Array<ITypedIdentifier>;
+    readonly modifiers?: Array<ModifierLike>;
+}
+
 
 export class BaseClassHelper {
     public static GenerateClass(
-        name: string,
-        identifiers: Array<ITypedIdentifier>,
-        modifiers: Array<ModifierLike>,
+        {name, modifiers, identifiers}: IBaseClass
     ): ClassDeclaration {
         return factory.createClassDeclaration(
-            modifiers,
+            modifiers || [],
             name,
             undefined,
             [],

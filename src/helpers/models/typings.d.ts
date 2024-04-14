@@ -1,4 +1,4 @@
-import {ReferenceType} from "../helpers/type-helpers/reference-type-helper";
+import {ReferenceType} from "../type-helpers/reference-type-helper";
 import {Identifier, KeywordTypeNode} from "typescript";
 
 export interface ITypedIdentifier {

@@ -1,9 +1,9 @@
 import ts, {factory} from "typescript";
-import {MathFunctionCodegen} from "./src/object-gen/math-function-codegen";
-import {ITypedIdentifier} from "./src/models/typings";
+import {MathFunctionCodegen} from "./src/hoc-codegen/functions/math-function-codegen";
+import {ITypedIdentifier} from "./src/helpers/models/typings";
 import {ReferenceType} from "./src/helpers/type-helpers/reference-type-helper";
-import {InterfaceCodegen} from "./src/object-gen/interface-codegen";
-import {ClassCodegen} from "./src/object-gen/class-codegen";
+import {InterfaceCodegen} from "./src/helpers/object-gen/interface-codegen";
+import {ClassCodegen} from "./src/helpers/object-gen/class-codegen";
 
 function print(nodes: any) {
     const printer = ts.createPrinter({newLine: ts.NewLineKind.LineFeed});
@@ -33,5 +33,5 @@ print([
     MathFunctionCodegen.MultiplyFunction("test", "a", "b"),
     MathFunctionCodegen.DivideFunction("test", "a", "b"),
     InterfaceCodegen.ExportableInterface(obj.name, obj.identifiers),
-    ClassCodegen.ExportableClass(obj.name, obj.identifiers)
+    ClassCodegen.ExportableClass(obj)
 ]);

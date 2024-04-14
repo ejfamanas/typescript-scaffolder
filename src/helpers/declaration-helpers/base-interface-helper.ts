@@ -1,15 +1,13 @@
-import {ITypedIdentifier} from "../../models/typings";
+import {ITypedIdentifier} from "../models/typings";
 import {factory, InterfaceDeclaration, ModifierLike} from "typescript";
 import {ReferenceTypeHelper} from "../type-helpers/reference-type-helper";
+import {IBaseInterface} from "./models";
+
 
 export class BaseInterfaceHelper {
-    public static GenerateInterface(
-        name: string,
-        identifiers: Array<ITypedIdentifier>,
-        modifiers: Array<ModifierLike>,
-    ): InterfaceDeclaration {
+    public static GenerateInterface({name, identifiers, modifiers}: IBaseInterface): InterfaceDeclaration {
         return factory.createInterfaceDeclaration(
-            modifiers,
+            modifiers || [],
             name,
             undefined,
             [],

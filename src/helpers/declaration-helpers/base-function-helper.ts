@@ -3,10 +3,13 @@ import {
     FunctionDeclaration,
     Identifier,
     KeywordTypeNode,
+    ModifierLike,
     ParameterDeclaration,
     ReturnStatement
 } from "typescript";
-import {ITypedIdentifier} from "../../models/typings";
+import {ITypedIdentifier} from "../models/typings";
+import {IBaseFunction} from "./models";
+
 
 export class BaseFunctionHelper {
 
@@ -20,11 +23,18 @@ export class BaseFunctionHelper {
      * @param identifiers
      * @param statements
      * @param keyword
+     * @param modifiers
      * @constructor
      */
-    public static GenerateFunction(name: string, identifiers: Array<ITypedIdentifier>, statements: Array<ReturnStatement>, keyword: KeywordTypeNode | undefined = undefined): FunctionDeclaration {
+    public static GenerateFunction({
+                                       name,
+                                       identifiers,
+                                       statements,
+                                       keyword,
+                                       modifiers
+                                   }: IBaseFunction): FunctionDeclaration {
         return factory.createFunctionDeclaration(
-            undefined,
+            modifiers || [],
             undefined,
             factory.createIdentifier(name),
             undefined,

@@ -1,8 +1,8 @@
 import {factory, FunctionDeclaration, ReturnStatement} from "typescript";
-import {BinaryExpressionHelper} from "../helpers/expression-helpers/binary-expression-helper";
-import {KeywordTypeHelper} from "../helpers/type-helpers/keyword-type-helper";
-import {ITypedIdentifier} from "../models/typings";
-import {BaseFunctionHelper} from "../helpers/object-helpers/base-function-helper";
+import {BinaryExpressionHelper} from "../../helpers/expression-helpers/binary-expression-helper";
+import {KeywordTypeHelper} from "../../helpers/type-helpers/keyword-type-helper";
+import {ITypedIdentifier} from "../../helpers/models/typings";
+import {BaseFunctionHelper} from "../../helpers/declaration-helpers/base-function-helper";
 
 export class MathFunctionCodegen {
     /**
