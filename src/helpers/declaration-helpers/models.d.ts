@@ -17,6 +17,6 @@ export interface IBaseFunction {
     readonly name: string,
     readonly identifiers: Array<ITypedIdentifier>,
     readonly statements: Array<ReturnStatement>,
-    readonly keyword: KeywordTypeNode | undefined
+    readonly keyword: KeywordTypeNode
     readonly modifiers?: Array<ModifierLike>;
 }

@@ -3,6 +3,7 @@ import {BinaryExpressionHelper} from "../../helpers/expression-helpers/binary-ex
 import {KeywordTypeHelper} from "../../helpers/type-helpers/keyword-type-helper";
 import {ITypedIdentifier} from "../../helpers/models/typings";
 import {BaseFunctionHelper} from "../../helpers/declaration-helpers/base-function-helper";
+import {IBaseFunction} from "../../helpers/declaration-helpers/models";
 
 export class MathFunctionCodegen {
     /**
@@ -88,6 +89,6 @@ export class MathFunctionCodegen {
      * @constructor
      */
     public static GenerateMathFunction(name: string, identifiers: Array<ITypedIdentifier>, statements: Array<ReturnStatement>): FunctionDeclaration {
-        return BaseFunctionHelper.GenerateFunction(name, identifiers, statements, KeywordTypeHelper.Number);
+        return BaseFunctionHelper.GenerateFunction(name, identifiers, statements, KeywordTypeHelper.Number, []);
     }
 }

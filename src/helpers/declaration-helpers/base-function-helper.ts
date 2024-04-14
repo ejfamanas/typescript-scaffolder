@@ -5,7 +5,7 @@ import {
     KeywordTypeNode,
     ModifierLike,
     ParameterDeclaration,
-    ReturnStatement
+    ReturnStatement, Statement
 } from "typescript";
 import {ITypedIdentifier} from "../models/typings";
 import {IBaseFunction} from "./models";
@@ -18,7 +18,6 @@ export class BaseFunctionHelper {
      * To keep the parameter field empty, pass in an empty array for @param identifiers
      * To keep the function body empty, pass in an empty array for @param statements
      * To not declare a return type, do not send a value for @param keyword
-     *
      * @param name
      * @param identifiers
      * @param statements
@@ -26,15 +25,15 @@ export class BaseFunctionHelper {
      * @param modifiers
      * @constructor
      */
-    public static GenerateFunction({
-                                       name,
-                                       identifiers,
-                                       statements,
-                                       keyword,
-                                       modifiers
-                                   }: IBaseFunction): FunctionDeclaration {
+    public static GenerateFunction(
+        name: string,
+        identifiers: Array<ITypedIdentifier>,
+        statements: Array<Statement>,
+        keyword: KeywordTypeNode,
+        modifiers: Array<ModifierLike>
+    ): FunctionDeclaration {
         return factory.createFunctionDeclaration(
-            modifiers || [],
+            modifiers,
             undefined,
             factory.createIdentifier(name),
             undefined,
