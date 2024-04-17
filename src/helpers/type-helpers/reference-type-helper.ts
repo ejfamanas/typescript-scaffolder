@@ -1,4 +1,4 @@
-import {factory, KeywordTypeNode, KeywordTypeSyntaxKind, SyntaxKind, TypeReferenceNode} from "typescript";
+import {factory, TypeReferenceNode} from "typescript";
 
 export enum ReferenceType {
     Any = "any",
