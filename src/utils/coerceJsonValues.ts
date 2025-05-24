@@ -8,7 +8,6 @@ interface JSONArray extends Array<JSONValue> {}
 export function coerceJsonValue(value: JSONValue): JSONValue {
     if (typeof value !== 'string') return value;
 
-    // Trim and lowercase string to match patterns
     const trimmed = value.trim().toLowerCase();
 
     if (trimmed === 'true') return true;
@@ -18,7 +17,7 @@ export function coerceJsonValue(value: JSONValue): JSONValue {
     const num = Number(value);
     if (!isNaN(num) && value !== '') return num;
 
-    return value; // fallback: keep as string
+    return value;
 }
 
 export function coerceJson(input: JSONValue): JSONValue {
@@ -26,7 +25,7 @@ export function coerceJson(input: JSONValue): JSONValue {
         return input.map(coerceJson) as JSONArray;
     }
 
-    if (input && typeof input === 'object' && input !== null) {
+    if (input && typeof input === 'object') {
         const result: JSONObject = {};
         for (const [key, value] of Object.entries(input)) {
             result[key] = coerceJson(value);
@@ -35,4 +34,12 @@ export function coerceJson(input: JSONValue): JSONValue {
     }
 
     return coerceJsonValue(input);
+}
+
+/**
+ * Accepts either a stringified JSON or a parsed object, then coerces types.
+ */
+export function safeCoerceJson(input: string | JSONValue): JSONValue {
+    const parsed = typeof input === 'string' ? JSON.parse(input) : input;
+    return coerceJson(parsed);
 }

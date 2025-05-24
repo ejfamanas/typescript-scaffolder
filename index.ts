@@ -1,24 +1,23 @@
 import path from 'path';
-import {validateAndGenerate} from "./src/utils/validateAndParseSchema";
-import {inferSchemaFromExample} from "./src/utils/inferSchemaFromJson";
+import {inferSchema, inferSchemaFromPath} from "./src/utils/inferSchemaFromJson";
 import fs from "fs";
-import {coerceJson} from "./src/utils/coerceJsonValues";
+import {coerceJson, safeCoerceJson} from "./src/utils/coerceJsonValues";
 
 async function main() {
     const getPath = (prefix: string) => `./src/schemas/examples/${prefix}-user.schema.json`
     // test type coercion
-    const raw = fs.readFileSync(getPath("string"), 'utf-8');
-    const parsed = JSON.parse(raw);
-    const normalized = coerceJson(parsed);
-    console.log("coercion", normalized)
-    // test type inference
-    const file = getPath("typed");
-    const ts = await inferSchemaFromExample(file);
-    console.log("typings", ts)
-    const schemaPath = path.resolve(__dirname, file);
-    const outputPath = path.resolve(__dirname, './types/User.ts');
+    const typedFile = getPath("typed");
+    const typings = await inferSchemaFromPath(typedFile)
+    console.log("Typed file:", typings)
 
-    await validateAndGenerate(schemaPath, outputPath);
+    // Stringified JSON version (testing coercion + inference)
+    const rawJson = fs.readFileSync(typedFile, 'utf-8');
+    const parsed = JSON.parse(rawJson);
+    const stringified = JSON.stringify(parsed);
+    const coerced = safeCoerceJson(stringified); // This will now normalize types
+
+    const reTypings = await inferSchema(JSON.stringify(coerced));
+    console.log("Stringified input:", reTypings);
 }
 
 main().catch(console.error);

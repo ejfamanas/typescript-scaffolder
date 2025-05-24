@@ -14,7 +14,6 @@
   "author": "",
   "license": "ISC",
   "devDependencies": {
-    "json-schema-to-typescript": "^15.0.4",
     "nodemon": "^3.0.3",
     "quicktype-core": "^23.2.5",
     "ts-node": "^10.9.2",
@@ -34,10 +33,7 @@
     }
   },
   "dependencies": {
-    "-": "^0.0.1",
     "@types/node": "^22.15.21",
-    "D": "^1.0.0",
-    "ajv": "^8.17.1",
     "ts-morph": "^26.0.0"
   }
 }
