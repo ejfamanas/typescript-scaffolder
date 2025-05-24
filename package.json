@@ -4,9 +4,8 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "start:dev": "nodemon index.ts",
-    "start:test": "ts-node --script-mode index.ts",
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "dev": "ts-node -r tsconfig-paths/register src/index.ts",
+    "test": "jest --coverage",
     "build": "tsc -p .",
     "start": "npm run build -- -w"
   },
@@ -14,9 +13,12 @@
   "author": "",
   "license": "ISC",
   "devDependencies": {
-    "nodemon": "^3.0.3",
+    "@types/jest": "^29.5.14",
+    "jest": "^29.7.0",
     "quicktype-core": "^23.2.5",
+    "ts-jest": "^29.3.4",
     "ts-node": "^10.9.2",
+    "tsconfig-paths": "^4.2.0",
     "typescript": "^5.8.3"
   },
   "nodemonConfig": {

@@ -1,7 +1,6 @@
-import path from 'path';
-import {inferSchema, inferSchemaFromPath} from "./src/utils/inferSchemaFromJson";
 import fs from "fs";
-import {coerceJson, safeCoerceJson} from "./src/utils/coerceJsonValues";
+import {inferSchema, inferSchemaFromPath} from "./src/utils/infer-schema-from-json";
+import {safeCoerceJson} from "./src/utils/coerce-json-values";
 
 async function main() {
     const getPath = (prefix: string) => `./src/schemas/examples/${prefix}-user.schema.json`
