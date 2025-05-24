@@ -13,7 +13,7 @@ async function main() {
     const rawJson = fs.readFileSync(typedFile, 'utf-8');
     const parsed = JSON.parse(rawJson);
     const stringified = JSON.stringify(parsed);
-    const coerced = safeCoerceJson(stringified); // This will now normalize types
+    const coerced = safeCoerceJson(stringified); // This will now normalize codegen
 
     const reTypings = await inferSchema(JSON.stringify(coerced));
     console.log("Stringified input:", reTypings);

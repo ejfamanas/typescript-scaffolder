@@ -37,7 +37,7 @@ export function coerceJson(input: JSONValue): JSONValue {
 }
 
 /**
- * Accepts either a stringified JSON or a parsed object, then coerces types.
+ * Accepts either a stringified JSON or a parsed object, then coerces codegen.
  */
 export function safeCoerceJson(input: string | JSONValue): JSONValue {
     const parsed = typeof input === 'string' ? JSON.parse(input) : input;

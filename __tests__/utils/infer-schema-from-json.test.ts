@@ -50,7 +50,7 @@ describe('infer-schema-from-json', () => {
         expect(result).not.toMatch(/:/);
     });
 
-    it('should produce union types for inconsistent field types', async () => {
+    it('should produce union codegen for inconsistent field codegen', async () => {
         const inconsistent = JSON.stringify([
             { id: 1, flag: "true" },
             { id: "2", flag: true }
