@@ -3,7 +3,13 @@ import {inferSchemaFromPath} from "./utils/infer-schema-from-json";
 import fs from "fs";
 import path from "node:path";
 
-export function processSchemaFile(filePath: string, relativePath: string, outputBaseDir: string): void {
+/**
+ * processes the JSON files and generates typescript interfaces using the same folder structure
+ * @param filePath
+ * @param relativePath
+ * @param outputBaseDir
+ */
+export function generateTypedInterfaces(filePath: string, relativePath: string, outputBaseDir: string): void {
     const outputDir = path.join(outputBaseDir, path.dirname(relativePath));
     ensureDir(outputDir);
 

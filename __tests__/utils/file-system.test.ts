@@ -1,0 +1,160 @@
+import fs from 'fs';
+import path from 'path';
+import {ensureDir, walkDirectory} from "../../src/utils/file-system";
+
+const TEST_ROOT = path.join(__dirname, '__testdata__');
+
+beforeAll(() => {
+    fs.mkdirSync(TEST_ROOT, { recursive: true });
+});
+
+afterAll(() => {
+    fs.rmSync(TEST_ROOT, { recursive: true, force: true });
+});
+
+describe('ensureDir', () => {
+    it('creates a new directory if it does not exist', () => {
+        const newDir = path.join(TEST_ROOT, 'ensure-me');
+        expect(fs.existsSync(newDir)).toBe(false);
+        ensureDir(newDir);
+        expect(fs.existsSync(newDir)).toBe(true);
+    });
+
+    it('does nothing if the directory already exists', () => {
+        const existingDir = path.join(TEST_ROOT, 'already-exists');
+        fs.mkdirSync(existingDir);
+        expect(() => ensureDir(existingDir)).not.toThrow();
+    });
+});
+
+describe('walkDirectory', () => {
+    const structure = {
+        'dir1': {
+            'file1.json': '{}',
+            'file2.txt': 'text',
+            'subdir': {
+                'file3.json': '{}'
+            }
+        },
+        'dir2': {
+            'file4.json': '{}'
+        }
+    };
+
+    function createTestStructure(base: string, structure: any) {
+        for (const key of Object.keys(structure)) {
+            const fullPath = path.join(base, key);
+            if (typeof structure[key] === 'string') {
+                fs.writeFileSync(fullPath, structure[key]);
+            } else {
+                fs.mkdirSync(fullPath, { recursive: true });
+                createTestStructure(fullPath, structure[key]);
+            }
+        }
+    }
+
+    beforeAll(() => {
+        createTestStructure(TEST_ROOT, structure);
+    });
+
+    it('invokes callback for all .json files and preserves relative paths', () => {
+        const found: string[] = [];
+
+        walkDirectory(TEST_ROOT, (filePath, relativePath) => {
+            found.push(relativePath);
+        }, TEST_ROOT, '.json');
+
+        expect(found.sort()).toEqual([
+            path.join('dir1', 'file1.json'),
+            path.join('dir1', 'subdir', 'file3.json'),
+            path.join('dir2', 'file4.json')
+        ].sort());
+    });
+
+    it('uses different file extension filter if provided', () => {
+        const found: string[] = [];
+
+        walkDirectory(TEST_ROOT, (filePath, relativePath) => {
+            found.push(relativePath);
+        }, TEST_ROOT, '.txt', );
+
+        expect(found).toEqual([
+            path.join('dir1', 'file2.txt')
+        ]);
+    });
+    // TODO: The next three tests pass, but the optional parameter specified in the function is not getting
+    //  picked up by the code coverage.
+    it('recursively walks into subdirectories', () => {
+        const nestedJson = {
+            'root': {
+                'child': {
+                    'grandchild': {
+                        'deep.json': '{}'
+                    }
+                }
+            }
+        };
+
+        createTestStructure(TEST_ROOT, nestedJson);
+
+        const found: string[] = [];
+
+        walkDirectory(path.join(TEST_ROOT, 'root'), (filePath, relativePath) => {
+            found.push(relativePath);
+        }, path.join(TEST_ROOT, 'root'), '.json');
+
+        expect(found).toContain(path.join('child', 'grandchild', 'deep.json'));
+    });
+
+    it('recursively walks into deeply nested subdirectories', () => {
+        const base = path.join(TEST_ROOT, 'nested-recursion');
+        const structure = {
+            'level1': {
+                'level2': {
+                    'deep.json': '{}'
+                }
+            }
+        };
+
+        createTestStructure(base, structure);
+
+        const found: string[] = [];
+        walkDirectory(base, (filePath, relativePath) => {
+            found.push(relativePath);
+        }, base, '.json');
+
+        expect(found).toContain(path.join('level1', 'level2', 'deep.json'));
+    });
+
+    it('calls walkDirectory recursively for subdirectories', () => {
+        const parent = path.join(TEST_ROOT, 'recursive-test');
+        const childDir = path.join(parent, 'child');
+
+        fs.mkdirSync(childDir, { recursive: true });
+        fs.writeFileSync(path.join(childDir, 'test.json'), '{}');
+
+        const found: string[] = [];
+        walkDirectory(parent, (filePath, relativePath) => {
+            found.push(relativePath);
+        }, parent, '.json');
+
+        expect(found).toContain(path.join('child', 'test.json'));
+    });
+});
+
+describe('walkDirectory failure cases', () => {
+    it('throws if rootDir does not exist', () => {
+        const missingDir = path.join(TEST_ROOT, 'does-not-exist');
+        expect(() => {
+            walkDirectory(missingDir, () => {}, missingDir);
+        }).toThrow();
+    });
+
+    it('does not invoke callback for non-matching extensions', () => {
+        const found: string[] = [];
+        walkDirectory(TEST_ROOT, (filePath, relativePath) => {
+            found.push(relativePath);
+        }, TEST_ROOT, '.md'); // no .md files in the test tree
+        expect(found).toEqual([]);
+    });
+});
