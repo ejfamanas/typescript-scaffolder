@@ -39,21 +39,21 @@ export class Logger {
         const funcTag = `[${funcName}]`
         const msg = util.format(...args);
         console.log(`${Logger.prefix} ${LogTag.Info} ${funcTag}`, msg);
-        Logger.append(LogTag.Info, funcTag, msg);
+        Logger.append(LogLevel.Info, funcTag, msg);
     }
 
     static warn(funcName: string, ...args: any[]) {
         const funcTag = `[${funcName}]`
         const msg = util.format(...args);
         console.warn(`${Logger.prefix} ${LogTag.Warn} ${funcTag}`, msg);
-        Logger.append(LogTag.Warn, funcTag, msg);
+        Logger.append(LogLevel.Warn, funcTag, msg);
     }
 
     static error(funcName: string, ...args: any[]) {
         const funcTag = `[${funcName}]`
         const msg = util.format(...args);
         console.error(`${Logger.prefix} ${LogTag.Error} ${funcTag}`, msg);
-        Logger.append(LogTag.Error, funcTag, msg);
+        Logger.append(LogLevel.Error, funcTag, msg);
     }
 
     static debug(funcName: string, ...args: any[]) {
@@ -61,7 +61,7 @@ export class Logger {
         if (process.env.DEBUG === 'true') {
             const msg = util.format(...args);
             console.debug(`${Logger.prefix} ${LogTag.Debug} ${funcTag}`, msg);
-            Logger.append(LogTag.Debug,funcTag, msg);
+            Logger.append(LogLevel.Debug,funcTag, msg);
         }
     }
 }

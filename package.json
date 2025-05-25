@@ -1,12 +1,13 @@
 {
   "name": "typescript-codegen",
   "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "files": ["dist"],
   "scripts": {
-    "dev": "ts-node index.ts",
+    "dev": "ts-node index.dev.ts",
     "test": "jest --coverage",
-    "build": "tsc -p .",
+    "build": "tsc",
     "start": "npm run build -- -w"
   },
   "keywords": [],

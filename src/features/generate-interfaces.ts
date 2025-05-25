@@ -1,8 +1,8 @@
-import {ensureDir} from "./utils/file-system";
-import {inferSchemaFromPath} from "./utils/infer-schema-from-json";
+import {ensureDir, walkDirectory} from "../utils/file-system";
+import {inferSchemaFromPath} from "../utils/infer-schema-from-json";
 import fs from "fs";
 import path from "node:path";
-import {Logger} from "./utils/logger";
+import {Logger} from "../utils/logger";
 
 /**
  * processes the JSON files and generates typescript interfaces using the same folder structure
@@ -34,4 +34,10 @@ export function generateTypedInterfaces(filePath: string, relativePath: string, 
             Logger.error(funcName, err);
             throw new Error(err)
         });
+}
+
+export function generateFoldersAndTypedInterfaces(schemaDir: string, outputDir: string) {
+    walkDirectory(schemaDir, (filePath: string, relativePath: string) =>
+        generateTypedInterfaces(filePath, relativePath, outputDir)
+    );
 }
