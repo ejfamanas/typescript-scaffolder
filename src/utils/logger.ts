@@ -30,83 +30,38 @@ export class Logger {
         }
     }
 
-    private static append(level: string, message: string) {
-        const entry = `${new Date().toISOString()} ${level} ${message}\n`;
+    private static append(level: string, funcTag: string, message: string) {
+        const entry = `${new Date().toISOString()} ${level} ${funcTag} ${message}\n`;
         fs.appendFileSync(Logger.logFile, entry, 'utf8');
     }
 
     static info(funcName: string, ...args: any[]) {
+        const funcTag = `[${funcName}]`
         const msg = util.format(...args);
-        console.log(`${Logger.prefix} ${LogTag.Info} [${funcName}]`, msg);
-        Logger.append(LogTag.Info, msg);
+        console.log(`${Logger.prefix} ${LogTag.Info} ${funcTag}`, msg);
+        Logger.append(LogTag.Info, funcTag, msg);
     }
 
     static warn(funcName: string, ...args: any[]) {
+        const funcTag = `[${funcName}]`
         const msg = util.format(...args);
-        console.warn(`${Logger.prefix} ${LogTag.Warn} [${funcName}]`, msg);
-        Logger.append(LogTag.Warn, msg);
+        console.warn(`${Logger.prefix} ${LogTag.Warn} ${funcTag}`, msg);
+        Logger.append(LogTag.Warn, funcTag, msg);
     }
 
     static error(funcName: string, ...args: any[]) {
+        const funcTag = `[${funcName}]`
         const msg = util.format(...args);
-        console.error(`${Logger.prefix} ${LogTag.Error} [${funcName}]`, msg);
-        Logger.append(LogTag.Error, msg);
+        console.error(`${Logger.prefix} ${LogTag.Error} ${funcTag}`, msg);
+        Logger.append(LogTag.Error, funcTag, msg);
     }
 
     static debug(funcName: string, ...args: any[]) {
+        const funcTag = `[${funcName}]`
         if (process.env.DEBUG === 'true') {
             const msg = util.format(...args);
-            console.debug(`${Logger.prefix} ${LogTag.Debug} [${funcName}]`, msg);
-            Logger.append(LogTag.Debug, msg);
+            console.debug(`${Logger.prefix} ${LogTag.Debug} ${funcTag}`, msg);
+            Logger.append(LogTag.Debug,funcTag, msg);
         }
-    }
-
-    static logInvocation(levels: {
-        start?: LogLevel;
-        success?: LogLevel;
-        failure?: LogLevel;
-    } = {}) {
-        return function (
-            _target: any,
-            propertyKey: string,
-            descriptor: PropertyDescriptor
-        ) {
-            const originalMethod = descriptor.value;
-
-            descriptor.value = function (...args: any[]) {
-                const startLevel = levels.start || LogLevel.Debug;
-                const successLevel = levels.success || LogLevel.Info;
-                const failureLevel = levels.failure || LogLevel.Error;
-
-                Logger[startLevel](`[${propertyKey}] called with`, ...args);
-
-                try {
-                    const result = originalMethod.apply(this, args);
-
-                    if (result instanceof Promise) {
-                        return result
-                            .then(res => {
-                                Logger[successLevel](`[${propertyKey}] resolved`);
-                                return res;
-                            })
-                            .catch(err => {
-                                Logger[failureLevel === LogLevel.Error ? LogLevel.Warn : failureLevel](
-                                    `[${propertyKey}] rejected with`,
-                                    err
-                                );
-                                throw err;
-                            });
-                    }
-
-                    Logger[successLevel](`[${propertyKey}] completed`);
-                    return result;
-                } catch (err) {
-                    Logger[failureLevel](`[${propertyKey}] threw`, err);
-                    throw err;
-                }
-            };
-
-            return descriptor;
-        };
     }
 }

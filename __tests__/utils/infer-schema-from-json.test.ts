@@ -40,8 +40,8 @@ describe('infer-schema-from-json', () => {
 
         fs.unlinkSync(tempPath); // Cleanup
     });
-    it('should throw on invalid JSON input', async () => {
-        await expect(inferSchema('{"id": "1", "name": "test"')).rejects.toThrow();
+    it('should return null on invalid JSON input', async () => {
+        await expect(inferSchema('{"id": "1", "name": "test"')).resolves.toBeNull();
     });
 
     it('should handle empty object input', async () => {
@@ -67,5 +67,22 @@ describe('infer-schema-from-json', () => {
         ]);
         const result = await inferSchema(partial);
         expect(result).toMatch(/age\?: number/);
+    });
+});
+
+describe('inferSchemaFromPath - error handling', () => {
+    const originalReadFileSync = fs.readFileSync;
+
+    afterEach(() => {
+        fs.readFileSync = originalReadFileSync;
+    });
+
+    it('returns null and logs a warning when file read fails', async () => {
+        fs.readFileSync = jest.fn(() => {
+            throw new Error('ENOENT: no such file or directory');
+        }) as unknown as typeof fs.readFileSync;
+
+        const result = await inferSchemaFromPath('/nonexistent/file.json');
+        expect(result).toBeNull();
     });
 });

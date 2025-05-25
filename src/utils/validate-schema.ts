@@ -1,5 +1,10 @@
 import {Logger} from "./logger";
 
+/**
+ * Checks an object to see if all required fields are present
+ * @param obj
+ * @param required
+ */
 export function assertRequiredFields(obj: Record<string, any>, required: string[]) {
     const funcName = 'assertRequiredFields';
     Logger.debug(funcName, 'Checking required fields', required);
@@ -12,6 +17,11 @@ export function assertRequiredFields(obj: Record<string, any>, required: string[
     Logger.info(funcName, 'All required fields are present');
 }
 
+/**
+ * Checks an object to see if the structure is correct to what is expected
+ * @param obj
+ * @param structure
+ */
 export function assertStructure(obj: any, structure: Record<string, string>) {
     const funcName = 'assertStructure';
     Logger.debug(funcName, 'Asserting structure', structure);
@@ -25,6 +35,10 @@ export function assertStructure(obj: any, structure: Record<string, string>) {
     Logger.info(funcName, 'Structure successfully asserted');
 }
 
+/**
+ * Checks to see if there are any duplicate keys within the JSON
+ * @param jsonString
+ */
 export function assertNoDuplicateKeys(jsonString: string) {
     const funcName = 'assertNoDuplicateKeys';
     Logger.debug(funcName, 'Asserting no duplicate keys', jsonString)
@@ -43,6 +57,12 @@ export function assertNoDuplicateKeys(jsonString: string) {
     Logger.info(funcName, 'Asserted no duplicate keys');
 }
 
+/**
+ * Checks to see if all values within an enum are valid
+ * @param field
+ * @param value
+ * @param allowed
+ */
 export function assertEnumValue(field: string, value: any, allowed: any[]) {
     const funcName = 'assertEnumValue';
     Logger.debug(funcName, 'Asserting enum value', field, value);
@@ -54,6 +74,13 @@ export function assertEnumValue(field: string, value: any, allowed: any[]) {
     Logger.info(funcName, 'Asserted enum values');
 }
 
+/**
+ * Checks to see whether the value declared in a spec is within the min and max range
+ * @param field
+ * @param value
+ * @param min
+ * @param max
+ */
 export function assertInRange(field: string, value: any, min: number, max: number) {
     const funcName = 'assertInRange';
     Logger.debug(funcName, 'Asserting in range', field, value, min, max)
