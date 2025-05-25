@@ -10,32 +10,35 @@ import {Logger} from "../utils/logger";
  * @param relativePath
  * @param outputBaseDir
  */
-export function generateTypedInterfaces(filePath: string, relativePath: string, outputBaseDir: string): void {
+export function generateTypedInterfaces(filePath: string, relativePath: string, outputBaseDir: string): Promise<void> {
     const funcName = 'generateTypedInterfaces';
-    Logger.debug(funcName, "Generating typed interfaces...")
+    Logger.debug(funcName, "Generating typed interfaces...");
     const outputDir = path.join(outputBaseDir, path.dirname(relativePath));
     ensureDir(outputDir);
 
     const outFile = path.join(outputDir, path.basename(filePath, '.json') + '.ts');
 
-    inferSchemaFromPath(filePath)
+    return inferSchemaFromPath(filePath)
         .then((tsInterface: string | null) => {
             if (tsInterface !== null) {
                 fs.writeFileSync(outFile, tsInterface, 'utf-8');
-                const inf = `Generated: ${outFile}`
-                Logger.info(funcName, inf);
+                Logger.info(funcName, `Generated: ${outFile}`);
             } else {
-                const err = `Failed to generate interface from ${filePath}`
-                Logger.warn(funcName, err);
+                Logger.warn(funcName, `Failed to generate interface from ${filePath}`);
             }
         })
         .catch((error: Error) => {
-            const err = `Critical error when trying to process ${filePath}, ${error}`
+            const err = `Critical error when trying to process ${filePath}, ${error}`;
             Logger.error(funcName, err);
-            throw new Error(err)
+            throw new Error(err);
         });
 }
 
+/**
+ * Parses a file structure housing JSON schemas and regenerates the directory tree with interfaces
+ * @param schemaDir
+ * @param outputDir
+ */
 export function generateFoldersAndTypedInterfaces(schemaDir: string, outputDir: string) {
     walkDirectory(schemaDir, (filePath: string, relativePath: string) =>
         generateTypedInterfaces(filePath, relativePath, outputDir)
