@@ -1,5 +1,5 @@
 {
-  "name": "@c2/typescript-codegen",
+  "name": "@ejfamanas/typescript-codegen",
   "version": "1.0.0",
   "main": "dist/index.js",
   "files": ["dist"],

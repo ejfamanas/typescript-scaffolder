@@ -1,4 +1,4 @@
-# The Coding Carpenter: TypeScript Code Generator
+# TypeScript Code Generator
 
 Generates typescript code based off of files or schemas such as JSON. 
 ## ✨ Version 1.0 Features
