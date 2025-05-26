@@ -41,31 +41,31 @@ const res = await inferSchemaFromPath(<filepath as string>)
 Interface generation automatically calls inferSchemaFromPath and generates a typescript file containing the interface
 ```
  generateInterfaces          // takes json file and generates an interface file
+ 
  generateInterfacesFromPath  // takes a directory of 1 or more levels and generates interfaces for each json
                              // the read directory tree will also be duplicated
 ```
 The above functions can be used with either async / await or Promise patterns:
 ```
-// inferSchemaFromPath is already called in these functions, you do not need to call it separately
-await generateInterfaces(<path to file, directory where file is located, output folder name>)
-await generateInterfacesFromPath(<schema directory, output directory>)
+ // inferSchemaFromPath is already called in these functions, you do not need to call it separately
+ await generateInterfaces(<path to file, directory where file is located, output folder name>)
+
+ await generateInterfacesFromPath(<schema directory, output directory>)
 ```
 
 ## Usage in CLI - Interfaces
-You can run the package directly from the CLI if building locally
+You can run the package directly from the CLI if building locally or as a dependency
 ```
-yarn build
-chmod +x dist/cli.js
-// typescript
+### Run from source (for local development)
+
 npx ts-node src/cli.ts -i schemas -o codegen/interfaces
-// from dist/
-./dist/cli.js -i schemas -o codegen/interfaces
-```
-Or you can run it as a dependency
-```
+
+### Run as a linked dependency
+
 yarn link
 # in your other project:
 yarn link typescript-codegen
+
 typescript-codegen --input schemas --output codegen/interfaces
 ```
 
