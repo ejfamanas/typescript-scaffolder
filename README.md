@@ -16,7 +16,7 @@ Generate TypeScript interfaces automatically from JSON schemas or raw JSON data.
 ### Installation
 To install the package, run the following command
 ```
-TODO
+npm install typescript-codegen
 ```
 ---
 
