@@ -50,6 +50,25 @@ The above functions can be used with either async / await or Promise patterns:
 await generateInterfaces(<path to file, directory where file is located, output folder name>)
 await generateInterfacesFromPath(<schema directory, output directory>)
 ```
+
+## Usage in CLI - Interfaces
+You can run the package directly from the CLI if building locally
+```
+yarn build
+chmod +x dist/cli.js
+// typescript
+npx ts-node src/cli.ts -i schemas -o codegen/interfaces
+// from dist/
+./dist/cli.js -i schemas -o codegen/interfaces
+```
+Or you can run it as a dependency
+```
+yarn link
+# in your other project:
+yarn link typescript-codegen
+typescript-codegen --input schemas --output codegen/interfaces
+```
+
 ## License
 Licensed under the [MIT License](LICENSE).
 

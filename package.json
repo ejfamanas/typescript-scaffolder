@@ -3,7 +3,12 @@
   "version": "1.0.0",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
-  "files": ["dist"],
+  "files": [
+    "dist"
+  ],
+  "bin": {
+    "typescript-codegen": "dist/cli.js"
+  },
   "scripts": {
     "dev": "ts-node index.dev.ts",
     "test": "jest --coverage",
@@ -37,6 +42,7 @@
   },
   "dependencies": {
     "@types/node": "^22.15.21",
+    "commander": "^14.0.0",
     "ts-morph": "^26.0.0"
   }
 }
