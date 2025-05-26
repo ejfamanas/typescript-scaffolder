@@ -16,7 +16,7 @@ Generate TypeScript interfaces automatically from JSON schemas or raw JSON data.
 ### Installation
 To install the package, run the following command
 ```
-npm install @c2/typescript-codegen
+npm install typescript-scaffolder
 ```
 ---
 
@@ -68,6 +68,9 @@ yarn link typescript-codegen
 
 typescript-codegen --input schemas --output codegen/interfaces
 ```
+
+## Repo
+https://github.com/ejfamanas/typescript-scaffolder
 
 ## Roadmap
 [x] Generate typescript interfaces from schema definitions
