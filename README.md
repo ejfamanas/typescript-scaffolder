@@ -20,12 +20,12 @@ TODO
 ```
 ---
 
-## Usage - Interfaces
+## Usage in Code - Interfaces
 ### Schema Inference
 There are two functions available to infer the schema generation for output preview:
 ```
-inferSchmea          // produces a preview of the interface inferred from a schema
-inferSchemaFromPath  // reads a json file and produces a preview of the interface from a schema
+inferSchmea                 // produces a preview of the interface inferred from a schema
+inferSchemaFromPath         // reads a json file and produces a preview of the interface from a schema
 ```
 
 The above functions can be used with either async / await or Promise patterns:
@@ -39,4 +39,17 @@ const res = await inferSchemaFromPath(<filepath as string>)
 
 ### Interface Generation
 Interface generation automatically calls inferSchemaFromPath and generates a typescript file containing the interface
+```
+ generateInterfaces          // takes json file and generates an interface file
+ generateInterfacesFromPath  // takes a directory of 1 or more levels and generates interfaces for each json
+                             // the read directory tree will also be duplicated
+```
+The above functions can be used with either async / await or Promise patterns:
+```
+// inferSchemaFromPath is already called in these functions, you do not need to call it separately
+await generateInterfaces(<path to file, directory where file is located, output folder name>)
+await generateInterfacesFromPath(<schema directory, output directory>)
+```
+## License
+Licensed under the [MIT License](LICENSE).
 
