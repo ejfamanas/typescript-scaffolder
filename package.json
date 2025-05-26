@@ -1,5 +1,5 @@
 {
-  "name": "@ejfamanas/typescript-codegen",
+  "name": "typescript-scaffolder",
   "version": "1.0.0",
   "main": "dist/index.js",
   "files": ["dist"],

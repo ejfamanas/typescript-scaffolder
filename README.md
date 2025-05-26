@@ -1,4 +1,4 @@
-# TypeScript Code Generator
+# TypeScript Scaffolder
 
 Generates typescript code based off of files or schemas such as JSON. 
 ## ✨ Version 1.0 Features
@@ -68,6 +68,17 @@ yarn link typescript-codegen
 
 typescript-codegen --input schemas --output codegen/interfaces
 ```
+
+## Roadmap
+[x] Generate typescript interfaces from schema definitions
+
+[ ] Scaffolding for service mocking
+
+[ ] Generate enums from definitions
+
+[ ] Generate classes from schema definitions
+
+[ ] Declarative function generation
 
 ## License
 Licensed under the [MIT License](LICENSE).
