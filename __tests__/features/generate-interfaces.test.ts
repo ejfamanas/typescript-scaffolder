@@ -1,7 +1,8 @@
 import fs from 'fs';
 import path from 'path';
 import {ensureDir, walkDirectory} from "../../src/utils/file-system";
-import {generateFoldersAndTypedInterfaces, generateTypedInterfaces, inferSchemaFromPath, Logger} from "../../src";
+import {Logger} from "../../src/utils/logger";
+import {generateInterfaces, generateInterfacesFromPath, inferSchemaFromPath} from "../../src";
 
 
 jest.mock('fs');
@@ -12,6 +13,7 @@ jest.mock('../../src/utils/logger');
 
 const mockedFs = fs as jest.Mocked<typeof fs>;
 const mockedInferSchema = inferSchemaFromPath as jest.MockedFunction<typeof inferSchemaFromPath>;
+const mockedInferSchemaFromPath = inferSchemaFromPath as jest.MockedFunction<typeof inferSchemaFromPath>;
 const mockedEnsureDir = ensureDir as jest.MockedFunction<typeof ensureDir>;
 const mockedWalkDirectory = walkDirectory as jest.MockedFunction<typeof walkDirectory>;
 const mockLogger = Logger as jest.Mocked<typeof Logger>;
@@ -28,7 +30,7 @@ describe('generateTypedInterfaces', () => {
     });
 
     it('should write a file when interface is successfully generated', async () => {
-        await generateTypedInterfaces(fakeFilePath, fakeRelativePath, fakeOutputDir);
+        await generateInterfaces(fakeFilePath, fakeRelativePath, fakeOutputDir);
 
         expect(mockedEnsureDir).toHaveBeenCalledWith(fakeOutputDir);
         expect(mockedFs.writeFileSync).toHaveBeenCalledWith(
@@ -41,7 +43,7 @@ describe('generateTypedInterfaces', () => {
 
     it('should log a warning if interface generation fails', async () => {
         mockedInferSchema.mockResolvedValue(null);
-        await generateTypedInterfaces(fakeFilePath, fakeRelativePath, fakeOutputDir);
+        await generateInterfaces(fakeFilePath, fakeRelativePath, fakeOutputDir);
 
         expect(mockLogger.warn).toHaveBeenCalledWith(
             'generateTypedInterfaces',
@@ -55,7 +57,7 @@ describe('generateTypedInterfaces', () => {
 
         // ✅ This line must be returned so the test runner waits on it
         return expect(
-            generateTypedInterfaces(fakeFilePath, fakeRelativePath, fakeOutputDir)
+            generateInterfaces(fakeFilePath, fakeRelativePath, fakeOutputDir)
         ).rejects.toThrow('Critical error when trying to process');
     });
 });
@@ -65,11 +67,19 @@ describe('generateFoldersAndTypedInterfaces', () => {
         const fakeSchemaDir = '/schemas';
         const fakeOutputDir = '/output';
 
-        generateFoldersAndTypedInterfaces(fakeSchemaDir, fakeOutputDir);
+        generateInterfacesFromPath(fakeSchemaDir, fakeOutputDir);
 
         expect(mockedWalkDirectory).toHaveBeenCalledWith(
             fakeSchemaDir,
             expect.any(Function)
         );
+    });
+    it('should throw and log on critical inference error', async () => {
+        const fakeError = new Error('schema failure');
+        mockedInferSchemaFromPath.mockRejectedValue(fakeError);
+
+        await expect(
+            generateInterfaces('/fake/input.json', 'input.json', '/fake/output')
+        ).rejects.toThrow('Critical error when trying to process');
     });
 });

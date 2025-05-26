@@ -19,7 +19,7 @@ const sampleJson = JSON.stringify(sampleObject, null, 2);
 
 describe('infer-schema-from-json', () => {
     it('should infer correct TypeScript interface from JSON string', async () => {
-        const result = await inferSchema(sampleJson);
+        const result = await inferSchema(sampleJson, "User");
 
         expect(result).toMatch(/export interface User/);
         expect(result).toMatch(/id:\s*string/);
@@ -35,17 +35,17 @@ describe('infer-schema-from-json', () => {
         fs.writeFileSync(tempPath, sampleJson, 'utf-8');
 
         const result = await inferSchemaFromPath(tempPath);
-        expect(result).toContain('export interface User');
+        expect(result).toContain('export interface TempUser');
         expect(result).toContain('preferences: Preferences');
 
         fs.unlinkSync(tempPath); // Cleanup
     });
     it('should return null on invalid JSON input', async () => {
-        await expect(inferSchema('{"id": "1", "name": "test"')).resolves.toBeNull();
+        await expect(inferSchema('{"id": "1", "name": "test"', "test")).resolves.toBeNull();
     });
 
     it('should handle empty object input', async () => {
-        const result = await inferSchema('{}');
+        const result = await inferSchema('{}', "User");
         expect(result).toMatch(/export interface User\s*{[^}]*}/);
         expect(result).not.toMatch(/:/);
     });
@@ -55,7 +55,7 @@ describe('infer-schema-from-json', () => {
             { id: 1, flag: "true" },
             { id: "2", flag: true }
         ]);
-        const result = await inferSchema(inconsistent);
+        const result = await inferSchema(inconsistent, "test");
         expect(result).toMatch(/id:\s*(number\s*\|\s*string|string\s*\|\s*number)/);
         expect(result).toMatch(/flag:\s*(boolean\s*\|\s*string|string\s*\|\s*boolean)/);
     });
@@ -65,7 +65,7 @@ describe('infer-schema-from-json', () => {
             { name: "Alice" },
             { name: "Bob", age: 30 }
         ]);
-        const result = await inferSchema(partial);
+        const result = await inferSchema(partial, "test");
         expect(result).toMatch(/age\?: number/);
     });
 });

@@ -10,7 +10,7 @@ import {Logger} from "../utils/logger";
  * @param relativePath
  * @param outputBaseDir
  */
-export function generateTypedInterfaces(filePath: string, relativePath: string, outputBaseDir: string): Promise<void> {
+export function generateInterfaces(filePath: string, relativePath: string, outputBaseDir: string): Promise<void> {
     const funcName = 'generateTypedInterfaces';
     Logger.debug(funcName, "Generating typed interfaces...");
     const outputDir = path.join(outputBaseDir, path.dirname(relativePath));
@@ -27,7 +27,7 @@ export function generateTypedInterfaces(filePath: string, relativePath: string, 
                 Logger.warn(funcName, `Failed to generate interface from ${filePath}`);
             }
         })
-        .catch((error: Error) => {
+        .catch((error) => {
             const err = `Critical error when trying to process ${filePath}, ${error}`;
             Logger.error(funcName, err);
             throw new Error(err);
@@ -39,8 +39,9 @@ export function generateTypedInterfaces(filePath: string, relativePath: string, 
  * @param schemaDir
  * @param outputDir
  */
-export function generateFoldersAndTypedInterfaces(schemaDir: string, outputDir: string) {
+export function generateInterfacesFromPath(schemaDir: string, outputDir: string) {
     walkDirectory(schemaDir, (filePath: string, relativePath: string) =>
-        generateTypedInterfaces(filePath, relativePath, outputDir)
+        // TODO: this line is escaping test coverage
+        generateInterfaces(filePath, relativePath, outputDir)
     );
 }
