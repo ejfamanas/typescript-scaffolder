@@ -1,4 +1,4 @@
-# TypeScript Code Generator
+# The Coding Carpenter: TypeScript Code Generator
 
 Generates typescript code based off of files or schemas such as JSON. 
 ## ✨ Version 1.0 Features
@@ -16,7 +16,7 @@ Generate TypeScript interfaces automatically from JSON schemas or raw JSON data.
 ### Installation
 To install the package, run the following command
 ```
-npm install typescript-codegen
+npm install @c2/typescript-codegen
 ```
 ---
 
