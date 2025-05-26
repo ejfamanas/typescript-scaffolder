@@ -2,7 +2,9 @@
   "name": "typescript-scaffolder",
   "version": "1.0.1",
   "main": "dist/index.js",
-  "files": ["dist"],
+  "files": [
+    "dist"
+  ],
   "bin": {
     "typescript-codegen": "dist/cli.js"
   },
@@ -38,8 +40,10 @@
     }
   },
   "dependencies": {
+    "@faker-js/faker": "^9.8.0",
     "@types/node": "^22.15.21",
     "commander": "^14.0.0",
-    "ts-morph": "^26.0.0"
+    "ts-morph": "^26.0.0",
+    "typia": "^9.3.1"
   }
 }

@@ -1,6 +1,6 @@
 import fs from 'fs';
 import path from 'path';
-import {inferSchema, inferSchemaFromPath} from "../../src/utils/infer-schema-from-json";
+import {inferSchema, inferSchemaFromPath} from "../../src";
 
 const sampleObject = {
     id: 'u_123',

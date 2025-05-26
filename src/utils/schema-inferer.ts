@@ -1,8 +1,7 @@
 import { quicktype, InputData, jsonInputForTargetLanguage } from 'quicktype-core';
 import fs from 'fs';
 import { Logger } from './logger';
-import path from "path";
-import {deriveInterfaceName} from "./derive-interface-name";
+import {deriveInterfaceName} from "./object-namer";
 
 /**
  * Infers a schema based on JSON string

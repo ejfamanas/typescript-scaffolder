@@ -1,4 +1,4 @@
-import {coerceJson, coerceJsonValue, safeCoerceJson} from "../../src/utils/coerce-json-values";
+import {coerceJson, coerceJsonValue, safeCoerceJson} from "../../src/utils/json-coercer";
 
 describe('coerceJsonValue', () => {
     it('should convert "true" to boolean true', () => {

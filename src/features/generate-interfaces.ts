@@ -1,5 +1,5 @@
 import {ensureDir, walkDirectory} from "../utils/file-system";
-import {inferSchemaFromPath} from "../utils/infer-schema-from-json";
+import {inferSchemaFromPath} from "../utils/schema-inferer";
 import fs from "fs";
 import path from "node:path";
 import {Logger} from "../utils/logger";

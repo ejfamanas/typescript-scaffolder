@@ -4,7 +4,7 @@ import {
     assertNoDuplicateKeys,
     assertRequiredFields,
     assertStructure
-} from "../../src/utils/validate-schema";
+} from "../../src/utils/schema-validator";
 
 
 describe('validate-schema utils', () => {
