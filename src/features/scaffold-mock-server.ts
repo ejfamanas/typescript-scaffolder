@@ -9,19 +9,18 @@ export async function scaffoldMockServer(schemaDir: string) {
     const app = express();
 
     walkDirectory(schemaDir, async (filePath) => {
-        const schema = await inferJsonSchemaFromPath(filePath);
-        if (schema === null) {
-            return;
-        }
-        const cleanedSchema = extractInterfaces(schema);
-        console.log(cleanedSchema)
-        cleanedSchema.forEach(({ name, body }) => {
+        const schemaContent = await inferJsonSchemaFromPath(filePath);
+        console.log(schemaContent)
+        const interfaces = extractInterfaces(schemaContent);
+        console.log('Extracted interfaces:', interfaces);
+        interfaces.forEach(({name, body}) => {
             const relativePath = path.relative(schemaDir, filePath);
             const parentDir = path.dirname(relativePath).split(path.sep).pop()?.toLowerCase() || 'root';
             const route = `/${parentDir}/${name.toLowerCase()}`;
 
             console.log(`✅ Route ${route} from ${filePath}`);
             app.get(route, (req, res: Response) => {
+                console.log("PING")
                 const mock = generateMockData(5, JSON.stringify(body));
                 res.json(mock);
             });
@@ -31,9 +30,13 @@ export async function scaffoldMockServer(schemaDir: string) {
     app.listen(3000, () => {
         console.log(`🚀 Mock API running at http://localhost:3000`);
     });
+    return app;
 }
 
-function extractInterfaces(schemaStr: string): { name: string; body: Record<string, string> }[] {
+function extractInterfaces(schemaStr: string | null): { name: string; body: Record<string, string> }[] {
+    if (schemaStr === null) {
+        return [];
+    }
     const interfaceRegex = /export\s+interface\s+(\w+)\s*{([^}]*)}/g;
     const interfaces: { name: string; body: Record<string, string> }[] = [];
 
@@ -53,7 +56,7 @@ function extractInterfaces(schemaStr: string): { name: string; body: Record<stri
                 }
             });
 
-        interfaces.push({ name, body });
+        interfaces.push({name, body});
     }
 
     return interfaces;
