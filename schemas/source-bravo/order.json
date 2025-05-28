@@ -1,0 +1,25 @@
+{
+  "orderId": "ORD-8675309",
+  "customerId": "CUST-42069",
+  "total": 319.97,
+  "currency": "USD",
+  "status": "shipped",
+  "items": [
+    {
+      "productId": "PROD-1337",
+      "name": "Noise-Cancelling Headphones",
+      "quantity": 1,
+      "price": 199.99
+    },
+    {
+      "productId": "PROD-404",
+      "name": "Wireless Ergonomic Mouse",
+      "quantity": 2,
+      "price": 59.99
+    }
+  ],
+  "fulfilled": true,
+  "createdAt": "2025-05-19T12:15:00.000Z",
+  "shippedAt": "2025-05-20T09:00:00.000Z",
+  "deliveryEstimate": "2025-05-24T18:00:00.000Z"
+}

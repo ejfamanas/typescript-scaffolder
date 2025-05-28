@@ -1,14 +1,14 @@
 import { quicktype, InputData, jsonInputForTargetLanguage } from 'quicktype-core';
 import fs from 'fs';
 import { Logger } from './logger';
-import {deriveInterfaceName} from "./object-namer";
+import {deriveInterfaceName} from "./object-helpers";
 
 /**
  * Infers a schema based on JSON string
  * NOTE: Use JSON.stringify(obj) on the JSON value before passing to this function
  */
-export async function inferSchema(json: string, interfaceName: string): Promise<string | null> {
-    const funcName = 'inferSchema';
+export async function inferJsonSchema(json: string, interfaceName: string): Promise<string | null> {
+    const funcName = 'inferJsonSchema';
     Logger.debug(funcName, 'Inferring schema...');
 
     try {
@@ -40,8 +40,8 @@ export async function inferSchema(json: string, interfaceName: string): Promise<
 /**
  * Infers a schema from a JSON file
  */
-export async function inferSchemaFromPath(filePath: string): Promise<string | null> {
-    const funcName = 'inferSchemaFromPath';
+export async function inferJsonSchemaFromPath(filePath: string): Promise<string | null> {
+    const funcName = 'inferJsonSchemaFromPath';
     Logger.debug(funcName, 'Inferring schema from file...');
     try {
         const json = fs.readFileSync(filePath, 'utf-8');
@@ -50,7 +50,7 @@ export async function inferSchemaFromPath(filePath: string): Promise<string | nu
         const interfaceName = deriveInterfaceName(filePath)
 
         Logger.info(funcName, 'Inferring interface...');
-        return await inferSchema(json, interfaceName);
+        return await inferJsonSchema(json, interfaceName);
     } catch (error: any) {
         Logger.warn(funcName, `Failed to read file: ${filePath}`);
         return null;

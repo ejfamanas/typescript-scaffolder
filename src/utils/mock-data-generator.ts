@@ -1,74 +1,81 @@
-import typia from 'typia';
-import { faker } from '@faker-js/faker';
-import { Logger } from './logger';
+import {faker} from '@faker-js/faker';
+import {Logger} from './logger';
 
-export function generateMockData<T extends object>(
+export function generateMockData(
     count: number,
-    overrides?: Partial<T> | ((item: T, index: number) => Partial<T>)
-): T[] {
+    schemaJson: string,
+    arrayLength = 1
+): any[] {
     const funcName = 'generateMockData';
-    Logger.info(funcName, 'Starting mock data generation...');
-    const results: T[] = [];
+    Logger.debug(funcName, 'Starting mock data generation...');
+    const results: any[] = [];
 
+    const schema = JSON.parse(schemaJson);
     for (let i = 0; i < count; i++) {
-        const base = typia.random<T>() as T;
-        const autoFaked: Partial<T> = {} as Partial<T>;
+        const autoFaked: Record<string, any> = {};
 
-        Logger.debug(funcName, `Identified the following keys: ${Object.keys(base).join(', ')}`);
+        Logger.debug(funcName, `Identified the following keys: ${Object.keys(schema).join(', ')}`);
 
-        for (const key of Object.keys(base) as (keyof T)[]) {
-            const value = base[key];
+        for (const key of Object.keys(schema)) {
+            const value = schema[key];
+            console.log("FROM FUNCTION", value)
 
-            switch (typeof value) {
+            // Handle array type hints like "string[]"
+            if (typeof value === 'string' && value.endsWith('[]')) {
+                const baseType = value.replace('[]', '');
+                Logger.debug(funcName, `Array type identified at key: ${String(key)} with base type ${baseType}`);
+                autoFaked[key] = Array.from({length: arrayLength}).map(() =>
+                    generatePrimitiveMock(baseType)
+                );
+                continue;
+            }
+
+            switch (value) {
                 case 'string': {
                     Logger.debug(funcName, `String identified at key: ${String(key)}`);
-                    const faked = getFakerValueForKey(String(key)) ?? faker.lorem.word();
-                    autoFaked[key] = faked as T[typeof key];
+                    autoFaked[key] = getFakerValueForKey(String(key)) ?? faker.lorem.word();
                     break;
                 }
                 case 'number': {
                     Logger.debug(funcName, `Number identified at key: ${String(key)}`);
-                    autoFaked[key] = faker.number.int({ min: 0, max: 100 }) as T[typeof key];
+                    autoFaked[key] = faker.number.int({min: 0, max: 100});
                     break;
                 }
                 case 'boolean': {
                     Logger.debug(funcName, `Boolean identified at key: ${String(key)}`);
-                    autoFaked[key] = faker.datatype.boolean() as T[typeof key];
+                    autoFaked[key] = faker.datatype.boolean();
                     break;
                 }
-                case 'object': {
-                    if (Array.isArray(value)) {
-                        Logger.debug(funcName, `Array identified at key: ${String(key)}`);
-                        const arrValue = value.map(item => {
-                            switch (typeof item) {
-                                case 'string': return faker.lorem.word();
-                                case 'number': return faker.number.int();
-                                case 'boolean': return faker.datatype.boolean();
-                                case 'object': return item; // nested object — preserve as-is
-                                // TODO: For some reason jest is still flagging this as uncovered
-                                default: return item;
-                            }
-                        });
-                        autoFaked[key] = arrValue as T[typeof key];
-                    } else if (value !== null) {
-                        Logger.debug(funcName, `Object identified at key: ${String(key)}`);
-                        autoFaked[key] = value as T[typeof key]; // Optional: recurse here later
+                default: {
+                    if (typeof value === 'object' && value !== null && !Array.isArray(value)) {
+                        Logger.debug(funcName, `Nested object detected at key: ${String(key)}`);
+                        autoFaked[key] = generateMockData(1, JSON.stringify(value), arrayLength)[0];
+                    } else {
+                        Logger.warn(funcName, `Unknown type or unsupported structure at key: ${String(key)}`);
+                        autoFaked[key] = null;
                     }
                     break;
                 }
             }
         }
 
-        const typedBase = base as T;
-        const enhanced = {
-            ...typedBase,
-            ...autoFaked,
-            ...(typeof overrides === 'function' ? overrides(typedBase, i) : overrides ?? {})
-        } as T;
-
-        results.push(enhanced);
+        results.push(autoFaked);
     }
+
     return results;
+}
+
+function generatePrimitiveMock(type: string): any {
+    switch (type) {
+        case 'string':
+            return faker.lorem.word();
+        case 'number':
+            return faker.number.int({min: 0, max: 100});
+        case 'boolean':
+            return faker.datatype.boolean();
+        default:
+            return null;
+    }
 }
 
 function getFakerValueForKey(key: string): string | null {

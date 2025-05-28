@@ -1,6 +1,6 @@
 import fs from 'fs';
 import path from 'path';
-import {inferSchema, inferSchemaFromPath} from "../../src";
+import {inferJsonSchema, inferJsonSchemaFromPath} from "../../src";
 
 const sampleObject = {
     id: 'u_123',
@@ -19,7 +19,7 @@ const sampleJson = JSON.stringify(sampleObject, null, 2);
 
 describe('infer-schema-from-json', () => {
     it('should infer correct TypeScript interface from JSON string', async () => {
-        const result = await inferSchema(sampleJson, "User");
+        const result = await inferJsonSchema(sampleJson, "User");
 
         expect(result).toMatch(/export interface User/);
         expect(result).toMatch(/id:\s*string/);
@@ -34,18 +34,18 @@ describe('infer-schema-from-json', () => {
         const tempPath = path.join(__dirname, 'temp-user.json');
         fs.writeFileSync(tempPath, sampleJson, 'utf-8');
 
-        const result = await inferSchemaFromPath(tempPath);
+        const result = await inferJsonSchemaFromPath(tempPath);
         expect(result).toContain('export interface TempUser');
         expect(result).toContain('preferences: Preferences');
 
         fs.unlinkSync(tempPath); // Cleanup
     });
     it('should return null on invalid JSON input', async () => {
-        await expect(inferSchema('{"id": "1", "name": "test"', "test")).resolves.toBeNull();
+        await expect(inferJsonSchema('{"id": "1", "name": "test"', "test")).resolves.toBeNull();
     });
 
     it('should handle empty object input', async () => {
-        const result = await inferSchema('{}', "User");
+        const result = await inferJsonSchema('{}', "User");
         expect(result).toMatch(/export interface User\s*{[^}]*}/);
         expect(result).not.toMatch(/:/);
     });
@@ -55,7 +55,7 @@ describe('infer-schema-from-json', () => {
             { id: 1, flag: "true" },
             { id: "2", flag: true }
         ]);
-        const result = await inferSchema(inconsistent, "test");
+        const result = await inferJsonSchema(inconsistent, "test");
         expect(result).toMatch(/id:\s*(number\s*\|\s*string|string\s*\|\s*number)/);
         expect(result).toMatch(/flag:\s*(boolean\s*\|\s*string|string\s*\|\s*boolean)/);
     });
@@ -65,7 +65,7 @@ describe('infer-schema-from-json', () => {
             { name: "Alice" },
             { name: "Bob", age: 30 }
         ]);
-        const result = await inferSchema(partial, "test");
+        const result = await inferJsonSchema(partial, "test");
         expect(result).toMatch(/age\?: number/);
     });
 });
@@ -82,7 +82,7 @@ describe('inferSchemaFromPath - error handling', () => {
             throw new Error('ENOENT: no such file or directory');
         }) as unknown as typeof fs.readFileSync;
 
-        const result = await inferSchemaFromPath('/nonexistent/file.json');
+        const result = await inferJsonSchemaFromPath('/nonexistent/file.json');
         expect(result).toBeNull();
     });
 });

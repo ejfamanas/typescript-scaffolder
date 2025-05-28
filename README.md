@@ -24,8 +24,8 @@ npm install typescript-scaffolder
 ### Schema Inference
 There are two functions available to infer the schema generation for output preview:
 ```
-inferSchmea                 // produces a preview of the interface inferred from a schema
-inferSchemaFromPath         // reads a json file and produces a preview of the interface from a schema
+inferJsonSchmea                 // produces a preview of the interface inferred from json
+inferJsonSchemaFromPath         // reads a json file and produces a preview of the interface from a schema
 ```
 
 The above functions can be used with either async / await or Promise patterns:

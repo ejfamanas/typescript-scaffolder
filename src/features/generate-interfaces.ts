@@ -1,5 +1,5 @@
 import {ensureDir, walkDirectory} from "../utils/file-system";
-import {inferSchemaFromPath} from "../utils/schema-inferer";
+import {inferJsonSchemaFromPath} from "../utils/schema-inferer";
 import fs from "fs";
 import path from "node:path";
 import {Logger} from "../utils/logger";
@@ -18,8 +18,9 @@ export function generateInterfaces(filePath: string, relativePath: string, outpu
 
     const outFile = path.join(outputDir, path.basename(filePath, '.json') + '.ts');
 
-    return inferSchemaFromPath(filePath)
+    return inferJsonSchemaFromPath(filePath)
         .then((tsInterface: string | null) => {
+            console.log(tsInterface)
             if (tsInterface !== null) {
                 fs.writeFileSync(outFile, tsInterface, 'utf-8');
                 Logger.info(funcName, `Generated: ${outFile}`);
