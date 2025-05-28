@@ -7,7 +7,7 @@ import {Logger} from "./logger";
  */
 export function deriveInterfaceName(filePath: string): string {
     const funcName = 'deriveInterfaceName';
-    Logger.info(funcName, 'deriving interface name from filename...')
+    Logger.debug(funcName, 'deriving interface name from filename...')
     const fileBase = path.basename(filePath, '.json');
     return fileBase
         .split(/[-_]/)

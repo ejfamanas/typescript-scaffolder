@@ -20,7 +20,6 @@ export function generateInterfaces(filePath: string, relativePath: string, outpu
 
     return inferJsonSchemaFromPath(filePath)
         .then((tsInterface: string | null) => {
-            console.log(tsInterface)
             if (tsInterface !== null) {
                 fs.writeFileSync(outFile, tsInterface, 'utf-8');
                 Logger.info(funcName, `Generated: ${outFile}`);

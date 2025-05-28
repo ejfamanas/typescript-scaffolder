@@ -18,7 +18,6 @@ export function generateMockData(
 
         for (const key of Object.keys(schema)) {
             const value = schema[key];
-            console.log("FROM FUNCTION", value)
 
             // Handle array type hints like "string[]"
             if (typeof value === 'string' && value.endsWith('[]')) {
@@ -61,16 +60,18 @@ export function generateMockData(
     return results;
 }
 
-export function generatePrimitiveMock(type: string): any {
-    switch (type) {
+export function generatePrimitiveMock(type: string): string | number | boolean {
+    switch (type.toLowerCase()) {
         case 'string':
             return faker.lorem.word();
         case 'number':
-            return faker.number.int({min: 0, max: 100});
+            return faker.number.int({ min: 0, max: 100 });
         case 'boolean':
             return faker.datatype.boolean();
+        case 'date':
+            return faker.date.recent().toISOString();
         default:
-            return null;
+            return `UnhandledType<${type}>`; // easier to catch visually
     }
 }
 
@@ -116,5 +117,5 @@ export function handleDefaultCase(value: any, key: string, arrayLength: number):
     }
 
     Logger.warn(funcName, `Unknown type or unsupported structure at key: ${key}`);
-    return null;
+    return `UnhandledType<${JSON.stringify(value)}>`;
 }

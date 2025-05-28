@@ -18,18 +18,18 @@ export async function inferJsonSchema(json: string, interfaceName: string): Prom
             samples: [json]
         });
 
-        Logger.info(funcName, 'Storing json input...');
+        Logger.debug(funcName, 'Storing json input...');
         const inputData = new InputData();
         inputData.addInput(jsonInput);
 
-        Logger.info(funcName, 'Awaiting quicktype result...');
+        Logger.debug(funcName, 'Awaiting quicktype result...');
         const result = await quicktype({
             inputData,
             lang: 'typescript',
             rendererOptions: { 'just-types': 'true' }
         });
 
-        Logger.info(funcName, 'Successfully inferred schema');
+        Logger.debug(funcName, 'Successfully inferred schema');
         return result.lines.join('\n');
     } catch (error: any) {
         Logger.warn(funcName, `Failed to infer JSON schema: ${error}`);
@@ -45,11 +45,11 @@ export async function inferJsonSchemaFromPath(filePath: string): Promise<string 
     Logger.debug(funcName, 'Inferring schema from file...');
     try {
         const json = fs.readFileSync(filePath, 'utf-8');
-        Logger.info(funcName, 'Successfully read json file');
+        Logger.debug(funcName, 'Successfully read json file');
 
         const interfaceName = deriveInterfaceName(filePath)
 
-        Logger.info(funcName, 'Inferring interface...');
+        Logger.debug(funcName, 'Inferring interface...');
         return await inferJsonSchema(json, interfaceName);
     } catch (error: any) {
         Logger.warn(funcName, `Failed to read file: ${filePath}`);
