@@ -13,20 +13,15 @@ export async function scaffoldMockServer(schemaDir: string) {
     const app = express();
     // TODO: Use .env file
     const root = "http://localhost:3000"
-    const routes = [];
     walkDirectory(schemaDir, async (filePath) => {
         const schemaContent = await inferJsonSchemaFromPath(filePath);
-        console.log(schemaContent)
         const interfaces = extractInterfaces(schemaContent);
-        console.log('Extracted interfaces:', interfaces);
         interfaces.forEach(({name, body}) => {
             const relativePath = path.relative(schemaDir, filePath);
             const parentDir = path.dirname(relativePath).split(path.sep).pop()?.toLowerCase() || 'root';
             const route = `/${parentDir}/${name.toLowerCase()}`;
-
-            routes.push(`${root}/${routes}`)
+            console.log(`Route created at: ${root}${route}`);
             app.get(route, (req, res: Response) => {
-                console.log("PING")
                 const mock = generateMockData(5, JSON.stringify(body));
                 res.json(mock);
             });
@@ -34,8 +29,7 @@ export async function scaffoldMockServer(schemaDir: string) {
     });
 
     app.listen(3000, () => {
-        console.log(`🚀 Mock API running at http://localhost:3000`);
-        routes.forEach(r => console.log(`Scaffolding: ${r}`));
+        console.log(`🚀 Mock API running at ${root}`);
     });
 }
 

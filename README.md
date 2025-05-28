@@ -3,17 +3,19 @@
 Generates typescript code based off of files or schemas such as JSON. 
 ## ✨ Version 1.0 Features
 
-### Interface Generation
+### Interface Generation (BETA)
 Generate TypeScript interfaces automatically from JSON schemas or raw JSON data.
 
-- 🔍 Infers full TypeScript interfaces using [quicktype](https://github.com/quicktype/quicktype)
-- 🧠 Supports nested objects, arrays, optional fields, unions
-- 🛠 Preserves directory structure from i.e. `schemas/<folder_name>` into `codegen/interfaces/<folder_name>`
-- 📁 Automatically creates output folders if they don't exist
-- 🧪 Independent logging and unit tests to aid in debugging
+- Infers full TypeScript interfaces using [quicktype](https://github.com/quicktype/quicktype)
+- Supports nested objects, arrays, optional fields, unions
+- Preserves directory structure from i.e. `schemas/<folder_name>` into `codegen/interfaces/<folder_name>`
+- Automatically creates output folders if they don't exist
+
+### Mock Server Generation (GET) (ALPHA)
+- Reads all json files within a directory tree and scaffolds out mock server endpoints for GET requests
 ---
 
-### Installation
+## Installation
 To install the package, run the following command
 ```
 npm install typescript-scaffolder
@@ -56,28 +58,34 @@ The above functions can be used with either async / await or Promise patterns:
 ## Usage in CLI - Interfaces
 You can run the package directly from the CLI if building locally or as a dependency
 ```
-### Run from source (for local development)
+ ### Run from source (for local development)
 
-npx ts-node src/cli.ts -i schemas -o codegen/interfaces
+ npx ts-node src/cli.ts -i schemas -o codegen/interfaces
 
-### Run as a linked dependency
+ ### Run as a linked dependency
 
-yarn link
-# in your other project:
-yarn link typescript-codegen
+ yarn link
+ # in your other project:
+ yarn link typescript-codegen
 
-typescript-codegen --input schemas --output codegen/interfaces
+    typescript-codegen --input schemas --output codegen/interfaces
 ```
+## Usage In Code - Mock Server Scaffolding
+You can run the mock server by using the following function
+```
+ await scaffoldMockServer(<dir where files are kept>)
+```
+The server will then automatically generate service endpoints and print
+
 
 ## Roadmap
 [x] Generate typescript interfaces from schema definitions
-
-[ ] Scaffolding for service mocking
-
+[X] Scaffolding for service mocking (GET)
+[ ] Scaffolding for service mocking (POST)
+[ ] Scaffolding for service mocking (PUT)
+[ ] Scaffolding for service mocking (DELETE)
 [ ] Generate enums from definitions
-
 [ ] Generate classes from schema definitions
-
 [ ] Declarative function generation
 
 ## License
