@@ -1,6 +1,12 @@
 import {faker} from '@faker-js/faker';
 import {Logger} from './logger';
 
+/**
+ * Generates a mock data sample from a type-hinted json schema
+ * @param count
+ * @param schemaJson
+ * @param arrayLength
+ */
 export function generateMockData(
     count: number,
     schemaJson: string,
