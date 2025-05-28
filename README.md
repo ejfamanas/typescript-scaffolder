@@ -30,7 +30,7 @@ inferSchemaFromPath         // reads a json file and produces a preview of the i
 
 The above functions can be used with either async / await or Promise patterns:
 ```
-const res = await inferSchema(<stringified json object)
+const res = await inferSchema(<stringified json object>)
 # returns a promise containing the interpreted interface as a string, or null if fails
 
 const res = await inferSchemaFromPath(<filepath as string>)
@@ -68,9 +68,6 @@ yarn link typescript-codegen
 
 typescript-codegen --input schemas --output codegen/interfaces
 ```
-
-## Repo
-https://github.com/ejfamanas/typescript-scaffolder
 
 ## Roadmap
 [x] Generate typescript interfaces from schema definitions
