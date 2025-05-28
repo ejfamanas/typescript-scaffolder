@@ -112,8 +112,8 @@ describe('mock-data-generator helper functions', () => {
             expect(typeof value).toBe('boolean');
         });
 
-        it('should return null for unknown types', () => {
-            expect(generatePrimitiveMock('unknown')).toBeNull();
+        it('should return an "UnhandledType" string for unknown types', () => {
+            expect(generatePrimitiveMock('unknown')).toBe('UnhandledType<unknown>');
         });
     });
 
@@ -157,9 +157,9 @@ describe('mock-data-generator helper functions', () => {
             expect(result).toHaveProperty('key');
         });
 
-        it('should return null for unknown structure', () => {
+        it('should return an "UnhandledType" string for unknown structure', () => {
             const result = handleDefaultCase(null, 'unknown', 1);
-            expect(result).toBeNull();
+            expect(result).toBe('UnhandledType<null>');
         });
     });
 });

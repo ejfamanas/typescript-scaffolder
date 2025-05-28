@@ -29,29 +29,11 @@ export function generateMockData(
                 continue;
             }
 
-            switch (value) {
-                case 'string': {
-                    Logger.debug(funcName, `String identified at key: ${String(key)}`);
-                    autoFaked[key] = getFakerValueForKey(String(key)) ?? faker.lorem.word();
-                    break;
-                }
-                case 'number': {
-                    Logger.debug(funcName, `Number identified at key: ${String(key)}`);
-                    autoFaked[key] = faker.number.int({min: 0, max: 100});
-                    break;
-                }
-                case 'boolean': {
-                    Logger.debug(funcName, `Boolean identified at key: ${String(key)}`);
-                    autoFaked[key] = faker.datatype.boolean();
-                    break;
-                }
-                case 'object':
-                    autoFaked[key] = faker.lorem.words();
-                    break;
-                default: {
-                    autoFaked[key] = handleDefaultCase(value, String(key), arrayLength);
-                    break;
-                }
+            if (typeof value === 'string') {
+                Logger.debug(funcName, `Primitive type string detected at key: ${String(key)} with type hint: ${value}`);
+                autoFaked[key] = getFakerValueForKey(String(key)) ?? generatePrimitiveMock(value);
+            } else {
+                autoFaked[key] = handleDefaultCase(value, String(key), arrayLength);
             }
         }
 
