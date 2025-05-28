@@ -3,7 +3,9 @@
   "version": "1.0.2",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
-  "files": ["dist"],
+  "files": [
+    "dist"
+  ],
   "bin": {
     "typescript-codegen": "dist/cli.js"
   },
@@ -17,8 +19,12 @@
   "author": "Eric Famanas (The Coding Carpenter)",
   "license": "MIT",
   "devDependencies": {
+    "@faker-js/faker": "^9.8.0",
+    "@types/express": "^5.0.2",
     "@types/jest": "^29.5.14",
+    "@types/node": "^22.15.21",
     "jest": "^29.7.0",
+    "quicktype-core": "^23.2.5",
     "ts-jest": "^29.3.4",
     "ts-node": "^10.9.2",
     "tsconfig-paths": "^4.2.0",
@@ -38,9 +44,11 @@
     }
   },
   "dependencies": {
-    "quicktype-core": "^23.2.5",
+    "@faker-js/faker": "^9.8.0",
     "@types/node": "^22.15.21",
     "commander": "^14.0.0",
+    "express": "^5.1.0",
+    "quicktype-core": "^23.2.5",
     "ts-morph": "^26.0.0"
   }
 }

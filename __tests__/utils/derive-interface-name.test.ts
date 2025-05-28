@@ -1,4 +1,4 @@
-import {deriveInterfaceName} from "../../src/utils/derive-interface-name";
+import {deriveInterfaceName} from "../../src/utils/object-helpers";
 
 describe('deriveInterfaceName', () => {
     it.each([

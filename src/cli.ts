@@ -7,7 +7,7 @@ import {generateInterfacesFromPath} from "./features/generate-interfaces";
 const program = new Command();
 
 program
-    .name('typescript-codegen')
+    .name('typescript-scaffolder')
     .description('Generate TypeScript interfaces from JSON schemas')
     .version('1.0.0')
     .option('-i, --input <dir>', 'Input directory', 'schemas')

@@ -2,18 +2,18 @@ import fs from 'fs';
 import path from 'path';
 import {ensureDir, walkDirectory} from "../../src/utils/file-system";
 import {Logger} from "../../src/utils/logger";
-import {generateInterfaces, generateInterfacesFromPath, inferSchemaFromPath} from "../../src";
+import {generateInterfaces, generateInterfacesFromPath, inferJsonSchemaFromPath} from "../../src";
 
 
 jest.mock('fs');
 jest.mock('path');
-jest.mock('../../src/utils/infer-schema-from-json');
+jest.mock('../../src/utils/schema-inferer');
 jest.mock('../../src/utils/file-system');
 jest.mock('../../src/utils/logger');
 
 const mockedFs = fs as jest.Mocked<typeof fs>;
-const mockedInferSchema = inferSchemaFromPath as jest.MockedFunction<typeof inferSchemaFromPath>;
-const mockedInferSchemaFromPath = inferSchemaFromPath as jest.MockedFunction<typeof inferSchemaFromPath>;
+const mockedInferSchema = inferJsonSchemaFromPath as jest.MockedFunction<typeof inferJsonSchemaFromPath>;
+const mockedInferSchemaFromPath = inferJsonSchemaFromPath as jest.MockedFunction<typeof inferJsonSchemaFromPath>;
 const mockedEnsureDir = ensureDir as jest.MockedFunction<typeof ensureDir>;
 const mockedWalkDirectory = walkDirectory as jest.MockedFunction<typeof walkDirectory>;
 const mockLogger = Logger as jest.Mocked<typeof Logger>;
