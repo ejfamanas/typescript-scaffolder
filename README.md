@@ -1,7 +1,7 @@
 # TypeScript Scaffolder
 
 Generates typescript code based off of files or schemas such as JSON. 
-## ✨ Version 1.0 Features
+## ✨ Version 1.1-A Features
 
 ### Interface Generation (BETA)
 Generate TypeScript interfaces automatically from JSON schemas or raw JSON data.
@@ -79,14 +79,14 @@ The server will then automatically generate service endpoints and print
 
 
 ## Roadmap
-[x] Generate typescript interfaces from schema definitions
-[X] Scaffolding for service mocking (GET)
-[ ] Scaffolding for service mocking (POST)
-[ ] Scaffolding for service mocking (PUT)
-[ ] Scaffolding for service mocking (DELETE)
-[ ] Generate enums from definitions
-[ ] Generate classes from schema definitions
-[ ] Declarative function generation
+[x] Generate typescript interfaces from schema definitions <br>
+[X] Scaffolding for service mocking (GET) <br>
+[ ] Scaffolding for service mocking (POST) <br>
+[ ] Scaffolding for service mocking (PUT) <br>
+[ ] Scaffolding for service mocking (DELETE) <br>
+[ ] Generate enums from definitions <br>
+[ ] Generate classes from schema definitions <br>
+[ ] Declarative function generation <br>
 
 ## License
 Licensed under the [MIT License](LICENSE).
