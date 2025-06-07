@@ -1,6 +1,6 @@
 {
   "name": "typescript-scaffolder",
-  "version": "1.1.4-alpha",
+  "version": "1.2.1-B",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "files": [
