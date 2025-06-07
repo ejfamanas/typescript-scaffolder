@@ -39,7 +39,7 @@ export function generateInterfaces(filePath: string, relativePath: string, outpu
  * @param schemaDir
  * @param outputDir
  */
-export function generateInterfacesFromPath(schemaDir: string, outputDir: string) {
+export async function generateInterfacesFromPath(schemaDir: string, outputDir: string) {
     walkDirectory(schemaDir, (filePath: string, relativePath: string) =>
         // TODO: this line is escaping test coverage
         generateInterfaces(filePath, relativePath, outputDir)

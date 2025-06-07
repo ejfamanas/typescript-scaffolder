@@ -14,3 +14,9 @@ export function deriveInterfaceName(filePath: string): string {
         .map(part => part.charAt(0).toUpperCase() + part.slice(1))
         .join('');
 }
+
+export function inferPrimitiveType(value: string): 'string' | 'number' | 'boolean' {
+    if (value === 'true' || value === 'false') return 'boolean';
+    if (!isNaN(Number(value))) return 'number';
+    return 'string';
+};
