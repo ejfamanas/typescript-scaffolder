@@ -3,7 +3,7 @@
 Generates typescript code based off of files or schemas such as JSON. 
 ## ✨ Version 1.1-A Features
 
-### Interface Generation (BETA)
+### Interface Generation (Beta)
 Generate TypeScript interfaces automatically from JSON schemas or raw JSON data.
 
 - Infers full TypeScript interfaces using [quicktype](https://github.com/quicktype/quicktype)
@@ -11,7 +11,7 @@ Generate TypeScript interfaces automatically from JSON schemas or raw JSON data.
 - Preserves directory structure from i.e. `schemas/<folder_name>` into `codegen/interfaces/<folder_name>`
 - Automatically creates output folders if they don't exist
 
-### Mock Server Generation (GET) (ALPHA)
+### Mock Server Generation (GET) (Alpha)
 - Reads all json files within a directory tree and scaffolds out mock server endpoints for GET requests
 ---
 

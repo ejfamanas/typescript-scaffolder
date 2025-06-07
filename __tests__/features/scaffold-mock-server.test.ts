@@ -1,7 +1,7 @@
-import {scaffoldMockServer} from '../../src/features/scaffold-mock-server';
 import * as fileSystem from '../../src/utils/file-system';
 import * as schemaInferer from '../../src/utils/schema-inferer';
 import * as mockGen from '../../src/utils/mock-data-generator';
+import {scaffoldMockServer} from "../../src";
 
 // Mocks
 jest.mock('../../src/utils/file-system');

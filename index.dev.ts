@@ -1,15 +1,23 @@
 import path from "path";
-import {generateInterfacesFromPath} from "./src/features/generate-interfaces";
-import {ensureDir} from "./src/utils/file-system";
-import {scaffoldMockServer} from "./src/features/scaffold-mock-server";
+import { ensureDir } from "./src/utils/file-system";
+import { generateEnvLoader, generateInterfacesFromPath, scaffoldMockServer } from "./src";
 
-const SCHEMAS_DIR = path.resolve(__dirname, 'schemas');
-const OUTPUT_DIR = path.resolve(__dirname, 'codegen/interfaces');
+const ROOT_DIR = process.cwd();                // Base dir where the script is run
+const LOCAL_DIR = __dirname;                   // Base dir where this file lives
+
+const ENV_FILE     = path.resolve(ROOT_DIR, '.env');
+const OUTPUT_PATH  = path.resolve(ROOT_DIR, 'codegen/config');
+const SCHEMAS_DIR  = path.resolve(LOCAL_DIR, 'schemas');
+const INTERFACE_DIR   = path.resolve(LOCAL_DIR, 'codegen/interfaces');
+const OUTPUT_FILE  = 'env-config.ts';
 
 async function main(): Promise<void> {
-    await ensureDir(OUTPUT_DIR);
-    await generateInterfacesFromPath(SCHEMAS_DIR, OUTPUT_DIR)
-    await scaffoldMockServer(SCHEMAS_DIR)
-}
+    await generateInterfacesFromPath(SCHEMAS_DIR, INTERFACE_DIR);
+    await scaffoldMockServer(SCHEMAS_DIR);
+    try {
+        await generateEnvLoader(ENV_FILE, OUTPUT_PATH, 'env-config.ts');
+    } catch (err) {
+        console.error("Failed to generate env loader:", OUTPUT_FILE);
+    }}
 
 main();

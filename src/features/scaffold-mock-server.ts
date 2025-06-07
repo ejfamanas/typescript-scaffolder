@@ -31,6 +31,8 @@ export async function scaffoldMockServer(schemaDir: string) {
     app.listen(3000, () => {
         console.log(`🚀 Mock API running at ${root}`);
     });
+
+    return app;
 }
 
 /**
