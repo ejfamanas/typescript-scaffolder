@@ -1,7 +1,7 @@
 # TypeScript Scaffolder
 
 Generates typescript code based off of files or schemas such as JSON. 
-## ✨ Version 1.1-A Features
+## ✨ Version 1.1-B Features
 
 ### Interface Generation (Beta)
 Generate TypeScript interfaces automatically from JSON schemas or raw JSON data.
@@ -10,6 +10,68 @@ Generate TypeScript interfaces automatically from JSON schemas or raw JSON data.
 - Supports nested objects, arrays, optional fields, unions
 - Preserves directory structure from i.e. `schemas/<folder_name>` into `codegen/interfaces/<folder_name>`
 - Automatically creates output folders if they don't exist
+
+This file:
+```
+{
+  "id": "u_123",
+  "email": "alice@example.com",
+  "age": 29,
+  "isActive": true,
+  "roles": ["admin", "editor"],
+  "preferences": {
+    "newsletter": true,
+    "theme": "dark"
+  },
+  "lastLogin": "2024-12-01T10:15:30Z"
+}
+```
+Will give you:
+```
+export interface User {
+    id:          string;
+    email:       string;
+    age:         number;
+    isActive:    boolean;
+    roles:       string[];
+    preferences: Preferences;
+    lastLogin:   Date;
+}
+
+export interface Preferences {
+    newsletter: boolean;
+    theme:      string;
+}
+```
+
+### Environment Variable Interface (Beta)
+- Reduces need for calling dotenv.config() from multiple areas
+- Creates an environment variable handler
+- Automatically generated based on keys declared in .env file
+- Automatically creates default values based on declared in .env file
+- Supports filenames such as .env.local or .env.prod as well
+
+This file:
+```
+SCHEMAS_DIR="schemas"
+OUTPUT_DIR_ROOT="codegen"
+INTERFACES_ROOT="interfaces"
+```
+
+Will give you:
+```
+export class EnvConfig {
+    static readonly SCHEMAS_DIR: string = process.env.SCHEMAS_DIR ?? '"schemas"';
+    static readonly OUTPUT_DIR_ROOT: string = process.env.OUTPUT_DIR_ROOT ?? '"codegen"';
+    static readonly INTERFACES_ROOT: string = process.env.INTERFACES_ROOT ?? '"interfaces"';
+}
+
+export enum EnvKeys {
+    SCHEMAS_DIR = "SCHEMAS_DIR",
+    OUTPUT_DIR_ROOT = "OUTPUT_DIR_ROOT",
+    INTERFACES_ROOT = "INTERFACES_ROOT"
+}
+```
 
 ### Mock Server Generation (GET) (Alpha)
 - Reads all json files within a directory tree and scaffolds out mock server endpoints for GET requests
@@ -22,64 +84,44 @@ npm install typescript-scaffolder
 ```
 ---
 
-## Usage in Code - Interfaces
-### Schema Inference
-There are two functions available to infer the schema generation for output preview:
+## Usages in code
+Please refer to the following code block for example usages:
 ```
-inferJsonSchmea                 // produces a preview of the interface inferred from json
-inferJsonSchemaFromPath         // reads a json file and produces a preview of the interface from a schema
-```
+import path from "path";
+import { generateEnvLoader, generateInterfacesFromPath, scaffoldMockServer } from "typescript-scaffolder";
 
-The above functions can be used with either async / await or Promise patterns:
-```
-const res = await inferSchema(<stringified json object>)
-# returns a promise containing the interpreted interface as a string, or null if fails
+const ROOT_DIR = process.cwd();                // Base dir where the script is run
+const LOCAL_DIR = __dirname;                   // Base dir where this file lives
 
-const res = await inferSchemaFromPath(<filepath as string>)
-# returns a promise containing the interpreted interface as a string, or null if fails
-```
+// Interface generation config
+const SCHEMA_INPUT_DIR    = path.resolve(LOCAL_DIR, 'schemas');
+const INTERFACE_OUTPUT_DIR= path.resolve(LOCAL_DIR, 'codegen/interfaces');
 
-### Interface Generation
-Interface generation automatically calls inferSchemaFromPath and generates a typescript file containing the interface
-```
- generateInterfaces          // takes json file and generates an interface file
- 
- generateInterfacesFromPath  // takes a directory of 1 or more levels and generates interfaces for each json
-                             // the read directory tree will also be duplicated
-```
-The above functions can be used with either async / await or Promise patterns:
-```
- // inferSchemaFromPath is already called in these functions, you do not need to call it separately
- await generateInterfaces(<path to file, directory where file is located, output folder name>)
+// Env accessor config
+const ENV_FILE            = path.resolve(ROOT_DIR, '.env');
+const ENV_OUTPUT_DIR      = path.resolve(ROOT_DIR, 'codegen/config');
+const ENV_OUTPUT_FILE            = 'env-config.ts';
 
- await generateInterfacesFromPath(<schema directory, output directory>)
-```
+async function main(): Promise<void> {
+    // using the interface generator (BETA)
+    await generateInterfacesFromPath(SCHEMA_INPUT_DIR, INTERFACE_OUTPUT_DIR);
+    
+    // using the env accessor (BETA)
+    await generateEnvLoader(ENV_FILE, ENV_OUTPUT_DIR, ENV_OUTPUT_FILE);
 
-## Usage in CLI - Interfaces
-You can run the package directly from the CLI if building locally or as a dependency
-```
- ### Run from source (for local development)
+    // using the mock server scaffolder (ALPHA)
+    await scaffoldMockServer(SCHEMA_INPUT_DIR);
 
- npx ts-node src/cli.ts -i schemas -o codegen/interfaces
+}
 
- ### Run as a linked dependency
-
- yarn link
- # in your other project:
- yarn link typescript-codegen
-
-    typescript-codegen --input schemas --output codegen/interfaces
+main();
 ```
-## Usage In Code - Mock Server Scaffolding
-You can run the mock server by using the following function
-```
- await scaffoldMockServer(<dir where files are kept>)
-```
-The server will then automatically generate service endpoints and print
 
 
 ## Roadmap
-[x] Generate typescript interfaces from schema definitions <br>
+[X] Generate typescript interfaces from schema definitions <br>
+[ ] Generate typescript enums to assert key names to avoid magic strings <br>
+[X] Generate typescript accessor to access environment variables <br>
 [X] Scaffolding for service mocking (GET) <br>
 [ ] Scaffolding for service mocking (POST) <br>
 [ ] Scaffolding for service mocking (PUT) <br>
