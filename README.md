@@ -1,7 +1,7 @@
 # TypeScript Scaffolder
 
 Generates typescript code based off of files or schemas such as JSON. 
-## ✨ Version 1.1-B Features
+## ✨ Version 1.3.1-beta
 
 ### Environment Variable Interface (Beta)
 - Reduces need for calling dotenv.config() from multiple areas
