@@ -1,39 +1,9 @@
 import express, {Response} from 'express';
 import {generateMockData} from '../utils/mock-data-generator';
 import {walkDirectory} from '../utils/file-system';
-import fs from 'fs';
 import path from 'path';
 import {inferJsonSchemaFromPath} from "../utils/schema-inferer";
 
-/**
- * Takes in a schema directory and scaffolds out get endpoints
- * @param schemaDir
- */
-export async function scaffoldMockServer(schemaDir: string) {
-    const app = express();
-    // TODO: Use .env file
-    const root = "http://localhost:3000"
-    walkDirectory(schemaDir, async (filePath) => {
-        const schemaContent = await inferJsonSchemaFromPath(filePath);
-        const interfaces = extractInterfaces(schemaContent);
-        interfaces.forEach(({name, body}) => {
-            const relativePath = path.relative(schemaDir, filePath);
-            const parentDir = path.dirname(relativePath).split(path.sep).pop()?.toLowerCase() || 'root';
-            const route = `/${parentDir}/${name.toLowerCase()}`;
-            console.log(`Route created at: ${root}${route}`);
-            app.get(route, (req, res: Response) => {
-                const mock = generateMockData(5, JSON.stringify(body));
-                res.json(mock);
-            });
-        });
-    });
-
-    app.listen(3000, () => {
-        console.log(`🚀 Mock API running at ${root}`);
-    });
-
-    return app;
-}
 
 /**
  * Extracts the interfaces returned from something like quickType to convert into a Record
@@ -64,6 +34,38 @@ function extractInterfaces(schemaStr: string | null): { name: string; body: Reco
 
         interfaces.push({name, body});
     }
-
     return interfaces;
+}
+
+/**
+ * Takes in a schema directory and scaffolds out get endpoints
+ * @param schemaDir
+ * @param ext
+ */
+export async function scaffoldMockServer(schemaDir: string, ext: string = '.json') {
+    const app = express();
+    // TODO: Use .env file
+    const root = "http://localhost:3000"
+    walkDirectory(
+        schemaDir,
+        async (filePath) => {
+            const schemaContent = await inferJsonSchemaFromPath(filePath);
+            const interfaces = extractInterfaces(schemaContent);
+            interfaces.forEach(({name, body}) => {
+                const relativePath = path.relative(schemaDir, filePath);
+                const parentDir = path.dirname(relativePath).split(path.sep).pop()?.toLowerCase() || 'root';
+                const route = `/${parentDir}/${name.toLowerCase()}`;
+                console.log(`Route created at: ${root}${route}`);
+                app.get(route, (req, res: Response) => {
+                    const mock = generateMockData(5, JSON.stringify(body));
+                    res.json(mock);
+                });
+            });
+        },
+        ext
+    );
+    app.listen(3000, () => {
+        console.log(`🚀 Mock API running at ${root}`);
+    });
+    return app;
 }
