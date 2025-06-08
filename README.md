@@ -32,7 +32,7 @@ export enum EnvKeys {
 }
 ```
 
-### Interface Generation (Beta)
+### Interface Generation (Stable)
 Generate TypeScript interfaces automatically from JSON schemas or raw JSON data.
 
 - Infers full TypeScript interfaces using [quicktype](https://github.com/quicktype/quicktype)
