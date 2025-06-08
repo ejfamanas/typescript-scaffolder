@@ -1,7 +1,7 @@
 # TypeScript Scaffolder
 
 Generates typescript code based off of files or schemas such as JSON. 
-## ✨ Version 1.3.1-beta
+## ✨ Version 1.3.2-beta
 
 ### Environment Variable Interface (Beta)
 - Reduces need for calling dotenv.config() from multiple areas
@@ -157,7 +157,7 @@ async function main(): Promise<void> {
     // this is a sync function, and should be run first anyway
     generateEnvLoader(ENV_FILE, ENV_OUTPUT_DIR, ENV_OUTPUT_FILE);
 
-    // using the interface generator (BETA)
+    // using the interface generator (STABLE)
     await generateInterfacesFromPath(SCHEMA_INPUT_DIR, INTERFACE_OUTPUT_DIR)
 
     // use the enum generator from the output of the interface generator (BETA)
@@ -173,8 +173,9 @@ main();
 
 ## Roadmap
 [X] Generate typescript interfaces from schema definitions <br>
-[ ] Generate typescript enums to assert key names to avoid magic strings <br>
+[X] Generate typescript enums to assert key names to avoid magic strings <br>
 [X] Generate typescript accessor to access environment variables <br>
+[ ] Command line interface access
 [X] Scaffolding for service mocking (GET) <br>
 [ ] Scaffolding for service mocking (POST) <br>
 [ ] Scaffolding for service mocking (PUT) <br>
