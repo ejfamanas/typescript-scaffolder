@@ -24,19 +24,21 @@ export function ensureDir(dirPath: string): void {
 export function walkDirectory(
     rootDir: string,
     callback: (filePath: string, relativePath: string) => void,
-    baseDir: string = rootDir, // TODO: this line is escaping test coverage
-    ext: string = '.json',
+    ext: string,
+    // TODO: this line is escaping test coverage because of the callback
+    baseDir: string = rootDir,
 ): void {
     const funcName = 'walkDirectory';
     Logger.debug(funcName, 'Walking file directory...')
     const entries = fs.readdirSync(rootDir, { withFileTypes: true });
     for (const entry of entries) {
         const fullPath = path.join(rootDir, entry.name);
-
         if (entry.isDirectory()) {
+            // keep going if it is a file directory
             Logger.debug(funcName, 'Found file directory...')
-            walkDirectory(fullPath, callback, baseDir, ext);
+            walkDirectory(fullPath, callback, ext, baseDir);
         } else if (entry.isFile() && entry.name.endsWith(ext)) {
+            // if it's a file, run the callback against the whole directory
             Logger.debug(funcName, 'Invoking callback in directory...')
             const relativePath = path.relative(baseDir, fullPath);
             callback(fullPath, relativePath);

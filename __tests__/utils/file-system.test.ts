@@ -5,11 +5,11 @@ import {ensureDir, walkDirectory} from "../../src/utils/file-system";
 const TEST_ROOT = path.join(__dirname, '__testdata__');
 
 beforeAll(() => {
-    fs.mkdirSync(TEST_ROOT, { recursive: true });
+    fs.mkdirSync(TEST_ROOT, {recursive: true});
 });
 
 afterAll(() => {
-    fs.rmSync(TEST_ROOT, { recursive: true, force: true });
+    fs.rmSync(TEST_ROOT, {recursive: true, force: true});
 });
 
 describe('ensureDir', () => {
@@ -47,7 +47,7 @@ describe('walkDirectory', () => {
             if (typeof structure[key] === 'string') {
                 fs.writeFileSync(fullPath, structure[key]);
             } else {
-                fs.mkdirSync(fullPath, { recursive: true });
+                fs.mkdirSync(fullPath, {recursive: true});
                 createTestStructure(fullPath, structure[key]);
             }
         }
@@ -60,9 +60,13 @@ describe('walkDirectory', () => {
     it('invokes callback for all .json files and preserves relative paths', () => {
         const found: string[] = [];
 
-        walkDirectory(TEST_ROOT, (filePath, relativePath) => {
-            found.push(relativePath);
-        }, TEST_ROOT, '.json');
+        walkDirectory(TEST_ROOT,
+            (_filePath, relativePath) => {
+                found.push(relativePath);
+            },
+            '.json',
+            TEST_ROOT
+        );
 
         expect(found.sort()).toEqual([
             path.join('dir1', 'file1.json'),
@@ -74,9 +78,13 @@ describe('walkDirectory', () => {
     it('uses different file extension filter if provided', () => {
         const found: string[] = [];
 
-        walkDirectory(TEST_ROOT, (filePath, relativePath) => {
-            found.push(relativePath);
-        }, TEST_ROOT, '.txt', );
+        walkDirectory(TEST_ROOT,
+            (_filePath, relativePath) => {
+                found.push(relativePath);
+            },
+            '.txt',
+            TEST_ROOT
+        );
 
         expect(found).toEqual([
             path.join('dir1', 'file2.txt')
@@ -99,9 +107,14 @@ describe('walkDirectory', () => {
 
         const found: string[] = [];
 
-        walkDirectory(path.join(TEST_ROOT, 'root'), (filePath, relativePath) => {
-            found.push(relativePath);
-        }, path.join(TEST_ROOT, 'root'), '.json');
+        walkDirectory(
+            path.join(TEST_ROOT, 'root'),
+            (_filePath, relativePath) => {
+                found.push(relativePath)
+            },
+            '.json',
+            path.join(TEST_ROOT, 'root')
+        );
 
         expect(found).toContain(path.join('child', 'grandchild', 'deep.json'));
     });
@@ -119,9 +132,12 @@ describe('walkDirectory', () => {
         createTestStructure(base, structure);
 
         const found: string[] = [];
-        walkDirectory(base, (filePath, relativePath) => {
-            found.push(relativePath);
-        }, base, '.json');
+        walkDirectory(base,
+            (_filePath, relativePath) => {
+                found.push(relativePath);
+            },
+            '.json',
+            base);
 
         expect(found).toContain(path.join('level1', 'level2', 'deep.json'));
     });
@@ -130,13 +146,17 @@ describe('walkDirectory', () => {
         const parent = path.join(TEST_ROOT, 'recursive-test');
         const childDir = path.join(parent, 'child');
 
-        fs.mkdirSync(childDir, { recursive: true });
+        fs.mkdirSync(childDir, {recursive: true});
         fs.writeFileSync(path.join(childDir, 'test.json'), '{}');
 
         const found: string[] = [];
-        walkDirectory(parent, (filePath, relativePath) => {
-            found.push(relativePath);
-        }, parent, '.json');
+        walkDirectory(parent,
+            (filePath, relativePath) => {
+                found.push(relativePath);
+            },
+            '.json',
+            parent
+        );
 
         expect(found).toContain(path.join('child', 'test.json'));
     });
@@ -146,7 +166,8 @@ describe('walkDirectory failure cases', () => {
     it('throws if rootDir does not exist', () => {
         const missingDir = path.join(TEST_ROOT, 'does-not-exist');
         expect(() => {
-            walkDirectory(missingDir, () => {}, missingDir);
+            walkDirectory(missingDir, () => {
+            }, missingDir);
         }).toThrow();
     });
 

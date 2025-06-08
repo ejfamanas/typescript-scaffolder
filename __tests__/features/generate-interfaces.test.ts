@@ -1,9 +1,7 @@
 import fs from 'fs';
-import path from 'path';
 import {ensureDir, walkDirectory} from "../../src/utils/file-system";
 import {Logger} from "../../src/utils/logger";
 import {generateInterfaces, generateInterfacesFromPath, inferJsonSchemaFromPath} from "../../src";
-
 
 jest.mock('fs');
 jest.mock('path');
@@ -71,7 +69,8 @@ describe('generateFoldersAndTypedInterfaces', () => {
 
         expect(mockedWalkDirectory).toHaveBeenCalledWith(
             fakeSchemaDir,
-            expect.any(Function)
+            expect.any(Function),
+            '.json'
         );
     });
     it('should throw and log on critical inference error', async () => {

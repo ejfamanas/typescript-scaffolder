@@ -8,30 +8,41 @@ import path from "path";
 
 dotenv.config();
 
+/**
+ * Takes in an env file and produces a typescript-safe interface of a class and enum
+ *
+ * @param envFile
+ * @param outputDir
+ * @param outputFile
+ * @param envClassName
+ * @param envEnumName
+ */
 export function generateEnvLoader(
-    ENV_FILE: string,
-    OUTPUT_PATH: string,
-    OUTPUT_FILE: string,
-    CLASS_NAME ='EnvConfig',
-    ENUM_NAME = 'EnvKeys'
+    envFile: string,
+    outputDir: string,
+    outputFile: string,
+    envClassName ='EnvConfig',
+    envEnumName = 'EnvKeys'
 ): void {
     const funcName = "generateEnvLoader";
-    Logger.debug(funcName, 'Generating env accessor')
-    const baseEnvFile = path.basename(ENV_FILE);
+    Logger.debug(funcName, 'Generating env accessor');
+    // need to make sure the new codegen root exists
+    ensureDir(outputDir);
+    const baseEnvFile = path.basename(envFile);
 
     if (!/^\.env(\..+)?$/.test(baseEnvFile) && baseEnvFile !== '.env') {
-        const error = `Expected an .env* file but received: ${ENV_FILE}`;
+        const error = `Expected an .env* file but received: ${envFile}`;
         Logger.error(funcName, error);
         throw new Error(error);
     }
 
-    if (!fs.existsSync(ENV_FILE)) {
-        const error = `ENV file does not exist at path: ${ENV_FILE}`
+    if (!fs.existsSync(envFile)) {
+        const error = `ENV file does not exist at path: ${envFile}`
         Logger.debug(funcName, error);
         throw new Error(error);
     }
 
-    const envLines = fs.readFileSync(ENV_FILE, 'utf-8')
+    const envLines = fs.readFileSync(envFile, 'utf-8')
         .split('\n')
         .map(line => line.trim())
         .filter(line => !!line && !line.startsWith('#') && line.includes('='));
@@ -70,11 +81,10 @@ export function generateEnvLoader(
         seenKeys.add(key);
     }
     const project = new Project();
-    ensureDir(OUTPUT_PATH);
 
-    const sourceFile = project.createSourceFile(`${OUTPUT_PATH}/${OUTPUT_FILE}`, '', {overwrite: true});
+    const sourceFile = project.createSourceFile(`${outputDir}/${outputFile}`, '', {overwrite: true});
     sourceFile.addClass({
-        name: CLASS_NAME,
+        name: envClassName,
         isExported: true,
         properties: envVars.map(({key, value, inferred}) => ({
             name: key,
@@ -87,7 +97,7 @@ export function generateEnvLoader(
 
     // Optionally generate an enum of the keys
     sourceFile.addEnum({
-        name: ENUM_NAME,
+        name: envEnumName,
         isExported: true,
         members: envVars.map(({key}) => ({
             name: key,
