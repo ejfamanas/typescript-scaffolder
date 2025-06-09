@@ -1,0 +1,12 @@
+{
+  "id": "u_123",
+  "email": "alice@example.com",
+  "age": 29,
+  "isActive": true,
+  "roles": ["admin", "editor"],
+  "preferences": {
+    "newsletter": true,
+    "theme": "dark"
+  },
+  "lastLogin": "2024-12-01T10:15:30Z"
+}
