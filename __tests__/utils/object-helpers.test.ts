@@ -1,24 +1,28 @@
-import { deriveInterfaceName, inferPrimitiveType } from '../../src/utils/object-helpers';
+import { deriveObjectName, inferPrimitiveType } from '../../src/utils/object-helpers';
 
-describe('deriveInterfaceName', () => {
-    it('converts kebab-case to PascalCase', () => {
-        const result = deriveInterfaceName('/some/path/user-profile.json');
-        expect(result).toBe('UserProfile');
+describe('deriveObjectName', () => {
+    it('should convert kebab-case to PascalCase', () => {
+        expect(deriveObjectName('user-profile.json')).toBe('UserProfile');
     });
 
-    it('converts snake_case to PascalCase', () => {
-        const result = deriveInterfaceName('/some/path/order_log.json');
-        expect(result).toBe('OrderLog');
+    it('should convert snake_case to PascalCase preserving underscores', () => {
+        expect(deriveObjectName('order_log.json')).toBe('Order_Log');
     });
 
-    it('handles filenames without dashes or underscores', () => {
-        const result = deriveInterfaceName('/some/path/customer.json');
-        expect(result).toBe('Customer');
+    it('should handle mixed case filenames', () => {
+        expect(deriveObjectName('Custom_File_Name.json')).toBe('Custom_File_Name');
     });
 
-    it('handles complex filenames', () => {
-        const result = deriveInterfaceName('/some/path/admin-user_log-entry.json');
-        expect(result).toBe('AdminUserLogEntry');
+    it('should camelCase lowercase filenames', () => {
+        expect(deriveObjectName('user_data.json')).toBe('User_Data');
+    });
+
+    it('should remove dashes but preserve underscores', () => {
+        expect(deriveObjectName('data-fetch_log.json')).toBe('DataFetch_Log');
+    });
+
+    it('should handle single word filenames', () => {
+        expect(deriveObjectName('Invoice.json')).toBe('Invoice');
     });
 });
 
