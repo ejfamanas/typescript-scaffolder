@@ -39,14 +39,14 @@ export async function inferJsonSchema(json: string, interfaceName: string): Prom
         const result = await quicktype({
             inputData,
             lang: 'typescript',
-            rendererOptions: { 'just-types': 'true' }
+            rendererOptions: {
+                'infer-enums': 'false',
+                'prefer-unions': 'false',
+                'just-types': 'true',
+            }
         });
-
-        // Prevent enums from being generated due to repeated values in arrays
-        const filteredLines = result.lines.filter(line => !line.trim().startsWith('export enum'));
-        const rawSchema = filteredLines.join('\n');
-
-        return renameFirstInterface(rawSchema, interfaceName);
+        Logger.debug(funcName, 'Schema successfully inferred');
+        return renameFirstInterface(result.lines.join('\n'), interfaceName);
     } catch (error: any) {
         Logger.warn(funcName, `Failed to infer JSON schema: ${error}`);
         return null;
