@@ -73,6 +73,17 @@ export interface Preferences {
 }
 ```
 
+### IMPORTANT: Considerations for ingested JSON
+- If your json has an array of examples, all of which are the same object shape,
+please only use one object entry to avoid accidental enum inference from repeating values.
+
+- If a field value in the JSON is listed as "null", it will be coerced to "any" to allow for
+flexibility.
+
+- The scaffolder expects correct values in all fields to infer typings. If a field is optional,
+use the correct value type or see point two when considering "null"
+
+
 ### Enum Generation from Interface (Beta)
 Generate TypeScript enums automatically from existing interfaces to create type-safe keys.
 

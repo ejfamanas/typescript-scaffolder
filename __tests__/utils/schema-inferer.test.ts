@@ -85,4 +85,18 @@ describe('inferSchemaFromPath - error handling', () => {
         const result = await inferJsonSchemaFromPath('/nonexistent/file.json');
         expect(result).toBeNull();
     });
+
+    it('should convert null values to any type', async () => {
+        const input = JSON.stringify({
+            id: null,
+            name: "Alice",
+            metadata: null
+        });
+
+        const result = await inferJsonSchema(input, "NullableExample");
+        console.log(result);
+        expect(result).toMatch(/id:\s*any/);
+        expect(result).toMatch(/metadata:\s*any/);
+        expect(result).toMatch(/name:\s*string/);
+    });
 });
