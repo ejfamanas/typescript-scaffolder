@@ -42,8 +42,10 @@ export async function inferJsonSchema(json: string, interfaceName: string): Prom
             rendererOptions: { 'just-types': 'true' }
         });
 
-        Logger.debug(funcName, 'Successfully inferred schema');
-        const rawSchema = result.lines.join('\n');
+        // Prevent enums from being generated due to repeated values in arrays
+        const filteredLines = result.lines.filter(line => !line.trim().startsWith('export enum'));
+        const rawSchema = filteredLines.join('\n');
+
         return renameFirstInterface(rawSchema, interfaceName);
     } catch (error: any) {
         Logger.warn(funcName, `Failed to infer JSON schema: ${error}`);
