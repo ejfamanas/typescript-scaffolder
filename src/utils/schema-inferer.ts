@@ -46,7 +46,10 @@ export async function inferJsonSchema(json: string, interfaceName: string): Prom
             }
         });
         Logger.debug(funcName, 'Schema successfully inferred');
-        return renameFirstInterface(result.lines.join('\n'), interfaceName);
+        const cleanedLines = result.lines.map((line: string) =>
+            line.replace(/(:\s*)null\b/, (_, group1) => `${group1}any`)
+        );
+        return renameFirstInterface(cleanedLines.join('\n'), interfaceName);
     } catch (error: any) {
         Logger.warn(funcName, `Failed to infer JSON schema: ${error}`);
         return null;
