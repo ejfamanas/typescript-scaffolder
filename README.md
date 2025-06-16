@@ -74,11 +74,16 @@ export interface Preferences {
 ```
 
 ### IMPORTANT: Considerations for ingested JSON
+**⚠️ JSON validators may emit warnings for structural issues. Check logs for details.**
 - If your json has an array of examples, all of which are the same object shape,
 please only use one object entry to avoid accidental enum inference from repeating values.
 
 - If a field value in the JSON is listed as "null", it will be coerced to "any" to allow for
 flexibility.
+
+- If your JSON schema contains duplicate keys or identical keys across deeply nested objects, 
+QuickType may produce incorrect or recursive TypeScript interfaces.
+To avoid this, ensure your JSON is well-structured with uniquely named keys at each nesting level.
 
 - The scaffolder expects correct values in all fields to infer typings. If a field is optional,
 use the correct value type or see point two when considering "null"
