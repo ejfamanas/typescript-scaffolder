@@ -4,7 +4,8 @@ import {
     assertNoDuplicateKeys,
     assertRequiredFields,
     assertStructure
-} from "../../src/utils/schema-validator";
+} from "../../src/utils/structure-validators";
+import {Logger} from "../../src/utils/logger";
 
 
 describe('validate-schema utils', () => {
@@ -15,10 +16,10 @@ describe('validate-schema utils', () => {
             ).not.toThrow();
         });
 
-        it('should throw when required fields are missing', () => {
+        it('should not throw when required fields are missing', () => {
             expect(() =>
                 assertRequiredFields({ id: 1 }, ['id', 'name'])
-            ).toThrow(/Missing required fields: name/);
+            ).not.toThrow();
         });
     });
 
@@ -29,10 +30,10 @@ describe('validate-schema utils', () => {
             ).not.toThrow();
         });
 
-        it('should throw when structure does not match', () => {
+        it('should warn when structure does not match', () => {
             expect(() =>
                 assertStructure({ id: 'abc', age: '30' }, { id: 'string', age: 'number' })
-            ).toThrow(/Field 'age' should be of type 'number'/);
+            ).not.toThrow(/Field 'age' should be of type 'number'/);
         });
     });
 
@@ -42,9 +43,9 @@ describe('validate-schema utils', () => {
             expect(() => assertNoDuplicateKeys(json)).not.toThrow();
         });
 
-        it('should throw when duplicate keys are present', () => {
+        it('should warn when duplicate keys are present', () => {
             const json = '{"id": 1, "id": 2}';
-            expect(() => assertNoDuplicateKeys(json)).toThrow(/Duplicate key detected: id/);
+            expect(() => assertNoDuplicateKeys(json)).not.toThrow();
         });
     });
 
@@ -53,9 +54,9 @@ describe('validate-schema utils', () => {
             expect(() => assertEnumValue('status', 'active', ['active', 'inactive'])).not.toThrow();
         });
 
-        it('should throw when value is not in enum', () => {
+        it('should warn when value is not in enum', () => {
             expect(() => assertEnumValue('status', 'archived', ['active', 'inactive']))
-                .toThrow(/Field 'status' must be one of/);
+                .not.toThrow();
         });
     });
 
@@ -64,12 +65,53 @@ describe('validate-schema utils', () => {
             expect(() => assertInRange('score', 80, 0, 100)).not.toThrow();
         });
 
-        it('should throw when value is out of range', () => {
-            expect(() => assertInRange('score', 150, 0, 100)).toThrow(/must be between/);
+        it('should not throw when value is out of range', () => {
+            expect(() => assertInRange('score', 150, 0, 100)).not.toThrow();
         });
 
-        it('should throw when value is not a number', () => {
-            expect(() => assertInRange('score', 'notANumber' as any, 0, 100)).toThrow(/must be a number/);
+        it('should not throw when value is not a number', () => {
+            expect(() => assertInRange('score', 'notANumber' as any, 0, 100)).not.toThrow();
         });
+    });
+});
+
+describe('schema-validator warnings on garbage input', () => {
+    it('should warn on duplicate keys and invalid structure', () => {
+        const spyWarn = jest.spyOn(Logger, 'warn').mockImplementation(() => {});
+        const json = `
+        {
+            "id": 1,
+            "id": 2,
+            "errorCode": 123,
+            "errorDesc": null
+        }
+        `;
+
+        // Run duplicate key check
+        assertNoDuplicateKeys(json);
+
+        // Run structure check
+        const parsed = JSON.parse(json);
+        assertStructure(parsed, {
+            errorCode: 'string',
+            errorDesc: 'string',
+        });
+
+        expect(spyWarn).toHaveBeenCalledWith(
+            'assertNoDuplicateKeys',
+            expect.stringContaining('Duplicate key detected: id')
+        );
+
+        expect(spyWarn).toHaveBeenCalledWith(
+            'assertStructure',
+            expect.stringContaining("Field 'errorCode' should be of type 'string'")
+        );
+
+        expect(spyWarn).toHaveBeenCalledWith(
+            'assertStructure',
+            expect.stringContaining("Field 'errorDesc' should be of type 'string'")
+        );
+
+        spyWarn.mockRestore();
     });
 });

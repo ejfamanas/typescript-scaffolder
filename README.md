@@ -1,36 +1,7 @@
 # TypeScript Scaffolder
 
 Generates typescript code based off of files or schemas such as JSON. 
-## ✨ Version 1.3.5-beta
-
-### Environment Variable Interface (Beta)
-- Reduces need for calling dotenv.config() from multiple areas
-- Creates an environment variable handler
-- Automatically generated based on keys declared in .env file
-- Automatically creates default values based on declared in .env file
-- Supports filenames such as .env.local or .env.prod as well
-
-This file:
-```
-SCHEMAS_DIR="schemas"
-OUTPUT_DIR_ROOT="codegen"
-INTERFACES_ROOT="interfaces"
-```
-
-Will give you:
-```
-export class EnvConfig {
-    static readonly SCHEMAS_DIR: string = process.env.SCHEMAS_DIR ?? '"schemas"';
-    static readonly OUTPUT_DIR_ROOT: string = process.env.OUTPUT_DIR_ROOT ?? '"codegen"';
-    static readonly INTERFACES_ROOT: string = process.env.INTERFACES_ROOT ?? '"interfaces"';
-}
-
-export enum EnvKeys {
-    SCHEMAS_DIR = "SCHEMAS_DIR",
-    OUTPUT_DIR_ROOT = "OUTPUT_DIR_ROOT",
-    INTERFACES_ROOT = "INTERFACES_ROOT"
-}
-```
+## ✨ Version 1.3.63 with beta features
 
 ### Interface Generation (Stable)
 Generate TypeScript interfaces automatically from JSON schemas or raw JSON data.
@@ -74,15 +45,48 @@ export interface Preferences {
 ```
 
 ### IMPORTANT: Considerations for ingested JSON
+**⚠️ JSON validators may emit warnings for structural issues. Check logs for details.**
 - If your json has an array of examples, all of which are the same object shape,
 please only use one object entry to avoid accidental enum inference from repeating values.
 
 - If a field value in the JSON is listed as "null", it will be coerced to "any" to allow for
 flexibility.
 
+- If your JSON schema contains duplicate keys or identical keys across deeply nested objects, 
+QuickType may produce incorrect or recursive TypeScript interfaces.
+To avoid this, ensure your JSON is well-structured with uniquely named keys at each nesting level.
+
 - The scaffolder expects correct values in all fields to infer typings. If a field is optional,
 use the correct value type or see point two when considering "null"
 
+### Environment Variable Interface (Beta)
+- Reduces need for calling dotenv.config() from multiple areas
+- Creates an environment variable handler
+- Automatically generated based on keys declared in .env file
+- Automatically creates default values based on declared in .env file
+- Supports filenames such as .env.local or .env.prod as well
+
+This file:
+```
+SCHEMAS_DIR="schemas"
+OUTPUT_DIR_ROOT="codegen"
+INTERFACES_ROOT="interfaces"
+```
+
+Will give you:
+```
+export class EnvConfig {
+    static readonly SCHEMAS_DIR: string = process.env.SCHEMAS_DIR ?? '"schemas"';
+    static readonly OUTPUT_DIR_ROOT: string = process.env.OUTPUT_DIR_ROOT ?? '"codegen"';
+    static readonly INTERFACES_ROOT: string = process.env.INTERFACES_ROOT ?? '"interfaces"';
+}
+
+export enum EnvKeys {
+    SCHEMAS_DIR = "SCHEMAS_DIR",
+    OUTPUT_DIR_ROOT = "OUTPUT_DIR_ROOT",
+    INTERFACES_ROOT = "INTERFACES_ROOT"
+}
+```
 
 ### Enum Generation from Interface (Beta)
 Generate TypeScript enums automatically from existing interfaces to create type-safe keys.
@@ -186,7 +190,7 @@ main();
 [X] Generate typescript interfaces from schema definitions <br>
 [X] Generate typescript enums to assert key names to avoid magic strings <br>
 [X] Generate typescript accessor to access environment variables <br>
-[ ] Command line interface access
+[ ] Command line interface access <br>
 [X] Scaffolding for service mocking (GET) <br>
 [ ] Scaffolding for service mocking (POST) <br>
 [ ] Scaffolding for service mocking (PUT) <br>
