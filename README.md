@@ -1,7 +1,7 @@
 # TypeScript Scaffolder
 
 Generates typescript code based off of files or schemas such as JSON. 
-## ✨ Version 1.3.64 with beta features
+## ✨ Version 1.3.65 with beta features
 
 ### Interface Generation (Stable)
 Generate TypeScript interfaces automatically from JSON schemas or raw JSON data.
