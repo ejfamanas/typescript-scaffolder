@@ -3,13 +3,13 @@
 Generates typescript code based off of files or schemas such as JSON. Best used when creating integrations APIs that 
 use json to express their schemas, such as RESTful APIs
 
-## ✨ Version 1.3.65 with 97.64% unit test coverage
+## ✨ Version 1.3.66 with 97.64% unit test coverage
 
 ### Interface Generation
 Generate TypeScript interfaces automatically from JSON schemas or raw JSON data.
 
 - Infers full TypeScript interfaces using [quicktype](https://github.com/quicktype/quicktype)
-- Supports nested objects, arrays, optional fields, unions
+- Supports nested objects, and arrays
 - Preserves directory structure from i.e. `schemas/<folder_name>` into `codegen/interfaces/<folder_name>`
 - Automatically creates output folders if they don't exist
 
