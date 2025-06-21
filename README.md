@@ -3,6 +3,7 @@
 Generates typescript code based off of files or schemas such as JSON. Best used when creating integrations APIs that <br>
 use json to express their schemas, such as RESTful APIs
 
+
 ## ✨ Version 1.3.64 with 97.64% unit test coverage
 
 ### Interface Generation
