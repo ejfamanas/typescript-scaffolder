@@ -32,6 +32,10 @@ export function inferPrimitiveType(value: string): 'string' | 'number' | 'boolea
 	return 'string';
 }
 
+/**
+ * scans a json object and identifies all duplicate keys for preprocessing
+ * @param input
+ */
 export function findGloballyDuplicatedKeys(input: any): Set<string> {
 	const keyCounts = new Map<string, number>();
 
@@ -53,19 +57,42 @@ export function findGloballyDuplicatedKeys(input: any): Set<string> {
 		.map(([key]) => key));
 }
 
+/**
+ * A preprocessor for Quicktype to prefix duplicate keys so that it does not create circular references
+ * or bad interfaces. Will prefix all duplicate keys with the field name of the parent. The prefix is then
+ * removed later downstream.
+ * @param input
+ * @param duplicateKeys
+ */
 export function prefixDuplicateKeys(input: any, duplicateKeys: Set<string>): any {
-	const clone = JSON.parse(JSON.stringify(input));
+	const funcName = 'prefixDuplicateKeys';
+	const clone = JSON.parse(JSON.stringify(input)); // deep clone to avoid mutation
 
 	function transform(node: any, parentKey: string | null = null): void {
 		if (Array.isArray(node)) {
-			if (node.length > 1) {
-				Logger.error('prefixDuplicateKeys', `Array at key '${parentKey}' contains more than one item:`, JSON.stringify(node, null, 2));
-				throw new Error(`prefixDuplicateKeys: Only one element is allowed in arrays. Found array of length ${node.length} at key '${parentKey}'`);
+			const objectElements = node.filter(item => typeof item === 'object' && item !== null);
+
+			if (objectElements.length > 1) {
+				Logger.error(funcName,
+					`Array at key '${parentKey}' contains more than one object:`,
+					JSON.stringify(node, null, 2)
+				);
+				throw new Error(
+					`prefixDuplicateKeys: Only one element is allowed in arrays. Found array of length ${objectElements.length} at key '${parentKey}'`
+				);
 			}
-			if (node.length > 0) {
-				transform(node[0], parentKey);
+
+			// Recurse on the first object element (if any)
+			if (objectElements.length === 1) {
+				transform(objectElements[0], parentKey);
 			}
-		} else if (typeof node === 'object' && node !== null) {
+
+			// Primitive arrays are ignored
+			return;
+		}
+
+		if (typeof node === 'object' && node !== null) {
+			// First: rewrite duplicate keys
 			if (parentKey) {
 				for (const key of Object.keys(node)) {
 					if (duplicateKeys.has(key)) {
@@ -75,7 +102,8 @@ export function prefixDuplicateKeys(input: any, duplicateKeys: Set<string>): any
 				}
 			}
 
-			for (const key in node) {
+			// Then recurse into each property
+			for (const key of Object.keys(node)) {
 				transform(node[key], key);
 			}
 		}
