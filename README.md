@@ -1,9 +1,9 @@
 # TypeScript Scaffolder
 
-Generates typescript code based off of files or schemas such as JSON. Best used when creating integrations APIs that 
-use json to express their schemas, such as RESTful APIs
+```typescript-scaffolder``` is a CLI-first codegen utility that creates TypeScript interfaces, enums, and config accessors from structured inputs like JSON, .env files, or interface definitions.
+Ideal for API integrations that expose schema via JSON — just drop the file in and generate clean, typed code for full-stack use. You can also integrate this into CI pipelines or dev scripts to keep generated types in sync with your schemas.
 
-## ✨ Version 1.3.66 with 97.64% unit test coverage
+## ✨ Version 1.3.67 with 97.64% unit test coverage
 
 ### Interface Generation
 Generate TypeScript interfaces automatically from JSON schemas or raw JSON data.
@@ -212,18 +212,15 @@ const ENV_OUTPUT_DIR        = path.resolve(LOCAL_DIR, 'codegen/config');
 const ENV_OUTPUT_FILE       = 'env-config.ts';
 
 async function main(): Promise<void> {
-    // using the env accessor (BETA)
+    // using the env accessor
     // this is a sync function, and should be run first anyway
     generateEnvLoader(ENV_FILE, ENV_OUTPUT_DIR, ENV_OUTPUT_FILE);
 
-    // using the interface generator (STABLE)
+    // using the interface generator
     await generateInterfacesFromPath(SCHEMA_INPUT_DIR, INTERFACE_OUTPUT_DIR)
 
-    // use the enum generator from the output of the interface generator (BETA)
+    // use the enum generator from the output of the interface generator
     await generateEnumsFromPath(INTERFACE_OUTPUT_DIR, ENUM_OUTPUT_DIR);
-
-    // using the mock server scaffolder (ALPHA)
-    await scaffoldMockServer(SCHEMA_INPUT_DIR);
 }
 
 main();
@@ -231,9 +228,9 @@ main();
 
 
 ## Roadmap
-[X] Generate typescript interfaces from schema definitions <br>
-[X] Generate typescript enums to assert key names to avoid magic strings <br>
-[X] Generate typescript accessor to access environment variables <br>
+[X] Generate TypeScript interfaces from schema definitions <br>
+[X] Generate TypeScript enums to assert key names to avoid magic strings <br>
+[X] Generate TypeScript accessor to access environment variables <br>
 [ ] Command line interface access <br>
 [ ] Scaffolding for service mocking (GET) <br>
 [ ] Scaffolding for service mocking (POST) <br>
@@ -242,6 +239,24 @@ main();
 [ ] Generate enums from definitions <br>
 [ ] Generate classes from schema definitions <br>
 [ ] Declarative function generation <br>
+
+## Reporting Bugs
+
+If you encounter a bug or unexpected behavior, please open an issue with:
+
+- A clear description of the problem
+- Steps to reproduce it (code snippets, input files, etc.)
+- The expected vs. actual result
+- Your environment (OS, Node.js version, TypeScript version)
+
+Bug reports are appreciated and help improve the project, even if you're not submitting a fix directly.
+
+## Contributing
+
+This project is currently maintained as a solo project. While issues and ideas are welcome, I’m not accepting external pull requests at this time.
+
+## Repo
+https://github.com/ejfamanas/typescript-scaffolder
 
 ## License
 Licensed under the [MIT License](LICENSE).
