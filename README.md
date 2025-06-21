@@ -1,9 +1,11 @@
 # TypeScript Scaffolder
 
-Generates typescript code based off of files or schemas such as JSON. 
-## ✨ Version 1.3.65 with beta features
+Generates typescript code based off of files or schemas such as JSON. Best used when creating integrations APIs that 
+use json to express their schemas, such as RESTful APIs
 
-### Interface Generation (Stable)
+## ✨ Version 1.3.64 with 97.64% unit test coverage
+
+### Interface Generation
 Generate TypeScript interfaces automatically from JSON schemas or raw JSON data.
 
 - Infers full TypeScript interfaces using [quicktype](https://github.com/quicktype/quicktype)
@@ -43,23 +45,69 @@ export interface Preferences {
     theme:      string;
 }
 ```
+It will also format out nested objects, where this file
+```
+{
+  "records": [
+    {
+      "userID": 101,
+      "sessionKey": "abc123",
+      "events": [
+        {
+          "eventID": 1,
+          "status": "ok",
+          "code": 200,
+          "message": "Success"
+        }
+      ],
+      "status": "ok",
+      "code": 200,
+      "message": "Success"
+    }
+  ],
+  "status": "ok",
+  "code": 200,
+  "message": "Success"
+}
+```
+Will give you:
+```
+export interface ApiResponse {
+  records:    Record[];
+  status:     string;
+  code:       number;
+  message:    string;
+}
+
+export interface Record {
+  userID:      number;
+  sessionKey:  string;
+  events:      Event[];
+  status:      string;
+  code:        number;
+  message:     string;
+}
+
+export interface Event {
+  eventID:     number;
+  status:      string;
+  code:        number;
+  message:     string;
+}
+```
 
 ### IMPORTANT: Considerations for ingested JSON
 **⚠️ JSON validators may emit warnings for structural issues. Check logs for details.**
-- If your json has an array of examples, all of which are the same object shape,
-please only use one object entry to avoid accidental enum inference from repeating values.
+- If your json has an array of objects, the program will throw to avoid unpredictable behaviour from Quicktype <br>
+like unions or circular references. Please only use one object entry per array to avoid this.
 
 - If a field value in the JSON is listed as "null", it will be coerced to "any" to allow for
 flexibility.
 
-- If your JSON schema contains duplicate keys or identical keys across deeply nested objects, 
-QuickType may produce incorrect or recursive TypeScript interfaces.
-To avoid this, ensure your JSON is well-structured with uniquely named keys at each nesting level.
-
 - The scaffolder expects correct values in all fields to infer typings. If a field is optional,
 use the correct value type or see point two when considering "null"
 
-### Environment Variable Interface (Beta)
+### Environment Variable Interface
 - Reduces need for calling dotenv.config() from multiple areas
 - Creates an environment variable handler
 - Automatically generated based on keys declared in .env file
@@ -88,7 +136,7 @@ export enum EnvKeys {
 }
 ```
 
-### Enum Generation from Interface (Beta)
+### Enum Generation from Interface
 Generate TypeScript enums automatically from existing interfaces to create type-safe keys.
 
 - Handles multiple interfaces per file
@@ -129,10 +177,6 @@ export enum PreferencesKeys {
   theme = "theme"
 }
 ```
-
-### Mock Server Generation (GET) (Alpha)
-- Reads all json files within a directory tree and scaffolds out mock server endpoints for GET requests
----
 
 ## Installation
 To install the package, run the following command
@@ -191,7 +235,7 @@ main();
 [X] Generate typescript enums to assert key names to avoid magic strings <br>
 [X] Generate typescript accessor to access environment variables <br>
 [ ] Command line interface access <br>
-[X] Scaffolding for service mocking (GET) <br>
+[ ] Scaffolding for service mocking (GET) <br>
 [ ] Scaffolding for service mocking (POST) <br>
 [ ] Scaffolding for service mocking (PUT) <br>
 [ ] Scaffolding for service mocking (DELETE) <br>
