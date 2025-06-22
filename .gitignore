@@ -145,3 +145,4 @@ dist
 /data/
 /coverage/
 /codegen/
+/src/codegen/

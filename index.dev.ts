@@ -1,5 +1,7 @@
 import path from "path";
 import {generateEnumsFromPath, generateEnvLoader, generateInterfacesFromPath} from "./src";
+import { generateApiClientFunction, generateApiClientsFromFile } from './src/features/generate-api-client';
+import { readEndpointClientConfigFile } from './src/utils/file-system';
 
 const ROOT_DIR = process.cwd();                // Base dir where the script is run
 const LOCAL_DIR = __dirname;                   // Base dir where this file lives
@@ -9,8 +11,8 @@ const SCHEMA_INPUT_DIR = path.resolve(LOCAL_DIR, 'config/schemas');
 const INTERFACE_OUTPUT_DIR = path.resolve(LOCAL_DIR, 'codegen/interfaces');
 
 // Client endpoint generation config
-const ENDPOINT_CONFIG_DIR = path.resolve(LOCAL_DIR, 'config/endpoints');
-const ENDPOINT_CLIENT_OUTPUT_DIR = path.resolve(LOCAL_DIR, 'codegen/endpoints');
+const ENDPOINT_CONFIG_PATH = path.resolve(LOCAL_DIR, 'config/endpoint-configs/example.json');
+
 
 // Generate enums, this will use the previously generated interface output
 const ENUM_OUTPUT_DIR = path.resolve(LOCAL_DIR, 'codegen/enums');
@@ -21,16 +23,18 @@ const ENV_OUTPUT_DIR = path.resolve(LOCAL_DIR, 'codegen/config');
 const ENV_OUTPUT_FILE = 'env-config.ts';
 
 async function build() {
-    // using the env accessor (BETA)
+    // using the env accessor
     // this is a sync function, and should be run first anyway
     generateEnvLoader(ENV_FILE, ENV_OUTPUT_DIR, ENV_OUTPUT_FILE);
 
-    // using the interface generator (BETA)
+    // using the interface generator
     await generateInterfacesFromPath(SCHEMA_INPUT_DIR, INTERFACE_OUTPUT_DIR)
 
-    // use the enum generator from the output of the interface generator (BETA)
+    // use the enum generator from the output of the interface generator
     await generateEnumsFromPath(INTERFACE_OUTPUT_DIR, ENUM_OUTPUT_DIR);
 
+    // Generates an object-centric api client based on a config file
+    await generateApiClientsFromFile(ENDPOINT_CONFIG_PATH, 'source-charlie');
 }
 
 build();

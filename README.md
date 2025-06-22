@@ -9,6 +9,7 @@ Ideal for API integrations that expose schema via JSON — just drop the file in
 - Generate TypeScript interfaces from JSON or schemas
 - Auto-create enums from interface keys
 - Typed `.env` accessor generator
+- Typed axios client api generation (alpha)
 - Preserves directory structure
 
 ## Table of Contents
@@ -17,6 +18,7 @@ Ideal for API integrations that expose schema via JSON — just drop the file in
 - [Interface Generation](#interface-generation)
 - [Environment Variable Interface](#environment-variable-interface)
 - [Enum Generation](#enum-generation-from-interface)
+- [Client Api Generation](#api-client-generation-from-interface-alpha)
 - [Roadmap](#roadmap)
 - [Reporting Bugs](#reporting-bugs)
 - [Contributing](#contributing)
@@ -194,6 +196,195 @@ export enum PreferencesKeys {
 }
 ```
 
+### API Client generation from interface (ALPHA)
+Generate TypeScript GET_ALL, GET, POST, PUT, DELETE REST Api client based on a configuration file 
+that uses referenced interfaces for typing. The following interface is used to define the api config
+
+```
+export type Method = 'GET' | 'POST' | 'PUT' | 'DELETE'
+export type AuthType = 'basic' | 'apikey' | 'none'
+
+export interface Endpoint {
+	method: Method;
+	path: string;
+	objectName: string;
+	operationName?: string;
+	pathParams?: string[];
+	queryParams?: string[];
+	headers?: Record<string, string>;
+
+	requestSchema?: string;
+	responseSchema: string;
+}
+
+export type EndpointConfigType = {
+	baseUrl: string
+	endpoints: Endpoint[]
+};
+
+export interface EndpointAuthConfig {
+	authType: AuthType;
+	credentials?: {
+		username?: string;
+		password?: string;
+		apiKeyName?: string;
+		apiKeyValue?: string;
+	};
+}
+
+export interface EndpointClientConfigFile extends EndpointConfigType, EndpointAuthConfig {
+}
+```
+As an example, if you have interfaces generated from the following JSON files:
+```
+GET_RES_people.json // defines an array
+GET_RES_person.json // defines a single object
+POST_REQ_create_person.json // defines a single object for creation
+```
+And you define your JSON config as below:
+```
+{
+  "baseUrl": "https://api.example.com",
+  "endpoints": [
+    {
+      "method": "GET",
+      "path": "/people",
+      "responseSchema": "GET_RES_people",
+      "pathParams": [],
+      "objectName": "person"
+    },
+    {
+      "method": "GET",
+      "path": "/people/:id",
+      "responseSchema": "GET_RES_person",
+      "pathParams": ["id"],
+      "objectName": "person"
+    },
+    {
+      "method": "POST",
+      "path": "/people",
+      "requestSchema": "POST_REQ_create_person",
+      "responseSchema": "GET_RES_person",
+      "pathParams": [],
+      "objectName": "person"
+    },
+    {
+      "method": "PUT",
+      "path": "/people/:id",
+      "requestSchema": "POST_REQ_create_person",
+      "responseSchema": "GET_RES_person",
+      "pathParams": ["id"],
+      "objectName": "person"
+    },
+    {
+      "method": "DELETE",
+      "path": "/people/:id",
+      "responseSchema": "GET_RES_person",
+      "pathParams": ["id"],
+      "objectName": "person"
+    }
+
+  ],
+  "authType": "apikey",
+  "credentials": {
+    "apiKeyName": "x-api-key",
+    "apiKeyValue": "test-1234"
+  }
+}
+```
+The system will produce a file called person_api.ts
+```
+import { GET_RES_people } from "../../interfaces/source-charlie/GET_RES_people";
+import axios from "axios";
+import { GET_RES_person } from "../../interfaces/source-charlie/GET_RES_person";
+import { POST_REQ_create_person } from "../../interfaces/source-charlie/POST_REQ_create_person";
+
+export async function GET_ALL_person(headers?: Record<string, string>): Promise<GET_RES_people> {
+
+          const authHeaders = { "x-api-key": "test-1234" };
+          const response = await axios.get(
+            `https://api.example.com/people`,
+            
+            {
+              headers: {
+                ...authHeaders,
+                ...headers,
+              },
+            }
+          );
+          return response.data;
+        
+}
+
+export async function GET_person(id: string, headers?: Record<string, string>): Promise<GET_RES_person> {
+
+          const authHeaders = { "x-api-key": "test-1234" };
+          const response = await axios.get(
+            `https://api.example.com/people/${id}`,
+            
+            {
+              headers: {
+                ...authHeaders,
+                ...headers,
+              },
+            }
+          );
+          return response.data;
+        
+}
+
+export async function POST_person(body: POST_REQ_create_person, headers?: Record<string, string>): Promise<GET_RES_person> {
+
+          const authHeaders = { "x-api-key": "test-1234" };
+          const response = await axios.post(
+            `https://api.example.com/people`,
+            body,
+            {
+              headers: {
+                ...authHeaders,
+                ...headers,
+              },
+            }
+          );
+          return response.data;
+        
+}
+
+export async function PUT_person(id: string, body: POST_REQ_create_person, headers?: Record<string, string>): Promise<GET_RES_person> {
+
+          const authHeaders = { "x-api-key": "test-1234" };
+          const response = await axios.put(
+            `https://api.example.com/people/${id}`,
+            body,
+            {
+              headers: {
+                ...authHeaders,
+                ...headers,
+              },
+            }
+          );
+          return response.data;
+        
+}
+
+export async function DELETE_person(id: string, headers?: Record<string, string>): Promise<GET_RES_person> {
+
+          const authHeaders = { "x-api-key": "test-1234" };
+          const response = await axios.delete(
+            `https://api.example.com/people/${id}`,
+            
+            {
+              headers: {
+                ...authHeaders,
+                ...headers,
+              },
+            }
+          );
+          return response.data;
+        
+}
+
+```
 ## Installation
 To install the package, run the following command
 ```
@@ -202,31 +393,56 @@ npm install typescript-scaffolder
 ---
 
 ## Usage
+### IMPORTANT: Considerations for where to place generated code
+If you intend to import the generated output into your main application code (e.g., use interfaces or API clients),
+we recommend placing the `codegen/` directory inside your `src/` folder.
+
+For example:
+```
+src/
+  codegen/
+    interfaces/
+    apis/
+    config/
+```
+
+This ensures:
+- TypeScript includes the generated files in your compilation scope
+- IDE tools (like IntelliSense or import resolution) behave correctly
+- You avoid pathing issues or brittle import warnings
+
+If you keep `codegen/` outside of `src/`, you may need to update your `tsconfig.json` to include it,
+or manually relocate usable outputs into `src/` after generation.
+
+### Example usages
+
 Please refer to the following code block for example usages:
 ```
 import path from "path";
-import {
-    generateEnumsFromPath,
-    generateEnvLoader,
-    generateInterfacesFromPath,
-    } from "typescript-scaffolder";
+import {generateEnumsFromPath, generateEnvLoader, generateInterfacesFromPath} from "./src";
+import { generateApiClientFunction, generateApiClientsFromFile } from './src/features/generate-api-client';
+import { readEndpointClientConfigFile } from './src/utils/file-system';
 
 const ROOT_DIR = process.cwd();                // Base dir where the script is run
 const LOCAL_DIR = __dirname;                   // Base dir where this file lives
 
 // Interface generation config
-const SCHEMA_INPUT_DIR      = path.resolve(LOCAL_DIR, 'schemas');
-const INTERFACE_OUTPUT_DIR  = path.resolve(LOCAL_DIR, 'codegen/interfaces');
+const SCHEMA_INPUT_DIR = path.resolve(LOCAL_DIR, 'config/schemas');
+const INTERFACE_OUTPUT_DIR = path.resolve(LOCAL_DIR, 'codegen/interfaces');
+
+// Client endpoint generation config
+const ENDPOINT_CONFIG_PATH = path.resolve(LOCAL_DIR, 'config/endpoint-configs/example.json');
+
 
 // Generate enums, this will use the previously generated interface output
-const ENUM_OUTPUT_DIR       = path.resolve(LOCAL_DIR, 'codegen/enums');
+const ENUM_OUTPUT_DIR = path.resolve(LOCAL_DIR, 'codegen/enums');
 
 // Env accessor config
-const ENV_FILE              = path.resolve(ROOT_DIR, '.env');
-const ENV_OUTPUT_DIR        = path.resolve(LOCAL_DIR, 'codegen/config');
-const ENV_OUTPUT_FILE       = 'env-config.ts';
+const ENV_FILE = path.resolve(ROOT_DIR, '.env');
+const ENV_OUTPUT_DIR = path.resolve(LOCAL_DIR, 'codegen/config');
+const ENV_OUTPUT_FILE = 'env-config.ts';
 
-async function main(): Promise<void> {
+async function build() {
     // using the env accessor
     // this is a sync function, and should be run first anyway
     generateEnvLoader(ENV_FILE, ENV_OUTPUT_DIR, ENV_OUTPUT_FILE);
@@ -236,9 +452,12 @@ async function main(): Promise<void> {
 
     // use the enum generator from the output of the interface generator
     await generateEnumsFromPath(INTERFACE_OUTPUT_DIR, ENUM_OUTPUT_DIR);
+
+    // Generates an object-centric api client based on a config file
+    await generateApiClientsFromFile(ENDPOINT_CONFIG_PATH, 'source-charlie');
 }
 
-main();
+build();
 ```
 
 
@@ -246,6 +465,7 @@ main();
 - [x] Generate TypeScript interfaces from schema definitions
 - [x] Generate TypeScript enums to assert key names
 - [x] Generate TypeScript accessor for environment variables
+- [x] Generate TypeScript axios REST api client from interfaces
 - [ ] Command line interface access
 - [ ] Scaffolding for service mocking (GET, POST, PUT, DELETE)
 - [ ] Generate enums from definitions

@@ -1,9 +1,10 @@
-export type Method = 'GET' | 'POST' | 'PUT'
+export type Method = 'GET' | 'POST' | 'PUT' | 'DELETE'
 export type AuthType = 'basic' | 'apikey' | 'none'
 
 export interface Endpoint {
 	method: Method;
 	path: string;
+	objectName: string;
 	operationName?: string;
 	pathParams?: string[];
 	queryParams?: string[];
