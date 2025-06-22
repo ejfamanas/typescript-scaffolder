@@ -1,4 +1,6 @@
-# TypeScript Scaffolder
+# TypeScript Scaffolder - v1.40
+Includes alpha features for REST API client generation
+
 ![npm version](https://img.shields.io/npm/v/typescript-scaffolder)
 ### Unit Test Coverage: 97.64%
 
