@@ -1,4 +1,4 @@
-export type Method = 'GET' | 'POST' | 'PUT'
+export type Method = 'GET' | 'POST' | 'PUT' | 'DELETE'
 export type AuthType = 'basic' | 'apikey' | 'none'
 
 export interface Endpoint {

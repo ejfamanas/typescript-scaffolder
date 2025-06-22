@@ -48,7 +48,7 @@ export function generateApiClientFunction(
 	const responseSchema = endpoint.responseSchema;
 	const pathParams = endpoint.pathParams ?? [];
 
-	const urlPath = pathParams.reduce((p, param) => p.replace(`{${param}}`, `\$\{${param}\}`), endpoint.path);
+	const urlPath = pathParams.reduce((p, param) => p.replace(`:${param}`, `\${${param}}`), endpoint.path);
 	const IFACE_DIR = path.join(process.cwd(), CODEGEN_DIR_ROOT, INTERFACES_ROOT, inputSubDirectory)
 
 	// Imports
@@ -80,9 +80,9 @@ export function generateApiClientFunction(
 
 	// Function parameters
 	const parameters = [
-		...pathParams.map((param) => ({name: param, type: 'string'})),
-		...(hasBody && requestSchema ? [{name: 'body', type: requestSchema}] : []),
-		{name: 'headers', hasQuestionToken: true, type: 'Record<string, string>'},
+		...pathParams.map((param) => ({ name: param, type: 'string' })),
+		...(hasBody && requestSchema ? [{ name: 'body', type: requestSchema }] : []),
+		{ name: 'headers', hasQuestionToken: true, type: 'Record<string, string>' },
 	];
 
 	if (

@@ -33,26 +33,7 @@ async function build() {
     // use the enum generator from the output of the interface generator
     await generateEnumsFromPath(INTERFACE_OUTPUT_DIR, ENUM_OUTPUT_DIR);
 
-    // Single API client function generation using the previously generated interfaces
-    generateApiClientFunction(
-        'https://example.com',
-        'GET_PERSON',
-        'PERSON_API',
-        {
-            method: 'GET',
-            path: '/people/{id}',
-            objectName: 'person',
-            pathParams: ['id'],
-            responseSchema: 'GET_RES_get_person',
-            requestSchema: 'GET_REQ_get_person',
-        },
-        {
-            authType: 'apikey',
-            credentials: { apiKeyName: 'x-api-key', apiKeyValue: 'abc123' },
-        },
-        'source-charlie'
-    );
-
+    // Generates an object-centric api client based on a config file
     await generateApiClientsFromFile(ENDPOINT_CONFIG_PATH, 'source-charlie');
 }
 

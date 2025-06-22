@@ -22,7 +22,23 @@
       "responseSchema": "GET_RES_person",
       "pathParams": [],
       "objectName": "person"
+    },
+    {
+      "method": "PUT",
+      "path": "/people/:id",
+      "requestSchema": "POST_REQ_create_person",
+      "responseSchema": "GET_RES_person",
+      "pathParams": ["id"],
+      "objectName": "person"
+    },
+    {
+      "method": "DELETE",
+      "path": "/people/:id",
+      "responseSchema": "GET_RES_person",
+      "pathParams": ["id"],
+      "objectName": "person"
     }
+
   ],
   "authType": "apikey",
   "credentials": {
