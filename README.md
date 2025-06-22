@@ -1,4 +1,4 @@
-# TypeScript Scaffolder - v1.40
+# TypeScript Scaffolder
 Includes alpha features for REST API client generation
 
 ![npm version](https://img.shields.io/npm/v/typescript-scaffolder)

@@ -1,6 +1,18 @@
 {
   "name": "typescript-scaffolder",
-  "version": "1.4.00",
+  "version": "1.4.01",
+  "keywords": [
+    "typescript",
+    "codegen",
+    "axios",
+    "json",
+    "json-schema",
+    "env",
+    "scaffold",
+    "api-client",
+    "openapi-alternative",
+    "typescript-generator"
+  ],
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "files": [
