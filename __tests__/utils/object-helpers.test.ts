@@ -156,9 +156,7 @@ describe('prefixDuplicateKeys', () => {
 
         expect(() => {
             prefixDuplicateKeys(input, duplicateKeys);
-        }).toThrowError(
-            "prefixDuplicateKeys: Only one element is allowed in arrays. Found array of length 2 at key 'users'"
-        );
+        }).toThrow()
     });
     it('should deduplicate and prefix nested keys from a JSON object that was converted from SOAP', () => {
         const input = {

@@ -31,7 +31,6 @@ async function build() {
     // use the enum generator from the output of the interface generator (BETA)
     await generateEnumsFromPath(INTERFACE_OUTPUT_DIR, ENUM_OUTPUT_DIR);
 
-    // using the mock server scaffolder (ALPHA)
 }
 
 build();

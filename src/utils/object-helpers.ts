@@ -76,8 +76,9 @@ export function prefixDuplicateKeys(input: any, duplicateKeys: Set<string>): any
 			const objectElements = node.filter(item => typeof item === 'object' && item !== null);
 
 			if (objectElements.length > 1) {
+				const msg = `Array at key '${parentKey}' contains more than one object:`
 				Logger.error(funcName,
-					`Array at key '${parentKey}' contains more than one object:`,
+					msg,
 					JSON.stringify(node, null, 2)
 				);
 			}
