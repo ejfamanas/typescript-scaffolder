@@ -1,6 +1,6 @@
 import fs from 'fs';
 import path from 'path';
-import {ensureDir, walkDirectory} from "../../src/utils/file-system";
+import { ensureDir, readEndpointClientConfigFile, walkDirectory } from "../../src/utils/file-system";
 
 const TEST_ROOT = path.join(__dirname, '__testdata__');
 
@@ -177,5 +177,56 @@ describe('walkDirectory failure cases', () => {
             found.push(relativePath);
         }, TEST_ROOT, '.md'); // no .md files in the test tree
         expect(found).toEqual([]);
+    });
+});
+
+describe('readEndpointClientConfigFile', () => {
+    const testFilePath = path.join(TEST_ROOT, 'endpoint-config.json');
+
+    it('returns parsed config if valid', () => {
+        const validConfig = {
+            baseUrl: "https://example.com",
+            authType: "basic",
+            credentials: {
+                username: "user",
+                password: "pass"
+            },
+            endpoints: [
+                {
+                    method: "GET",
+                    path: "/test",
+                    responseSchema: "TestResponse"
+                }
+            ]
+        };
+
+        fs.writeFileSync(testFilePath, JSON.stringify(validConfig, null, 2));
+        const result = readEndpointClientConfigFile(testFilePath);
+
+        expect(result).not.toBeNull();
+        expect(result?.baseUrl).toBe("https://example.com");
+        expect(result?.authType).toBe("basic");
+        expect(result?.endpoints.length).toBe(1);
+    });
+
+    it('throws if file does not exist', () => {
+        expect(() => {
+            readEndpointClientConfigFile(path.join(TEST_ROOT, 'does-not-exist.json'));
+        }).toThrowError(/Config file not found at path/);
+    });
+
+    it('throws on malformed JSON', () => {
+        fs.writeFileSync(testFilePath, '{ bad json ');
+        expect(() => {
+            readEndpointClientConfigFile(testFilePath);
+        }).toThrowError(/Failed to parse config JSON/);
+    });
+
+    it('throws on structurally invalid config', () => {
+        const invalidConfig = { hello: "world" }; // missing baseUrl, endpoints
+        fs.writeFileSync(testFilePath, JSON.stringify(invalidConfig));
+        expect(() => {
+            readEndpointClientConfigFile(testFilePath);
+        }).toThrowError(/Invalid structure in EndpointClientConfigFile/);
     });
 });

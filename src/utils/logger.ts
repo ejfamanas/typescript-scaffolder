@@ -54,6 +54,7 @@ export class Logger {
         const msg = util.format(...args);
         console.error(`${Logger.prefix} ${LogTag.Error} ${funcTag}`, msg);
         Logger.append(LogLevel.Error, funcTag, msg);
+        throw new Error(`[${funcName}]${funcTag}: ${msg}`);
     }
 
     static debug(funcName: string, ...args: any[]) {

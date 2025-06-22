@@ -193,7 +193,6 @@ import {
     generateEnumsFromPath,
     generateEnvLoader,
     generateInterfacesFromPath,
-    scaffoldMockServer
     } from "typescript-scaffolder";
 
 const ROOT_DIR = process.cwd();                // Base dir where the script is run
@@ -221,9 +220,6 @@ async function main(): Promise<void> {
 
     // use the enum generator from the output of the interface generator (BETA)
     await generateEnumsFromPath(INTERFACE_OUTPUT_DIR, ENUM_OUTPUT_DIR);
-
-    // using the mock server scaffolder (ALPHA)
-    await scaffoldMockServer(SCHEMA_INPUT_DIR);
 }
 
 main();
@@ -234,6 +230,7 @@ main();
 [X] Generate typescript interfaces from schema definitions <br>
 [X] Generate typescript enums to assert key names to avoid magic strings <br>
 [X] Generate typescript accessor to access environment variables <br>
+[ ] Generate typed GET REST API clients from raw json <br>
 [ ] Command line interface access <br>
 [ ] Scaffolding for service mocking (GET) <br>
 [ ] Scaffolding for service mocking (POST) <br>

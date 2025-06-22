@@ -37,6 +37,9 @@ export function inferPrimitiveType(value: string): 'string' | 'number' | 'boolea
  * @param input
  */
 export function findGloballyDuplicatedKeys(input: any): Set<string> {
+	const funcName = 'findGloballyDuplicatedKeys';
+	Logger.debug(funcName, 'finding globally duplciated keys...');
+
 	const keyCounts = new Map<string, number>();
 
 	function scan(node: any): void {
@@ -77,20 +80,14 @@ export function prefixDuplicateKeys(input: any, duplicateKeys: Set<string>): any
 					`Array at key '${parentKey}' contains more than one object:`,
 					JSON.stringify(node, null, 2)
 				);
-				throw new Error(
-					`prefixDuplicateKeys: Only one element is allowed in arrays. Found array of length ${objectElements.length} at key '${parentKey}'`
-				);
 			}
-
 			// Recurse on the first object element (if any)
 			if (objectElements.length === 1) {
 				transform(objectElements[0], parentKey);
 			}
-
 			// Primitive arrays are ignored
 			return;
 		}
-
 		if (typeof node === 'object' && node !== null) {
 			// First: rewrite duplicate keys
 			if (parentKey) {

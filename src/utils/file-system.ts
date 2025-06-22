@@ -1,6 +1,7 @@
 import fs from 'fs';
 import path from 'path';
 import {Logger} from "./logger";
+import { EndpointClientConfigFile } from '../models/api-definitions';
 
 /**
  * Ensures the directory exists; creates it recursively if it doesn't.
@@ -44,4 +45,33 @@ export function walkDirectory(
             callback(fullPath, relativePath);
         }
     }
+}
+
+export function readEndpointClientConfigFile(configPath: string): EndpointClientConfigFile | null {
+    const funcName = 'readEndpointClientConfigFile';
+    Logger.debug(funcName, `Reading config file from ${configPath}`);
+    if (!fs.existsSync(configPath)) {
+        Logger.error(funcName,`Config file not found at path: ${configPath}`);
+        return null;
+    }
+    const fileContent = fs.readFileSync(configPath, 'utf-8');
+    try {
+        const parsed: unknown = JSON.parse(fileContent);
+
+        // Basic shape check (could later add Zod/Yup validation)
+        if (
+            typeof parsed === 'object' &&
+            parsed !== null &&
+            'baseUrl' in parsed &&
+            'endpoints' in parsed &&
+            Array.isArray((parsed as any).endpoints)
+        ) {
+            return parsed as EndpointClientConfigFile;
+        } else {
+            Logger.error(funcName, 'Invalid structure in EndpointClientConfigFile');
+        }
+    } catch (err) {
+        Logger.error(funcName, 'Failed to parse config JSON', err);
+    }
+    return null;
 }

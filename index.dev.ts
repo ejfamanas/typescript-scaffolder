@@ -1,12 +1,16 @@
 import path from "path";
-import {generateEnumsFromPath, generateEnvLoader, generateInterfacesFromPath, scaffoldMockServer} from "./src";
+import {generateEnumsFromPath, generateEnvLoader, generateInterfacesFromPath} from "./src";
 
 const ROOT_DIR = process.cwd();                // Base dir where the script is run
 const LOCAL_DIR = __dirname;                   // Base dir where this file lives
 
 // Interface generation config
-const SCHEMA_INPUT_DIR = path.resolve(LOCAL_DIR, 'schemas');
+const SCHEMA_INPUT_DIR = path.resolve(LOCAL_DIR, 'config/schemas');
 const INTERFACE_OUTPUT_DIR = path.resolve(LOCAL_DIR, 'codegen/interfaces');
+
+// Client endpoint generation config
+const ENDPOINT_CONFIG_DIR = path.resolve(LOCAL_DIR, 'config/endpoints');
+const ENDPOINT_CLIENT_OUTPUT_DIR = path.resolve(LOCAL_DIR, 'codegen/endpoints');
 
 // Generate enums, this will use the previously generated interface output
 const ENUM_OUTPUT_DIR = path.resolve(LOCAL_DIR, 'codegen/enums');
@@ -28,7 +32,6 @@ async function build() {
     await generateEnumsFromPath(INTERFACE_OUTPUT_DIR, ENUM_OUTPUT_DIR);
 
     // using the mock server scaffolder (ALPHA)
-    await scaffoldMockServer(SCHEMA_INPUT_DIR);
 }
 
 build();

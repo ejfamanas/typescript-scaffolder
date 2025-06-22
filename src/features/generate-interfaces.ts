@@ -29,7 +29,6 @@ export async function generateInterfaces(filePath: string, relativePath: string,
     } catch (error) {
         const err = `Critical error when trying to process ${filePath}, ${error}`;
         Logger.error(funcName, err);
-        throw new Error(err);
     }
 }
 

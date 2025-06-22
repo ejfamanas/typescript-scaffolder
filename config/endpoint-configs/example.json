@@ -1,0 +1,33 @@
+{
+  "baseUrl": "www.myexample.com/api",
+  "endpoints": [
+    {
+      "method": "GET",
+      "path": "/something/something_else",
+      "requestSchema": "POST_REQ_create_badge",
+      "responseSchema": "POST_RES_create_badge",
+      "pathParams": []
+    },
+    {
+      "method": "GET",
+      "path": "/something/something_even_more",
+      "requestSchema": "POST_REQ_get_access_control_pass_type_list_for_tournament_and_event",
+      "responseSchema": "POST_RES_get_access_control_category_sub_category_function_list_for_tournament_and_event",
+      "pathParams": []
+    },
+    {
+      "method": "GET",
+      "path": "/something_new/something_even_newer/:id",
+      "requestSchema": "POST_REQ_get_access_control_category_sub_category_function_list_for_tournament_and_event",
+      "responseSchema": "POST_RES_get_event_product_list",
+      "pathParams": [
+        "id"
+      ]
+    }
+  ],
+  "authType": "basic",
+  "credentials": {
+    "username": "asdflaksjflasdkj",
+    "password": "sommmghjkhlkjlkad"
+  }
+}

@@ -33,13 +33,11 @@ export function generateEnvLoader(
     if (!/^\.env(\..+)?$/.test(baseEnvFile) && baseEnvFile !== '.env') {
         const error = `Expected an .env* file but received: ${envFile}`;
         Logger.error(funcName, error);
-        throw new Error(error);
     }
 
     if (!fs.existsSync(envFile)) {
         const error = `ENV file does not exist at path: ${envFile}`
-        Logger.debug(funcName, error);
-        throw new Error(error);
+        Logger.error(funcName, error);
     }
 
     const envLines = fs.readFileSync(envFile, 'utf-8')
@@ -57,7 +55,6 @@ export function generateEnvLoader(
         if (!keyPattern.test(cleanKey)) {
             const error = `Invalid env key format: ${cleanKey}`;
             Logger.error(funcName, error);
-            throw new Error(error);
         }
         // warn on empty values
         if (value === '') {
@@ -76,7 +73,7 @@ export function generateEnvLoader(
     const seenKeys = new Set<string>();
     for (const { key } of envVars) {
         if (seenKeys.has(key)) {
-            throw new Error(`Duplicate env key detected: ${key}`);
+            Logger.error(funcName, `Duplicate env key detected: ${key}`);
         }
         seenKeys.add(key);
     }
