@@ -1,0 +1,16 @@
+{
+  "firstName": "Jane",
+  "lastName": "Doe",
+  "title": "Senior Developer",
+  "email": "jane.doe@example.com",
+  "phoneNumber": "+1-555-1234",
+  "country": "USA",
+  "address": {
+    "streetAddress": "123 Main St",
+    "zipCode": "90210",
+    "state": "CA"
+  },
+  "metadata": {
+    "note": "Created via admin panel"
+  }
+}

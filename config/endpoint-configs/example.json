@@ -1,33 +1,32 @@
 {
-  "baseUrl": "www.myexample.com/api",
+  "baseUrl": "https://api.example.com",
   "endpoints": [
     {
       "method": "GET",
-      "path": "/something/something_else",
-      "requestSchema": "POST_REQ_create_badge",
-      "responseSchema": "POST_RES_create_badge",
-      "pathParams": []
+      "path": "/people",
+      "responseSchema": "GET_RES_people",
+      "pathParams": [],
+      "objectName": "person"
     },
     {
       "method": "GET",
-      "path": "/something/something_even_more",
-      "requestSchema": "POST_REQ_get_access_control_pass_type_list_for_tournament_and_event",
-      "responseSchema": "POST_RES_get_access_control_category_sub_category_function_list_for_tournament_and_event",
-      "pathParams": []
+      "path": "/people/:id",
+      "responseSchema": "GET_RES_person",
+      "pathParams": ["id"],
+      "objectName": "person"
     },
     {
-      "method": "GET",
-      "path": "/something_new/something_even_newer/:id",
-      "requestSchema": "POST_REQ_get_access_control_category_sub_category_function_list_for_tournament_and_event",
-      "responseSchema": "POST_RES_get_event_product_list",
-      "pathParams": [
-        "id"
-      ]
+      "method": "POST",
+      "path": "/people",
+      "requestSchema": "POST_REQ_create_person",
+      "responseSchema": "GET_RES_person",
+      "pathParams": [],
+      "objectName": "person"
     }
   ],
-  "authType": "basic",
+  "authType": "apikey",
   "credentials": {
-    "username": "asdflaksjflasdkj",
-    "password": "sommmghjkhlkjlkad"
+    "apiKeyName": "x-api-key",
+    "apiKeyValue": "test-1234"
   }
 }

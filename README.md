@@ -202,6 +202,29 @@ npm install typescript-scaffolder
 ---
 
 ## Usage
+### IMPORTANT: Considerations for where to place generated code
+If you intend to import the generated output into your main application code (e.g., use interfaces or API clients),
+we recommend placing the `codegen/` directory inside your `src/` folder.
+
+For example:
+```
+src/
+  codegen/
+    interfaces/
+    apis/
+    config/
+```
+
+This ensures:
+- TypeScript includes the generated files in your compilation scope
+- IDE tools (like IntelliSense or import resolution) behave correctly
+- You avoid pathing issues or brittle import warnings
+
+If you keep `codegen/` outside of `src/`, you may need to update your `tsconfig.json` to include it,
+or manually relocate usable outputs into `src/` after generation.
+
+### Example usages
+
 Please refer to the following code block for example usages:
 ```
 import path from "path";
