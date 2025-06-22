@@ -25,9 +25,11 @@ describe('Logger', () => {
         expect(mockedFs.appendFileSync).toHaveBeenCalled();
     });
 
-    it('logs error', () => {
-        Logger.error(testFunc, testMessage);
-        // console.error check removed
+    it('logs error and throws', () => {
+        expect(() => {
+            Logger.error(testFunc, testMessage);
+        }).toThrow();
+
         expect(mockedFs.appendFileSync).toHaveBeenCalled();
     });
 

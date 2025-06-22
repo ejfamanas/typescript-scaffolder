@@ -16,10 +16,10 @@ describe('validate-schema utils', () => {
             ).not.toThrow();
         });
 
-        it('should not throw when required fields are missing', () => {
+        it('should throw when required fields are missing', () => {
             expect(() =>
                 assertRequiredFields({ id: 1 }, ['id', 'name'])
-            ).not.toThrow();
+            ).toThrow();
         });
     });
 

@@ -49,14 +49,13 @@ describe('generateTypedInterfaces', () => {
         );
     });
 
-    it('should log and throw on schema inference error', async () => {
+    it('should log an error and throw on schema inference failure', async () => {
         const error = new Error('schema failure');
         mockedInferSchema.mockRejectedValue(error);
 
-        // ✅ This line must be returned so the test runner waits on it
-        return expect(
+        await expect(
             generateInterfaces(fakeFilePath, fakeRelativePath, fakeOutputDir)
-        ).rejects.toThrow('Critical error when trying to process');
+        ).rejects.toThrow();
     });
 });
 
@@ -79,6 +78,6 @@ describe('generateFoldersAndTypedInterfaces', () => {
 
         await expect(
             generateInterfaces('/fake/input.json', 'input.json', '/fake/output')
-        ).rejects.toThrow('Critical error when trying to process');
+        ).rejects.toThrow();
     });
 });

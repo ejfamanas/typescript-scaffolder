@@ -54,7 +54,6 @@ async function build() {
     );
 
     await generateApiClientsFromFile(ENDPOINT_CONFIG_PATH, 'source-charlie');
-
 }
 
 build();
