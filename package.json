@@ -1,6 +1,6 @@
 {
   "name": "typescript-scaffolder",
-  "version": "1.4.01",
+  "version": "1.4.02",
   "keywords": [
     "typescript",
     "codegen",
@@ -29,7 +29,6 @@
     "build": "tsc",
     "start": "npm run build -- -w"
   },
-  "keywords": [],
   "author": "Eric Famanas (The Coding Carpenter)",
   "license": "MIT",
   "dependencies": {
