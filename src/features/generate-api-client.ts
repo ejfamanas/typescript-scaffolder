@@ -1,6 +1,6 @@
 import { Project } from 'ts-morph';
 import fs from 'fs';
-import { Endpoint, EndpointAuthConfig, EndpointClientConfigFile } from '../models/api-definitions';
+import { Endpoint, EndpointAuthConfig, EndpointClientConfigFile } from 'models/api-definitions';
 import path from 'path'
 import { ensureDir, readEndpointClientConfigFile } from '../utils/file-system';
 import { deriveFunctionName, generateInlineAuthHeader } from '../utils/client-constructors';

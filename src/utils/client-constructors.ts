@@ -1,4 +1,4 @@
-import { Endpoint } from '../models/api-definitions';
+import { Endpoint } from 'models/api-definitions';
 
 export function generateInlineAuthHeader(authType: string, credentials?: Record<string, string>): string {
 	switch (authType) {

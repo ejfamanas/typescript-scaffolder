@@ -1,7 +1,7 @@
 import fs from 'fs';
 import path from 'path';
 import {Logger} from "./logger";
-import { EndpointClientConfigFile } from '../models/api-definitions';
+import { EndpointClientConfigFile } from 'models/api-definitions';
 
 /**
  * Ensures the directory exists; creates it recursively if it doesn't.

@@ -11,4 +11,4 @@ export {
 	EndpointConfigType,
 	Method,
 	AuthType
-} from './models/api-definitions'
+} from 'models/api-definitions'
