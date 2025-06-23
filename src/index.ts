@@ -5,10 +5,10 @@ export {generateEnvLoader} from './features/generate-env-loader';
 export {generateEnums, generateEnumsFromPath} from './features/generate-enums';
 export {generateApiClientsFromFile, generateApiClientFunction} from './features/generate-api-client'
 export {
+	Method,
+	AuthType,
 	Endpoint,
 	EndpointAuthConfig,
 	EndpointClientConfigFile,
 	EndpointConfigType,
-	Method,
-	AuthType
-} from 'models/api-definitions'
+} from './models/api-definitions'
