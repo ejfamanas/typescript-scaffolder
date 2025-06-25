@@ -1,0 +1,18 @@
+{
+  "id": "user-001",
+  "firstName": "Jane",
+  "lastName": "Doe",
+  "title": "Senior Developer",
+  "email": "jane.doe@example.com",
+  "metadata": {
+    "employeeId": "12345",
+    "department": "Engineering"
+  },
+  "phoneNumber": "+1-555-1234",
+  "country": "USA",
+  "address": {
+    "streetAddress": "123 Main St",
+    "zipCode": "90210",
+    "state": "CA"
+  }
+}

@@ -422,8 +422,9 @@ Please refer to the following code block for example usages:
 ```
 import path from "path";
 import {generateEnumsFromPath, generateEnvLoader, generateInterfacesFromPath} from "./src";
-import { generateApiClientFunction, generateApiClientsFromFile } from './src/features/generate-api-client';
-import { readEndpointClientConfigFile } from './src/utils/file-system';
+import {
+    generateApiClientsFromPath
+} from './src/features/generate-api-client';
 
 const ROOT_DIR = process.cwd();                // Base dir where the script is run
 const LOCAL_DIR = __dirname;                   // Base dir where this file lives
@@ -433,8 +434,8 @@ const SCHEMA_INPUT_DIR = path.resolve(LOCAL_DIR, 'config/schemas');
 const INTERFACE_OUTPUT_DIR = path.resolve(LOCAL_DIR, 'codegen/interfaces');
 
 // Client endpoint generation config
-const ENDPOINT_CONFIG_PATH = path.resolve(LOCAL_DIR, 'config/endpoint-configs/example.json');
-
+const ENDPOINT_CONFIG_PATH = path.resolve(LOCAL_DIR, 'config/endpoint-configs');
+const CLIENT_OUTPUT_DIR = path.resolve(LOCAL_DIR, 'codegen/apis')
 
 // Generate enums, this will use the previously generated interface output
 const ENUM_OUTPUT_DIR = path.resolve(LOCAL_DIR, 'codegen/enums');
@@ -455,8 +456,8 @@ async function build() {
     // use the enum generator from the output of the interface generator
     await generateEnumsFromPath(INTERFACE_OUTPUT_DIR, ENUM_OUTPUT_DIR);
 
-    // Generates an object-centric api client based on a config file
-    await generateApiClientsFromFile(ENDPOINT_CONFIG_PATH, 'source-charlie');
+    // Generates an object-centric api clients based on a collection of config files
+    await generateApiClientsFromPath(ENDPOINT_CONFIG_PATH, INTERFACE_OUTPUT_DIR, CLIENT_OUTPUT_DIR);
 }
 
 build();

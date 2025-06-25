@@ -1,0 +1,48 @@
+{
+  "baseUrl": "https://api.example.com",
+  "endpoints": [
+    {
+      "method": "GET",
+      "path": "/users",
+      "responseSchema": "GET_RES_users",
+      "pathParams": [],
+      "objectName": "user"
+    },
+    {
+      "method": "GET",
+      "path": "/users/:id",
+      "responseSchema": "GET_RES_user",
+      "pathParams": ["id"],
+      "objectName": "user"
+    },
+    {
+      "method": "POST",
+      "path": "/users",
+      "requestSchema": "POST_REQ_create_user",
+      "responseSchema": "GET_RES_user",
+      "pathParams": [],
+      "objectName": "user"
+    },
+    {
+      "method": "PUT",
+      "path": "/users/:id",
+      "requestSchema": "POST_REQ_create_user",
+      "responseSchema": "GET_RES_user",
+      "pathParams": ["id"],
+      "objectName": "user"
+    },
+    {
+      "method": "DELETE",
+      "path": "/users/:id",
+      "responseSchema": "GET_RES_user",
+      "pathParams": ["id"],
+      "objectName": "user"
+    }
+
+  ],
+  "authType": "apikey",
+  "credentials": {
+    "apiKeyName": "x-api-key",
+    "apiKeyValue": "test-1234"
+  }
+}
