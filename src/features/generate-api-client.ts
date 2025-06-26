@@ -223,7 +223,10 @@ export async function generateApiClientsFromPath(
 		for (const schema of requiredSchemas) {
 			const dirs = interfaceNameToDirs.get(schema);
 			if (!dirs) {
-				// Schema not found anywhere, cannot generate API client for this config
+				const configFileName = path.basename(configPath);
+				console.warn(`[MISSING SCHEMA] Schema "${schema}" not found in interface files. Referenced in config: ${configFileName}`);
+				const availableSchemas = Array.from(interfaceNameToDirs.keys()).join(', ');
+				console.debug(`Available schemas: ${availableSchemas}`);
 				foundDir = null;
 				break;
 			}
