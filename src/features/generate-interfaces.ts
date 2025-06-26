@@ -22,7 +22,7 @@ export async function generateInterfaces(filePath: string, relativePath: string,
         const tsInterface = await inferJsonSchemaFromPath(filePath);
         if (tsInterface !== null) {
             fs.writeFileSync(outFile, tsInterface, 'utf-8');
-            Logger.info(funcName, `Generated: ${outFile}`);
+            Logger.debug(funcName, `Generated: ${outFile}`);
         } else {
             Logger.warn(funcName, `Failed to generate interface from ${filePath}`);
         }

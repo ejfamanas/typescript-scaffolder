@@ -75,18 +75,12 @@ export function prefixDuplicateKeys(input: any, duplicateKeys: Set<string>): any
 		if (Array.isArray(node)) {
 			const objectElements = node.filter(item => typeof item === 'object' && item !== null);
 
-			if (objectElements.length > 1) {
-				const msg = `Array at key '${parentKey}' contains more than one object:`
-				Logger.error(funcName,
-					msg,
-					JSON.stringify(node, null, 2)
-				);
-			}
-			// Recurse on the first object element (if any)
-			if (objectElements.length === 1) {
+			if (objectElements.length > 0) {
+				Logger.info(funcName, `Processing array at key '${parentKey}' with ${objectElements.length} object(s). Using first for inference.`);
 				transform(objectElements[0], parentKey);
 			}
-			// Primitive arrays are ignored
+
+			// Primitive arrays or empty arrays are ignored
 			return;
 		}
 		if (typeof node === 'object' && node !== null) {

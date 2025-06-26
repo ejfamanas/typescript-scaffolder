@@ -63,7 +63,7 @@ export async function generateEnums(filePath: string, relativePath: string, outp
     const outPath = path.join(outputDir, path.basename(filePath, '.ts') + '.enums.ts');
     fs.writeFileSync(outPath, enumsContent, 'utf-8');
 
-    Logger.info(funcName, `Generated: ${outPath}`);
+    Logger.debug(funcName, `Generated: ${outPath}`);
 }
 
 /**
