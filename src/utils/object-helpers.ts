@@ -16,7 +16,7 @@ export function deriveObjectName(filePath: string): string {
 	const transformed = rawParts.map(part => {
 		if (part === '-') return '';
 		if (part === '_') return '_';
-		return part.charAt(0).toUpperCase() + part.slice(1);
+		return part;
 	});
 
 	return transformed.join('');

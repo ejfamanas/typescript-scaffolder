@@ -1,8 +1,8 @@
 import {InputData, jsonInputForTargetLanguage, quicktype} from 'quicktype-core';
 import fs from 'fs';
 import {Logger} from './logger';
-import { deriveObjectName, findGloballyDuplicatedKeys, prefixDuplicateKeys } from "./object-helpers";
-import {assertNoDuplicateKeys, assertRequiredFields, assertStructure} from "./structure-validators";
+import {deriveObjectName, findGloballyDuplicatedKeys, prefixDuplicateKeys} from "./object-helpers";
+import {assertNoDuplicateKeys} from "./structure-validators";
 
 /**
  * Used to override quicktypes naming coercion by restoring underscores

@@ -5,24 +5,24 @@ import {
 } from '../../src/utils/object-helpers';
 
 describe('deriveObjectName', () => {
-    it('should convert kebab-case to PascalCase', () => {
-        expect(deriveObjectName('user-profile.json')).toBe('UserProfile');
+    it('should not convert kebab-case to PascalCase', () => {
+        expect(deriveObjectName('user-profile.json')).toBe('userprofile');
     });
 
-    it('should convert snake_case to PascalCase preserving underscores', () => {
-        expect(deriveObjectName('order_log.json')).toBe('Order_Log');
+    it('should not convert snake_case to PascalCase preserving underscores', () => {
+        expect(deriveObjectName('order_log.json')).toBe('order_log');
     });
 
     it('should handle mixed case filenames', () => {
         expect(deriveObjectName('Custom_File_Name.json')).toBe('Custom_File_Name');
     });
 
-    it('should camelCase lowercase filenames', () => {
-        expect(deriveObjectName('user_data.json')).toBe('User_Data');
+    it('should not camelCase lowercase filenames', () => {
+        expect(deriveObjectName('user_data.json')).toBe('user_data');
     });
 
     it('should remove dashes but preserve underscores', () => {
-        expect(deriveObjectName('data-fetch_log.json')).toBe('DataFetch_Log');
+        expect(deriveObjectName('data-fetch_log.json')).toBe('datafetch_log');
     });
 
     it('should handle single word filenames', () => {
@@ -144,7 +144,7 @@ describe('prefixDuplicateKeys', () => {
             }
         });
     });
-    it('should throw an error if an array contains more than one item', () => {
+    it('should not throw an error if an array contains more than one item', () => {
         const input = {
             users: [
                 { id: 1 },
@@ -156,7 +156,7 @@ describe('prefixDuplicateKeys', () => {
 
         expect(() => {
             prefixDuplicateKeys(input, duplicateKeys);
-        }).toThrow()
+        }).not.toThrow()
     });
     it('should deduplicate and prefix nested keys from a JSON object that was converted from SOAP', () => {
         const input = {

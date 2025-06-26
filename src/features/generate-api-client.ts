@@ -59,14 +59,14 @@ export function generateApiClientFunction(
 			.relative(path.dirname(outputFilePath), path.join(interfaceInputDir, requestSchema))
 			.replace(/\\/g, '/')
 			.replace(/\.ts$/, '');
-		addImportIfMissing(requestPath, requestSchema);
+		addImportIfMissing(requestPath, requestSchema); // use requestSchema verbatim
 	}
 
 	const responsePath = path
 		.relative(path.dirname(outputFilePath), path.join(interfaceInputDir, responseSchema))
 		.replace(/\\/g, '/')
 		.replace(/\.ts$/, '');
-	addImportIfMissing(responsePath, responseSchema);
+	addImportIfMissing(responsePath, responseSchema); // use responseSchema verbatim
 
 	addImportIfMissing('axios', 'axios', true);
 
