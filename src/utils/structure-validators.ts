@@ -51,7 +51,7 @@ export function assertNoDuplicateKeys(jsonString: string) {
         }
         seenKeys.add(key);
     }
-    Logger.info(funcName, 'Asserted no duplicate keys');
+    Logger.debug(funcName, 'Asserted no duplicate keys');
 }
 
 /**
