@@ -4,37 +4,37 @@
     {
       "method": "GET",
       "path": "/people",
-      "responseSchema": "GET_RES_people",
+      "responseSchema": "get_res_people",
       "pathParams": [],
       "objectName": "person"
     },
     {
       "method": "GET",
       "path": "/people/:id",
-      "responseSchema": "GET_RES_person",
+      "responseSchema": "get_res_person",
       "pathParams": ["id"],
       "objectName": "person"
     },
     {
       "method": "POST",
       "path": "/people",
-      "requestSchema": "POST_REQ_create_person",
-      "responseSchema": "GET_RES_person",
+      "requestSchema": "post_req_create_person",
+      "responseSchema": "get_res_person",
       "pathParams": [],
       "objectName": "person"
     },
     {
       "method": "PUT",
       "path": "/people/:id",
-      "requestSchema": "POST_REQ_create_person",
-      "responseSchema": "GET_RES_person",
+      "requestSchema": "post_req_create_person",
+      "responseSchema": "get_res_person",
       "pathParams": ["id"],
       "objectName": "person"
     },
     {
       "method": "DELETE",
       "path": "/people/:id",
-      "responseSchema": "GET_RES_person",
+      "responseSchema": "get_res_person",
       "pathParams": ["id"],
       "objectName": "person"
     }

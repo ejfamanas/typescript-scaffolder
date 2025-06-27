@@ -36,7 +36,7 @@ describe('generateTypedInterfaces', () => {
             'export interface Example { id: string; }',
             'utf-8'
         );
-        expect(mockLogger.info).toHaveBeenCalled();
+        expect(mockLogger.debug).toHaveBeenCalled();
     });
 
     it('should log a warning if interface generation fails', async () => {

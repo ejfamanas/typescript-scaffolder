@@ -4,7 +4,7 @@
     {
       "method": "GET",
       "path": "/users",
-      "responseSchema": "GET_RES_users",
+      "responseSchema": "GET_RES_UsErs",
       "pathParams": [],
       "objectName": "user"
     },

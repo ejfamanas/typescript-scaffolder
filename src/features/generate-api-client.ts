@@ -3,10 +3,8 @@ import fs from 'fs';
 import { Endpoint, EndpointAuthConfig, EndpointClientConfigFile } from 'models/api-definitions';
 import path from 'path'
 import { ensureDir, readEndpointClientConfigFile, walkDirectory } from '../utils/file-system';
-import { deriveFunctionName, generateInlineAuthHeader } from '../utils/client-constructors';
-import dotenv from 'dotenv';
+import { generateInlineAuthHeader } from '../utils/client-constructors';
 import { Logger } from '../utils/logger';
-import { generateEnums } from './generate-enums';
 
 export function generateApiClientFunction(
 	baseUrl: string,
@@ -61,14 +59,14 @@ export function generateApiClientFunction(
 			.relative(path.dirname(outputFilePath), path.join(interfaceInputDir, requestSchema))
 			.replace(/\\/g, '/')
 			.replace(/\.ts$/, '');
-		addImportIfMissing(requestPath, requestSchema);
+		addImportIfMissing(requestPath, requestSchema); // use requestSchema verbatim
 	}
 
 	const responsePath = path
 		.relative(path.dirname(outputFilePath), path.join(interfaceInputDir, responseSchema))
 		.replace(/\\/g, '/')
 		.replace(/\.ts$/, '');
-	addImportIfMissing(responsePath, responseSchema);
+	addImportIfMissing(responsePath, responseSchema); // use responseSchema verbatim
 
 	addImportIfMissing('axios', 'axios', true);
 
@@ -83,7 +81,7 @@ export function generateApiClientFunction(
 		writeMode === 'append' &&
 		sourceFile.getFunction(functionName)
 	) {
-		console.warn(`Function "${functionName}" already exists in ${fileName}.ts — skipping.`);
+		Logger.info(funcName,`Function "${functionName}" already exists in ${fileName}.ts — skipping.`);
 		return;
 	}
 
@@ -125,6 +123,7 @@ export function generateApiClientFunction(
  * @param outputDir - Output directory
  */
 export async function generateApiClientFromFile(configPath: string, interfacesDir: string, outputDir: string) {
+	const funcName = 'generateApiClientFromFile'
 	const config: EndpointClientConfigFile | null = readEndpointClientConfigFile(configPath);
 	if (!config) {
 		return;
@@ -132,7 +131,7 @@ export async function generateApiClientFromFile(configPath: string, interfacesDi
 	for (const endpoint of config.endpoints) {
 		const {objectName} = endpoint;
 		if (!objectName) {
-			console.warn('Missing modelName in endpoint:', endpoint);
+			Logger.warn(funcName,'Missing modelName in endpoint:', endpoint);
 			continue;
 		}
 		const action =
@@ -173,7 +172,8 @@ export async function generateApiClientsFromPath(
 	interfacesRootDir: string,
 	outputRootDir: string
 ) {
-	Logger.debug('generateApiClientsFromPath', 'Starting API client generation from config and interface directories...');
+	const funcName = 'generateApiClientsFromPath'
+	Logger.debug(funcName, 'Starting API client generation from config and interface directories...');
 
 	const configFiles = fs
 		.readdirSync(configDir)
@@ -224,9 +224,9 @@ export async function generateApiClientsFromPath(
 			const dirs = interfaceNameToDirs.get(schema);
 			if (!dirs) {
 				const configFileName = path.basename(configPath);
-				console.warn(`[MISSING SCHEMA] Schema "${schema}" not found in interface files. Referenced in config: ${configFileName}`);
+				Logger.warn(funcName,`Schema "${schema}" not found in interface files. Referenced in config: ${configFileName}`);
 				const availableSchemas = Array.from(interfaceNameToDirs.keys()).join(', ');
-				console.debug(`Available schemas: ${availableSchemas}`);
+				Logger.debug(funcName, `Available schemas: ${availableSchemas}`);
 				foundDir = null;
 				break;
 			}
@@ -243,7 +243,7 @@ export async function generateApiClientsFromPath(
 		}
 
 		if (!foundDir) {
-			console.warn(`Could not find a directory containing all schemas for config: ${configPath}`);
+			Logger.warn(funcName,`Could not find a directory containing all schemas for config: ${configPath}`);
 			continue;
 		}
 
@@ -255,5 +255,5 @@ export async function generateApiClientsFromPath(
 		await generateApiClientFromFile(configPath, foundDir, outputDir);
 	}
 
-	Logger.info('generateApiClientsFromPath', 'API client generation completed.');
+	Logger.info(funcName, 'API client generation completed.');
 }

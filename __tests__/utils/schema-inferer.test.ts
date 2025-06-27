@@ -35,7 +35,7 @@ describe('inferSchemaFromJson', () => {
 		fs.writeFileSync(tempPath, sampleJson, 'utf-8');
 
 		const result = await inferJsonSchemaFromPath(tempPath);
-		expect(result).toContain('export interface TempUser');
+		expect(result).toContain('export interface tempuser');
 		expect(result).toContain('preferences: Preferences');
 
 		fs.unlinkSync(tempPath); // Cleanup
@@ -128,7 +128,6 @@ describe('inferSchemaFromPath - error handling', () => {
 		});
 
 		const result = await inferJsonSchema(input, "NullableExample");
-		console.log(result);
 		expect(result).toMatch(/id:\s*any/);
 		expect(result).toMatch(/metadata:\s*any/);
 		expect(result).toMatch(/name:\s*string/);

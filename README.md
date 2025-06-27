@@ -200,7 +200,28 @@ export enum PreferencesKeys {
 
 ### API Client generation from interface (ALPHA)
 Generate TypeScript GET_ALL, GET, POST, PUT, DELETE REST Api client based on a configuration file 
-that uses referenced interfaces for typing. The following interface is used to define the api config
+that uses referenced interfaces for typing. 
+
+### Directory Structure Notes
+
+When using `generateApiClientsFromPath`, follow this pattern for best results:
+
+- Config files should be stored in a **flat** folder structure (e.g., `config/endpoint-configs`)
+- Generated interfaces can be stored in a **parent folder with subdirectories** to reflect source groupings (e.g., `codegen/interfaces/source-a`, `codegen/interfaces/source-b`)
+- The output directory (e.g., `codegen/apis`) will **mirror** the structure of the interfaces directory
+- The names specified in the api config file must match the interface file name.
+
+For example, given:
+- Interface input input: `codegen/interfaces/source-charlie/GET_RES_users.ts`
+- Config file: `config/endpoint-configs/users.json`
+- Config responseSchema value: `GET_RES_users`
+- Output file: `codegen/apis/source-charlie/USER_api.ts`
+
+The output will be:
+- `codegen/apis/source-charlie/users_api.ts`
+
+
+The following interface is used to define the api config
 
 ```
 export type Method = 'GET' | 'POST' | 'PUT' | 'DELETE'
