@@ -8,11 +8,6 @@ export async function generateApiRegistry(apiRootDir: string, registryFileName =
 	Logger.debug(funcName, 'Generating registry...');
 	const importMap = new Map<string, string[]>(); // Map<subdirectory, filePaths>
 
-	if (importMap.size === 0) {
-		Logger.warn(funcName, 'No API files found. Registry will not be generated.');
-		return;
-	}
-
 	walkDirectory(apiRootDir, (filePath) => {
 			if (filePath.endsWith('.ts') && !filePath.endsWith(registryFileName)) {
 				const subDir = path.relative(apiRootDir, path.dirname(filePath));
@@ -22,6 +17,11 @@ export async function generateApiRegistry(apiRootDir: string, registryFileName =
 			}
 		}, '.ts'
 	);
+
+	if (importMap.size === 0) {
+		Logger.warn(funcName, 'No API files found. Registry will not be generated.');
+		return;
+	}
 
 	const importStatements: string[] = [];
 	const registryEntries: string[] = [];
