@@ -3,7 +3,7 @@ import fs from 'fs';
 import { Endpoint, EndpointAuthConfig, EndpointClientConfigFile } from 'models/api-definitions';
 import path from 'path'
 import { ensureDir, readEndpointClientConfigFile, walkDirectory } from '../utils/file-system';
-import { generateInlineAuthHeader } from '../utils/client-constructors';
+import { generateClientAction, generateInlineAuthHeader } from '../utils/client-constructors';
 import { Logger } from '../utils/logger';
 
 export function generateApiClientFunction(
@@ -128,21 +128,14 @@ export async function generateApiClientFromFile(configPath: string, interfacesDi
 	if (!config) {
 		return;
 	}
+
 	for (const endpoint of config.endpoints) {
 		const {objectName} = endpoint;
 		if (!objectName) {
 			Logger.warn(funcName,'Missing modelName in endpoint:', endpoint);
 			continue;
 		}
-		const action =
-			endpoint.method === 'GET' && endpoint.pathParams?.length
-				? 'GET'
-				: endpoint.method === 'GET'
-					? 'GET_ALL'
-					: endpoint.method.toUpperCase();
-
-		const functionName = `${action}_${objectName}`;
-		const fileName = `${objectName}_api`;
+		const {functionName, fileName} = generateClientAction(endpoint, objectName);
 
 		generateApiClientFunction(
 			config.baseUrl,
@@ -225,8 +218,10 @@ export async function generateApiClientsFromPath(
 			if (!dirs) {
 				const configFileName = path.basename(configPath);
 				Logger.warn(funcName,`Schema "${schema}" not found in interface files. Referenced in config: ${configFileName}`);
+
 				const availableSchemas = Array.from(interfaceNameToDirs.keys()).join(', ');
 				Logger.debug(funcName, `Available schemas: ${availableSchemas}`);
+
 				foundDir = null;
 				break;
 			}

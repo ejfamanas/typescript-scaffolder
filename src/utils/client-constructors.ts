@@ -1,6 +1,13 @@
-import { Endpoint } from 'models/api-definitions';
+import { AuthType, Endpoint } from 'models/api-definitions';
+import { Logger } from './logger';
 
-export function generateInlineAuthHeader(authType: string, credentials?: Record<string, string>): string {
+export function generateInlineAuthHeader(authType: AuthType, credentials?: Record<string, string>): string {
+	const funcName = 'generateInlineAuthHeader';
+	Logger.debug(funcName, 'Generating inline auth header...');
+	if (authType === 'none' && credentials === undefined) {
+		Logger.warn(funcName, 'No credentials found for auth header found.')
+		return '{}';
+	}
 	switch (authType) {
 		case 'basic':
 			if (credentials?.username && credentials?.password) {
@@ -19,12 +26,21 @@ export function generateInlineAuthHeader(authType: string, credentials?: Record<
 	return '{}';
 }
 
-export function deriveFunctionName(endpoint: Endpoint): string {
-	const lastSegment = endpoint.path.split('/').filter(Boolean).pop()?.replace(/{|}/g, '') ?? 'request';
-	const verb = endpoint.method === 'GET' && !endpoint.pathParams?.length ? 'getAll' : endpoint.method.toLowerCase();
-	return `${verb}${capitalize(lastSegment)}`;
+export function generateClientAction(endpoint: Endpoint, objectName: string): {
+	functionName: string,
+	fileName: string
+} {
+	const funcName = 'generateClientAction';
+	Logger.debug(funcName, 'Generating client action...');
+	const action =
+		endpoint.method === 'GET' && endpoint.pathParams?.length
+			? 'GET'
+			: endpoint.method === 'GET'
+				? 'GET_ALL'
+				: endpoint.method.toUpperCase();
+
+	const functionName = `${action}_${objectName}`;
+	const fileName = `${objectName}_api`;
+	return {functionName, fileName};
 }
 
-export function capitalize(str: string) {
-	return str.charAt(0).toUpperCase() + str.slice(1);
-}
