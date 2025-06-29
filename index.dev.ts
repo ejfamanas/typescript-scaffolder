@@ -7,7 +7,8 @@ import {
 	generateInterfacesFromPath,
 	getApiFunction
 } from "./src";
-import { apiRegistry } from './src/codegen/apis/registry';
+import {apiRegistry} from "./src/codegen/apis/registry";
+// import { apiRegistry } from './src/codegen/apis/registry';
 
 
 const ROOT_DIR = process.cwd();                // Base dir where the script is run
