@@ -1,7 +1,7 @@
-import { AuthType, Endpoint } from 'models/api-definitions';
+import { AuthType, Endpoint, EndpointAuthCredentials } from 'models/api-definitions';
 import { Logger } from './logger';
 
-export function generateInlineAuthHeader(authType: AuthType, credentials?: Record<string, string>): string {
+export function generateInlineAuthHeader(authType: AuthType, credentials?: EndpointAuthCredentials): string {
 	const funcName = 'generateInlineAuthHeader';
 	Logger.debug(funcName, 'Generating inline auth header...');
 	if (authType === 'none' && credentials === undefined) {
@@ -12,7 +12,8 @@ export function generateInlineAuthHeader(authType: AuthType, credentials?: Recor
 		case 'basic':
 			if (credentials?.username && credentials?.password) {
 				const token = Buffer.from(`${credentials.username}:${credentials.password}`).toString('base64');
-				return `{"Authorization": "Basic ${token}"}`;
+				const headerName = credentials.authHeaderName || 'Authorization';
+				return `{ "${headerName}": "Basic ${token}" }`;
 			}
 			break;
 		case 'apikey':
@@ -43,4 +44,3 @@ export function generateClientAction(endpoint: Endpoint, objectName: string): {
 	const fileName = `${objectName}_api`;
 	return {functionName, fileName};
 }
-

@@ -21,12 +21,15 @@ export type EndpointConfigType = {
 
 export interface EndpointAuthConfig {
 	authType: AuthType;
-	credentials?: {
-		username?: string;
-		password?: string;
-		apiKeyName?: string;
-		apiKeyValue?: string;
-	};
+	credentials?: EndpointAuthCredentials
+}
+
+export interface EndpointAuthCredentials {
+	authHeaderName?: string;
+	username?: string;
+	password?: string;
+	apiKeyName?: string;
+	apiKeyValue?: string;
 }
 
 export interface EndpointClientConfigFile extends EndpointConfigType, EndpointAuthConfig {

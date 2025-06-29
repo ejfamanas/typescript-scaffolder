@@ -1,18 +1,26 @@
 import * as path from 'path';
 import * as fs from 'fs';
 import { walkDirectory } from '../utils/file-system';
+import { Logger } from '../utils/logger';
 
 export async function generateApiRegistry(apiRootDir: string, registryFileName = 'registry.ts') {
+	const funcName = 'generateApiRegistry';
+	Logger.debug(funcName, 'Generating registry...');
 	const importMap = new Map<string, string[]>(); // Map<subdirectory, filePaths>
 
+	if (importMap.size === 0) {
+		Logger.warn(funcName, 'No API files found. Registry will not be generated.');
+		return;
+	}
+
 	walkDirectory(apiRootDir, (filePath) => {
-		if (filePath.endsWith('.ts') && !filePath.endsWith(registryFileName)) {
-			const subDir = path.relative(apiRootDir, path.dirname(filePath));
-			const files = importMap.get(subDir) || [];
-			files.push(filePath);
-			importMap.set(subDir, files);
-		}
-	}, '.ts'
+			if (filePath.endsWith('.ts') && !filePath.endsWith(registryFileName)) {
+				const subDir = path.relative(apiRootDir, path.dirname(filePath));
+				const files = importMap.get(subDir) || [];
+				files.push(filePath);
+				importMap.set(subDir, files);
+			}
+		}, '.ts'
 	);
 
 	const importStatements: string[] = [];
@@ -45,19 +53,23 @@ ${registryEntries.join(',\n')}
 }
 
 export function getApiFunction(
-  apiRegistry: Record<string, Record<string, (...args: any[]) => Promise<any>>>,
-  service: string,
-  functionName: string
+	apiRegistry: Record<string, Record<string, (...args: any[]) => Promise<any>>>,
+	service: string,
+	functionName: string
 ): (...args: any[]) => Promise<any> {
-  const serviceRegistry = apiRegistry?.[service];
-  if (!serviceRegistry) {
-    throw new Error(`Service "${service}" not found in API registry.`);
-  }
+	const funcName = 'getApiFunction';
+	Logger.debug(funcName, 'Fetching api function...');
+	const serviceRegistry = apiRegistry?.[service];
+	if (!serviceRegistry) {
+		Logger.warn(funcName, 'No service registry found.');
+	}
 
-  const fn = serviceRegistry?.[functionName];
-  if (!fn || typeof fn !== 'function') {
-    throw new Error(`Function "${functionName}" not found in service "${service}".`);
-  }
+	const fn = serviceRegistry?.[functionName];
+	if (!fn || typeof fn !== 'function') {
+		const msg = `Function "${functionName}" not found in service "${service}".`
+		Logger.error(funcName, `Function "${functionName}" not found in service "${service}".`);
+		throw new Error(msg);
+	}
 
-  return fn;
+	return fn;
 }

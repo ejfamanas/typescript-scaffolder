@@ -12,6 +12,7 @@ export {
 	AuthType,
 	Endpoint,
 	EndpointAuthConfig,
+	EndpointAuthCredentials,
 	EndpointClientConfigFile,
 	EndpointConfigType,
 } from './models/api-definitions'
