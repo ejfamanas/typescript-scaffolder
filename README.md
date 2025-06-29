@@ -408,6 +408,44 @@ export async function DELETE_person(id: string, headers?: Record<string, string>
 }
 
 ```
+### Api Client Registry File
+If you want to create a single registration file from the collection of APIs that you have in your service, you can use
+the `generateApiRegistry` function to create a single file from which to programmatically access all your APIs. 
+
+For example:
+```
+src/
+  codegen/
+    apis/
+      source-charlie/
+        person_api.ts
+      source-delta/
+        user_api.ts
+
+```
+Will generate:
+```
+import * as person_api from './source-charlie/person_api';
+import * as user_api from './source-delta/user_api';
+
+export const apiRegistry = {
+  'source-charlie': {
+    ...person_api
+  },
+  'source-delta': {
+    ...user_api
+  }
+};
+```
+You can then use an example const:
+```
+const fn = apiRegistry?.[service]?.[functionName]
+```
+To store the function and call it as required, or user the helper function which has runtime validation built in:
+```
+const fn = getApiFunction(apiRegistry, 'source-delta', 'GET_user');
+```
+
 ## Installation
 To install the package, run the following command
 ```
@@ -442,46 +480,68 @@ or manually relocate usable outputs into `src/` after generation.
 Please refer to the following code block for example usages:
 ```
 import path from "path";
-import {generateEnumsFromPath, generateEnvLoader, generateInterfacesFromPath} from "./src";
 import {
-    generateApiClientsFromPath
-} from './src/features/generate-api-client';
+	generateApiClientsFromPath,
+	generateApiRegistry,
+	generateEnumsFromPath,
+	generateEnvLoader,
+	generateInterfacesFromPath,
+	getApiFunction
+} from "./src";
+import { apiRegistry } from './src/codegen/apis/registry';
+
 
 const ROOT_DIR = process.cwd();                // Base dir where the script is run
 const LOCAL_DIR = __dirname;                   // Base dir where this file lives
+const CODEGEN_DIR = path.resolve(LOCAL_DIR, 'src/codegen')
 
 // Interface generation config
 const SCHEMA_INPUT_DIR = path.resolve(LOCAL_DIR, 'config/schemas');
-const INTERFACE_OUTPUT_DIR = path.resolve(LOCAL_DIR, 'codegen/interfaces');
+const INTERFACE_OUTPUT_DIR = path.resolve(CODEGEN_DIR, 'interfaces');
 
 // Client endpoint generation config
 const ENDPOINT_CONFIG_PATH = path.resolve(LOCAL_DIR, 'config/endpoint-configs');
-const CLIENT_OUTPUT_DIR = path.resolve(LOCAL_DIR, 'codegen/apis')
+const CLIENT_OUTPUT_DIR = path.resolve(CODEGEN_DIR, 'apis')
 
 // Generate enums, this will use the previously generated interface output
-const ENUM_OUTPUT_DIR = path.resolve(LOCAL_DIR, 'codegen/enums');
+const ENUM_OUTPUT_DIR = path.resolve(CODEGEN_DIR, 'enums');
 
 // Env accessor config
 const ENV_FILE = path.resolve(ROOT_DIR, '.env');
-const ENV_OUTPUT_DIR = path.resolve(LOCAL_DIR, 'codegen/config');
+const ENV_OUTPUT_DIR = path.resolve(CODEGEN_DIR, 'config');
 const ENV_OUTPUT_FILE = 'env-config.ts';
 
 async function build() {
-    // using the env accessor
-    // this is a sync function, and should be run first anyway
-    generateEnvLoader(ENV_FILE, ENV_OUTPUT_DIR, ENV_OUTPUT_FILE);
+	// using the env accessor
+	// this is a sync function, and should be run first anyway
+	generateEnvLoader(ENV_FILE, ENV_OUTPUT_DIR, ENV_OUTPUT_FILE);
 
-    // using the interface generator
-    await generateInterfacesFromPath(SCHEMA_INPUT_DIR, INTERFACE_OUTPUT_DIR)
+	// using the interface generator
+	await generateInterfacesFromPath(SCHEMA_INPUT_DIR, INTERFACE_OUTPUT_DIR)
 
-    // use the enum generator from the output of the interface generator
-    await generateEnumsFromPath(INTERFACE_OUTPUT_DIR, ENUM_OUTPUT_DIR);
+	// use the enum generator from the output of the interface generator
+	await generateEnumsFromPath(INTERFACE_OUTPUT_DIR, ENUM_OUTPUT_DIR);
 
-    // Generates an object-centric api clients based on a collection of config files
-    await generateApiClientsFromPath(ENDPOINT_CONFIG_PATH, INTERFACE_OUTPUT_DIR, CLIENT_OUTPUT_DIR);
+	// Generates an object-centric api client based on a config file
+	await generateApiClientsFromPath(ENDPOINT_CONFIG_PATH, INTERFACE_OUTPUT_DIR, CLIENT_OUTPUT_DIR);
+
+	// Generate the api registry to access the generated client functions
+	await generateApiRegistry(CLIENT_OUTPUT_DIR);
 }
 
-build();
+// this test will check if the registry is working. axios should be called if the generation was successful
+async function testApiFunction() {
+	try {
+		// use the getApiFunction in combination with the registry, service name, and function name to activate
+		const fn = getApiFunction(apiRegistry, 'source-delta', 'GET_user');
+		const result = await fn(); // You might need to pass args depending on the signature
+		console.log('Function executed successfully:', result);
+	} catch (error) {
+		console.error('Function invocation failed:', error);
+	}
+}
+
+build().then(testApiFunction);
 ```
 
 
