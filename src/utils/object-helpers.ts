@@ -57,7 +57,7 @@ export function findGloballyDuplicatedKeys(input: any): Set<string> {
 
 	return new Set([...keyCounts.entries()]
 		.filter(([_, count]) => count > 1)
-		.map(([key]) => key));
+		.map(([key, _]) => key));
 }
 
 /**
@@ -76,7 +76,7 @@ export function prefixDuplicateKeys(input: any, duplicateKeys: Set<string>): any
 			const objectElements = node.filter(item => typeof item === 'object' && item !== null);
 
 			if (objectElements.length > 0) {
-				Logger.info(funcName, `Processing array at key '${parentKey}' with ${objectElements.length} object(s). Using first for inference.`);
+				Logger.debug(funcName, `Processing array at key '${parentKey}' with ${objectElements.length} object(s). Using first for inference.`);
 				transform(objectElements[0], parentKey);
 			}
 

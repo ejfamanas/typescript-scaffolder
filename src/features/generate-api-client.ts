@@ -69,6 +69,7 @@ export function generateApiClientFunction(
 	addImportIfMissing(responsePath, responseSchema); // use responseSchema verbatim
 
 	addImportIfMissing('axios', 'axios', true);
+	addImportIfMissing('axios', 'AxiosRequestConfig');
 
 	// Function parameters
 	const parameters = [
@@ -102,7 +103,7 @@ export function generateApiClientFunction(
             ...authHeaders,
             ...headers,
           },
-        }
+        } as AxiosRequestConfig
       );
       return response.data;
     `,

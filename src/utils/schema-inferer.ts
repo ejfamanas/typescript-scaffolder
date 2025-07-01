@@ -3,6 +3,7 @@ import fs from 'fs';
 import {Logger} from './logger';
 import {deriveObjectName, findGloballyDuplicatedKeys, prefixDuplicateKeys} from "./object-helpers";
 import {assertNoDuplicateKeys} from "./structure-validators";
+import path from "path";
 
 /**
  * Used to override quicktypes naming coercion by restoring underscores
@@ -100,7 +101,7 @@ export async function inferJsonSchemaFromPath(filePath: string): Promise<string 
         Logger.debug(funcName, 'Successfully read json file');
 
         // 🔍 Check for duplicate keys in the raw JSON
-        assertNoDuplicateKeys(rawJson);
+        assertNoDuplicateKeys(rawJson, path.relative(process.cwd(), filePath));
 
         const interfaceName = deriveObjectName(filePath);
         Logger.debug(funcName, 'Inferring interface...');

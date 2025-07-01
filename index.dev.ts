@@ -7,8 +7,7 @@ import {
 	generateInterfacesFromPath,
 	getApiFunction
 } from "./src";
-import {apiRegistry} from "./src/codegen/apis/registry";
-// import { apiRegistry } from './src/codegen/apis/registry';
+// import {apiRegistry} from "./src/codegen/apis/registry";
 
 
 const ROOT_DIR = process.cwd();                // Base dir where the script is run
@@ -50,15 +49,16 @@ async function build() {
 }
 
 // this test will check if the registry is working. axios should be called if the generation was successful
-async function testApiFunction() {
-	try {
-		// use the getApiFunction in combination with the registry, service name, and function name to activate
-		const fn = getApiFunction(apiRegistry, 'source-delta', 'GET_user');
-		const result = await fn(); // You might need to pass args depending on the signature
-		console.log('Function executed successfully:', result);
-	} catch (error) {
-		console.error('Function invocation failed:', error);
-	}
-}
+// async function testApiFunction() {
+// 	try {
+// 		// use the getApiFunction in combination with the registry, service name, and function name to activate
+// 		const fn = getApiFunction(apiRegistry, 'source-delta', 'GET_user');
+// 		const result = await fn(); // You might need to pass args depending on the signature
+// 		console.log('Function executed successfully:', result);
+// 	} catch (error) {
+// 		console.error('Function invocation failed:', error);
+// 	}
+// }
 
-build().then(testApiFunction);
+// build().then(testApiFunction);
+build();

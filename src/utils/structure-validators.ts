@@ -13,7 +13,7 @@ export function assertRequiredFields(obj: Record<string, any>, required: string[
         const err = `Missing required fields: ${missing.join(', ')}`
         Logger.error(funcName, err);
     }
-    Logger.info(funcName, 'All required fields are present');
+    Logger.debug(funcName, 'All required fields are present');
 }
 
 /**
@@ -30,14 +30,14 @@ export function assertStructure(obj: any, structure: Record<string, string>) {
             Logger.warn(funcName, err);
         }
     }
-    Logger.info(funcName, 'Structure successfully asserted');
+    Logger.debug(funcName, 'Structure successfully asserted');
 }
 
 /**
  * Checks to see if there are any duplicate keys within the JSON
  * @param jsonString
  */
-export function assertNoDuplicateKeys(jsonString: string) {
+export function assertNoDuplicateKeys(jsonString: string, filename: string) {
     const funcName = 'assertNoDuplicateKeys';
     Logger.debug(funcName, 'Asserting no duplicate keys', jsonString)
     const seenKeys = new Set<string>();
@@ -46,7 +46,7 @@ export function assertNoDuplicateKeys(jsonString: string) {
     while ((match = regex.exec(jsonString))) {
         const key = match[1];
         if (seenKeys.has(key)) {
-            const err = `Duplicate key detected: ${key}`
+            const err = `Duplicate key detected: ${key} in ${filename}`
             Logger.warn(funcName, err)
         }
         seenKeys.add(key);
@@ -67,7 +67,7 @@ export function assertEnumValue(field: string, value: any, allowed: any[]) {
         const err = `Field '${field}' must be one of ${JSON.stringify(allowed)}, got '${value}'`
         Logger.warn(funcName, err);
     }
-    Logger.info(funcName, 'Asserted enum values');
+    Logger.debug(funcName, 'Asserted enum values');
 }
 
 /**
@@ -88,5 +88,5 @@ export function assertInRange(field: string, value: any, min: number, max: numbe
         const err = `Field '${field}' must be between ${min} and ${max}, got ${value}`
         Logger.warn(funcName, err);
     }
-    Logger.info(funcName, 'Asserted fields are in range');
+    Logger.debug(funcName, 'Asserted fields are in range');
 }
