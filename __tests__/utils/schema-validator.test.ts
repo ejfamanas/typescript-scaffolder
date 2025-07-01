@@ -40,12 +40,12 @@ describe('validate-schema utils', () => {
     describe('assertNoDuplicateKeys', () => {
         it('should pass when there are no duplicate keys', () => {
             const json = '{"id": 1, "name": "Alice"}';
-            expect(() => assertNoDuplicateKeys(json)).not.toThrow();
+            expect(() => assertNoDuplicateKeys(json, "")).not.toThrow();
         });
 
         it('should warn when duplicate keys are present', () => {
             const json = '{"id": 1, "id": 2}';
-            expect(() => assertNoDuplicateKeys(json)).not.toThrow();
+            expect(() => assertNoDuplicateKeys(json, "")).not.toThrow();
         });
     });
 
@@ -77,6 +77,7 @@ describe('validate-schema utils', () => {
 
 describe('schema-validator warnings on garbage input', () => {
     it('should warn on duplicate keys and invalid structure', () => {
+        // TODO: This keeps throwing a signature error when its not
         const spyWarn = jest.spyOn(Logger, 'warn').mockImplementation(() => {});
         const json = `
         {
@@ -88,7 +89,7 @@ describe('schema-validator warnings on garbage input', () => {
         `;
 
         // Run duplicate key check
-        assertNoDuplicateKeys(json);
+        assertNoDuplicateKeys(json, "");
 
         // Run structure check
         const parsed = JSON.parse(json);

@@ -52,6 +52,20 @@ ${registryEntries.join(',\n')}
 	fs.writeFileSync(registryPath, output, 'utf8');
 }
 
+
+/**
+ * Dynamically retrieves an API function from the generated registry.
+ *
+ * Note: The returned function's argument signature must be known by the caller.
+ * This function does not enforce parameter validation or ordering.
+ * It is the caller's responsibility to pass the correct arguments.
+ *
+ * @param apiRegistry - A nested record of service -> function name -> API function.
+ * @param service - The top-level key representing a group of API clients (e.g. a namespace).
+ * @param functionName - The exported name of the function within the selected service.
+ * @returns The referenced API function.
+ * @throws If the function or service cannot be found in the registry.
+ */
 export function getApiFunction(
 	apiRegistry: Record<string, Record<string, (...args: any[]) => Promise<any>>>,
 	service: string,
