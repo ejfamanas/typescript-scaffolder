@@ -1,8 +1,8 @@
 # TypeScript Scaffolder
-Includes alpha features for REST API client generation
+Includes beta features for REST API client generation
 
 ![npm version](https://img.shields.io/npm/v/typescript-scaffolder)
-### Unit Test Coverage: 97.64%
+### Unit Test Coverage: 97.53%
 
 `typescript-scaffolder` is a utility that creates TypeScript interfaces, enums, and config accessors from structured inputs like JSON, .env files, or interface definitions.
 Ideal for API integrations that expose schema via JSON — just drop the file in and generate clean, typed code for full-stack use. You can also integrate this into CI pipelines or dev scripts to keep generated types in sync with your schemas.
@@ -11,7 +11,7 @@ Ideal for API integrations that expose schema via JSON — just drop the file in
 - Generate TypeScript interfaces from JSON or schemas
 - Auto-create enums from interface keys
 - Typed `.env` accessor generator
-- Typed axios client api generation (alpha)
+- Typed axios client api generation (beta)
 - Preserves directory structure
 
 ## Table of Contents
@@ -21,7 +21,7 @@ Ideal for API integrations that expose schema via JSON — just drop the file in
 - [Interface Generation](#interface-generation)
 - [Environment Variable Interface](#environment-variable-interface)
 - [Enum Generation](#enum-generation-from-interface)
-- [Client Api Generation](#api-client-generation-from-interface-alpha)
+- [Client Api Generation](#api-client-generation-from-interface)
 - [Roadmap](#roadmap)
 - [Reporting Bugs](#reporting-bugs)
 - [Contributing](#contributing)
@@ -199,8 +199,8 @@ export enum PreferencesKeys {
 }
 ```
 
-### API Client generation from interface (BETA)
-Generate TypeScript GET_ALL, GET, POST, PUT, DELETE REST Api client based on a configuration file 
+### API Client generation from interface
+Generate TypeScript `GET_ALL, GET, POST, PUT, DELETE` REST Api client based on a configuration file 
 that uses referenced interfaces for typing. 
 
 ### Directory Structure Notes
@@ -545,7 +545,7 @@ async function testApiFunction() {
 build().then(testApiFunction);
 ```
 
-## CLI Usage Examples (ALPHA)
+## CLI Usage Examples
 
 Below are example commands to run each of the CLI subcommands available in `typescript-scaffolder`.
 
