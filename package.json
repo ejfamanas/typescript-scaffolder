@@ -1,6 +1,6 @@
 {
   "name": "typescript-scaffolder",
-  "version": "1.5.00",
+  "version": "1.5.01",
   "keywords": [
     "typescript",
     "codegen",
@@ -11,7 +11,8 @@
     "scaffold",
     "api-client",
     "openapi-alternative",
-    "typescript-generator"
+    "typescript-generator",
+    "cli"
   ],
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
