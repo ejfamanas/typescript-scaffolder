@@ -22,7 +22,6 @@ Ideal for API integrations that expose schema via JSON — just drop the file in
 - [Environment Variable Interface](#environment-variable-interface)
 - [Enum Generation](#enum-generation-from-interface)
 - [Client Api Generation](#api-client-generation-from-interface-alpha)
-- 
 - [Roadmap](#roadmap)
 - [Reporting Bugs](#reporting-bugs)
 - [Contributing](#contributing)
@@ -546,7 +545,7 @@ async function testApiFunction() {
 build().then(testApiFunction);
 ```
 
-## CLI Usage Examples
+## CLI Usage Examples (ALPHA)
 
 Below are example commands to run each of the CLI subcommands available in `typescript-scaffolder`.
 
