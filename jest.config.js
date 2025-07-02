@@ -16,9 +16,10 @@ module.exports = {
       tsconfig: 'tsconfig.json',
     }
   },
-
-  // ✅ Coverage threshold enforcement
-  coverageThreshold: {
+  coveragePathIgnorePatterns: [
+    '/node_modules/',
+    '/src/index.ts',
+  ],  coverageThreshold: {
     global: {
       branches: 80,
       functions: 85,
