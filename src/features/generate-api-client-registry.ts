@@ -3,6 +3,24 @@ import * as fs from 'fs';
 import { walkDirectory } from '../utils/file-system';
 import { Logger } from '../utils/logger';
 
+/**
+ * Creates a registry of functions within a file that can be used at runtime. This function will produce
+ * an object in the following shape, where the field name equals the folder name where the api files are
+ * located
+ *
+ * Example:
+ * export const apiRegistry = {
+ *   'source-charlie': {
+ *     ...person_api
+ *   },
+ *   'source-delta': {
+ *     ...user_api
+ *   }
+ * };
+ *
+ * @param apiRootDir - the parent directory where the Api files are located. Will go into child directories
+ * @param registryFileName - the name of the registry file
+ */
 export async function generateApiRegistry(apiRootDir: string, registryFileName = 'registry.ts') {
 	const funcName = 'generateApiRegistry';
 	Logger.debug(funcName, 'Generating registry...');

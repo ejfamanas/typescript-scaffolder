@@ -1,6 +1,11 @@
 import { AuthType, Endpoint, EndpointAuthCredentials } from 'models/api-definitions';
 import { Logger } from './logger';
 
+/**
+ * Creates an auth header object based on the endpoint credentials config
+ * @param authType
+ * @param credentials
+ */
 export function generateInlineAuthHeader(authType: AuthType, credentials?: EndpointAuthCredentials): string {
 	const funcName = 'generateInlineAuthHeader';
 	Logger.debug(funcName, 'Generating inline auth header...');
@@ -27,11 +32,17 @@ export function generateInlineAuthHeader(authType: AuthType, credentials?: Endpo
 	return '{}';
 }
 
-export function generateClientAction(endpoint: Endpoint, objectName: string): {
+/**
+ * returns the function name and filename for a specified action given an endpoint and parent object
+ * @param endpoint
+ * @param objectName
+ */
+export function generateClientAction(endpoint: Endpoint): {
 	functionName: string,
 	fileName: string
 } {
 	const funcName = 'generateClientAction';
+	const { objectName } = endpoint
 	Logger.debug(funcName, 'Generating client action...');
 	const action =
 		endpoint.method === 'GET' && endpoint.pathParams?.length
