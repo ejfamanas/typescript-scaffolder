@@ -17,10 +17,12 @@ Ideal for API integrations that expose schema via JSON — just drop the file in
 ## Table of Contents
 - [Installation](#installation)
 - [Usage](#usage)
+- [CLI Usage Examples](#cli-usage-examples)
 - [Interface Generation](#interface-generation)
 - [Environment Variable Interface](#environment-variable-interface)
 - [Enum Generation](#enum-generation-from-interface)
 - [Client Api Generation](#api-client-generation-from-interface-alpha)
+- 
 - [Roadmap](#roadmap)
 - [Reporting Bugs](#reporting-bugs)
 - [Contributing](#contributing)
@@ -198,7 +200,7 @@ export enum PreferencesKeys {
 }
 ```
 
-### API Client generation from interface (ALPHA)
+### API Client generation from interface (BETA)
 Generate TypeScript GET_ALL, GET, POST, PUT, DELETE REST Api client based on a configuration file 
 that uses referenced interfaces for typing. 
 
@@ -544,13 +546,92 @@ async function testApiFunction() {
 build().then(testApiFunction);
 ```
 
+## CLI Usage Examples
+
+Below are example commands to run each of the CLI subcommands available in `typescript-scaffolder`.
+
+### Generate Interfaces
+
+Generate TypeScript interfaces from JSON schema files:
+
+```bash
+typescript-scaffolder interfaces -i ./schemas -o ./codegen/interfaces
+```
+
+### Generate Enums
+
+Generate TypeScript enums from interface files:
+
+```bash
+typescript-scaffolder enums -i ./codegen/interfaces -o ./codegen/enums --ext .ts
+```
+
+### Generate Environment Loader
+
+Generate a typed environment variable accessor from a `.env` file:
+
+```bash
+typescript-scaffolder envloader \
+  --env-file .env \
+  --output-dir ./codegen/config \
+  --output-file env-config.ts \
+  --class-name EnvConfig \
+  --enum-name EnvKeys
+```
+
+### Generate API Client From Single Config File
+
+Generate an API client from a single JSON config file:
+
+```bash
+typescript-scaffolder apiclient-file \
+  --config ./config/api.json \
+  --interfaces ./codegen/interfaces \
+  --output ./codegen/apis
+```
+
+### Generate API Clients From Config Directory
+
+Generate API clients from multiple JSON config files in a directory:
+
+```bash
+typescript-scaffolder apiclient-dir \
+  --config-dir ./config/api-configs \
+  --interfaces-root ./codegen/interfaces \
+  --output-root ./codegen/apis
+```
+
+### Generate API Client Registry
+
+Generate a consolidated API client registry file from generated clients:
+
+```bash
+typescript-scaffolder apiclient-registry \
+  --api-root ./codegen/apis \
+  --registry-file registry.ts
+```
+
+---
+
+To see all available commands and options, run:
+
+```bash
+typescript-scaffolder help
+```
+
+or
+
+```bash
+typescript-scaffolder --help
+```
+
 
 ## Roadmap
 - [x] Generate TypeScript interfaces from schema definitions
 - [x] Generate TypeScript enums to assert key names
 - [x] Generate TypeScript accessor for environment variables
 - [x] Generate TypeScript axios REST api client from interfaces
-- [ ] Command line interface access
+- [x] Command line interface access
 - [ ] Scaffolding for service mocking (GET, POST, PUT, DELETE)
 - [ ] Generate enums from definitions
 - [ ] Generate classes from schema definitions
