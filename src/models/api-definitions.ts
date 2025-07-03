@@ -1,7 +1,12 @@
 export type Method = 'GET' | 'POST' | 'PUT' | 'DELETE'
 export type AuthType = 'basic' | 'apikey' | 'none'
 
-export interface Endpoint {
+export interface SchemaConsumer {
+	requestSchema?: string;
+	responseSchema?: string;
+}
+
+export interface Endpoint extends SchemaConsumer {
 	method: Method;
 	path: string;
 	objectName: string;
@@ -9,7 +14,6 @@ export interface Endpoint {
 	pathParams?: string[];
 	queryParams?: string[];
 	headers?: Record<string, string>;
-
 	requestSchema?: string;
 	responseSchema: string;
 }

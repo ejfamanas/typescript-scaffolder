@@ -1,101 +1,15 @@
 import { Project } from 'ts-morph';
 import fs from 'fs';
-import { Endpoint, EndpointAuthConfig, EndpointClientConfigFile } from 'models/api-definitions';
+import {Endpoint, EndpointAuthConfig, EndpointClientConfigFile, SchemaConsumer} from 'models/api-definitions';
 import path from 'path'
 import { ensureDir, readEndpointClientConfigFile, walkDirectory } from '../utils/file-system';
-import { generateClientAction, generateInlineAuthHeader } from '../utils/client-constructors';
+import {
+	addRequiredImports, collectRequiredSchemas,
+	constructUrlPath, determineHasBody, findDirectoryContainingAllSchemas,
+	generateClientAction,
+	generateInlineAuthHeader
+} from '../utils/client-constructors';
 import { Logger } from '../utils/logger';
-
-export function determineHasBody(method: string): boolean {
-	return ['post', 'put'].includes(method.toLowerCase());
-}
-
-export function constructUrlPath(endpoint: Endpoint): string {
-	const pathParams = endpoint.pathParams ?? [];
-	return pathParams.reduce((p, param) => p.replace(`:${param}`, `\${${param}}`), endpoint.path);
-}
-
-export function addRequiredImports(
-	sourceFile: import('ts-morph').SourceFile,
-	outputFilePath: string,
-	interfaceInputDir: string,
-	requestSchema: string | undefined,
-	responseSchema: string,
-	hasBody: boolean
-) {
-	const existingImports = sourceFile.getImportDeclarations().map(decl => decl.getModuleSpecifierValue());
-	const addImportIfMissing = (specifier: string, namedImport: string, isDefault = false) => {
-		if (!existingImports.includes(specifier)) {
-			sourceFile.addImportDeclaration({
-				...(isDefault ? { defaultImport: namedImport } : { namedImports: [namedImport] }),
-				moduleSpecifier: specifier,
-			});
-		}
-	};
-
-	if (requestSchema && hasBody) {
-		const requestPath = path
-			.relative(path.dirname(outputFilePath), path.join(interfaceInputDir, requestSchema))
-			.replace(/\\/g, '/')
-			.replace(/\.ts$/, '');
-		addImportIfMissing(requestPath, requestSchema); // use requestSchema verbatim
-	}
-
-	const responsePath = path
-		.relative(path.dirname(outputFilePath), path.join(interfaceInputDir, responseSchema))
-		.replace(/\\/g, '/')
-		.replace(/\.ts$/, '');
-	addImportIfMissing(responsePath, responseSchema); // use responseSchema verbatim
-
-	addImportIfMissing('axios', 'axios', true);
-	addImportIfMissing('axios', 'AxiosRequestConfig');
-}
-
-export function collectRequiredSchemas(endpoints: Endpoint[]): Set<string> {
-	const requiredSchemas = new Set<string>();
-	for (const endpoint of endpoints) {
-		if (endpoint.requestSchema) {
-			requiredSchemas.add(endpoint.requestSchema);
-		}
-		if (endpoint.responseSchema) {
-			requiredSchemas.add(endpoint.responseSchema);
-		}
-	}
-	return requiredSchemas;
-}
-
-export function findDirectoryContainingAllSchemas(
-	requiredSchemas: Set<string>,
-	interfaceNameToDirs: Map<string, Set<string>>,
-	configPath: string,
-	funcName: string
-): string | null {
-	// To find a directory that contains all required schemas:
-	// We build a map from directory to count of schemas found there
-	const dirSchemaCount: Map<string, number> = new Map();
-	for (const schema of requiredSchemas) {
-		const dirs = interfaceNameToDirs.get(schema);
-		if (!dirs) {
-			const configFileName = path.basename(configPath);
-			Logger.warn(funcName,`Schema "${schema}" not found in interface files. Referenced in config: ${configFileName}`);
-
-			const availableSchemas = Array.from(interfaceNameToDirs.keys()).join(', ');
-			Logger.debug(funcName, `Available schemas: ${availableSchemas}`);
-
-			return null;
-		}
-		for (const dir of dirs) {
-			dirSchemaCount.set(dir, (dirSchemaCount.get(dir) ?? 0) + 1);
-		}
-	}
-	const totalSchemas = requiredSchemas.size;
-	for (const [dir, count] of dirSchemaCount.entries()) {
-		if (count === totalSchemas) {
-			return dir;
-		}
-	}
-	return null;
-}
 
 export function generateApiClientFunction(
 	baseUrl: string,

@@ -20,13 +20,12 @@ export function ensureDir(dirPath: string): void {
  * @param rootDir - The current directory being walked
  * @param callback - Function to call with the full file path and relative path
  * @param baseDir - The base directory used to calculate relative paths (defaults to rootDir)
- * @param ext - File extension to match (default is '.json')
+ * @param ext - File extension to match
  */
 export function walkDirectory(
     rootDir: string,
     callback: (filePath: string, relativePath: string) => void,
     ext: string,
-    // TODO: this line is escaping test coverage because of the callback
     baseDir: string = rootDir,
 ): void {
     const funcName = 'walkDirectory';
@@ -35,10 +34,12 @@ export function walkDirectory(
     for (const entry of entries) {
         const fullPath = path.join(rootDir, entry.name);
         if (entry.isDirectory()) {
+
             // keep going if it is a file directory
             Logger.debug(funcName, 'Found file directory...')
             walkDirectory(fullPath, callback, ext, baseDir);
         } else if (entry.isFile() && entry.name.endsWith(ext)) {
+
             // if it's a file, run the callback against the whole directory
             Logger.debug(funcName, 'Invoking callback in directory...')
             const relativePath = path.relative(baseDir, fullPath);

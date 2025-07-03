@@ -630,6 +630,7 @@ typescript-scaffolder --help
 - [x] Generate TypeScript enums to assert key names
 - [x] Generate TypeScript accessor for environment variables
 - [x] Generate TypeScript axios REST api client from interfaces
+- [ ] Generate Typescript axios webhooks
 - [x] Command line interface access
 - [ ] Scaffolding for service mocking (GET, POST, PUT, DELETE)
 - [ ] Generate enums from definitions
