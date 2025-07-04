@@ -5,9 +5,9 @@ import {
 	generateEnumsFromPath,
 	generateEnvLoader,
 	generateInterfacesFromPath,
-	getApiFunction
+	generateWebhookRegistry,
+	generateWebhooksFromPath,
 } from "./src";
-// import {apiRegistry} from "./src/codegen/apis/registry";
 
 
 const ROOT_DIR = process.cwd();                // Base dir where the script is run
@@ -30,6 +30,9 @@ const ENV_FILE = path.resolve(ROOT_DIR, '.env');
 const ENV_OUTPUT_DIR = path.resolve(CODEGEN_DIR, 'config');
 const ENV_OUTPUT_FILE = 'env-config.ts';
 
+const WEBHOOK_CONFIG_PATH = path.resolve(LOCAL_DIR, 'config/webhook-configs');
+const WEBHOOK_OUTPUT_DIR = path.resolve(CODEGEN_DIR, 'webhooks');
+
 async function build() {
 	// using the env accessor
 	// this is a sync function, and should be run first anyway
@@ -44,21 +47,14 @@ async function build() {
 	// Generates an object-centric api client based on a config file
 	await generateApiClientsFromPath(ENDPOINT_CONFIG_PATH, INTERFACE_OUTPUT_DIR, CLIENT_OUTPUT_DIR);
 
+	// Generate webhook handlers/senders based on the webhook configs
+	await generateWebhooksFromPath(WEBHOOK_CONFIG_PATH, INTERFACE_OUTPUT_DIR, WEBHOOK_OUTPUT_DIR);
+
+	// Generate the webhook registry for runtime resolution
+	await generateWebhookRegistry(WEBHOOK_OUTPUT_DIR);
+
 	// Generate the api registry to access the generated client functions
 	await generateApiRegistry(CLIENT_OUTPUT_DIR);
 }
 
-// this test will check if the registry is working. axios should be called if the generation was successful
-// async function testApiFunction() {
-// 	try {
-// 		// use the getApiFunction in combination with the registry, service name, and function name to activate
-// 		const fn = getApiFunction(apiRegistry, 'source-delta', 'GET_user');
-// 		const result = await fn(); // You might need to pass args depending on the signature
-// 		console.log('Function executed successfully:', result);
-// 	} catch (error) {
-// 		console.error('Function invocation failed:', error);
-// 	}
-// }
-
-// build().then(testApiFunction);
 build();

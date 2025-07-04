@@ -77,6 +77,7 @@ export function addRequiredImports(
 ) {
 	const existingImports = sourceFile.getImportDeclarations().map(decl => decl.getModuleSpecifierValue());
 	const addImportIfMissing = (specifier: string, namedImport: string, isDefault = false) => {
+		if (!namedImport?.trim()) return; // Skip if name is empty or undefined
 		if (!existingImports.includes(specifier)) {
 			sourceFile.addImportDeclaration({
 				...(isDefault ? { defaultImport: namedImport } : { namedImports: [namedImport] }),

@@ -2,7 +2,7 @@ import { Project } from 'ts-morph';
 import fs from 'fs';
 import {Endpoint, EndpointAuthConfig, EndpointClientConfigFile, SchemaConsumer} from 'models/api-definitions';
 import path from 'path'
-import { ensureDir, readEndpointClientConfigFile, walkDirectory } from '../utils/file-system';
+import { ensureDir, extractInterfaces, readEndpointClientConfigFile, walkDirectory } from '../utils/file-system';
 import {
 	addRequiredImports, collectRequiredSchemas,
 	constructUrlPath, determineHasBody, findDirectoryContainingAllSchemas,
@@ -148,27 +148,7 @@ export async function generateApiClientsFromPath(
 	const funcName = 'generateApiClientsFromPath'
 	Logger.debug(funcName, 'Starting API client generation from config and interface directories...');
 
-	const configFiles = fs
-		.readdirSync(configDir)
-		.filter((file) => file.endsWith('.json'))
-		.map((file) => path.join(configDir, file));
-
-	// Map from interface name (without extension) to array of directories where found
-	const interfaceNameToDirs: Map<string, Set<string>> = new Map();
-
-	// Walk interfacesRootDir and cache directories by interface filename (without .ts)
-	walkDirectory(
-		interfacesRootDir,
-		(interfacePath: string) => {
-			const dir = path.dirname(interfacePath);
-			const baseName = path.basename(interfacePath, '.ts');
-			if (!interfaceNameToDirs.has(baseName)) {
-				interfaceNameToDirs.set(baseName, new Set());
-			}
-			interfaceNameToDirs.get(baseName)!.add(dir);
-		},
-		'.ts'
-	);
+	const {configFiles, interfaceNameToDirs} = extractInterfaces(configDir, interfacesRootDir);
 
 	for (const configPath of configFiles) {
 		const config: EndpointClientConfigFile | null = readEndpointClientConfigFile(configPath);

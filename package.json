@@ -24,6 +24,7 @@
   },
   "scripts": {
     "dev": "ts-node index.dev.ts",
+    "register": "ts-node index.registers.ts",
     "test:all": "jest --all",
     "test:coverage": "jest --coverage",
     "test:failures": "jest --onlyFailures",

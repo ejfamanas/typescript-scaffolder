@@ -1,8 +1,8 @@
-import {ensureDir, walkDirectory} from "../utils/file-system";
-import {inferJsonSchemaFromPath} from "../utils/schema-inferer";
+import { ensureDir, walkDirectory } from "../utils/file-system";
+import { inferJsonSchemaFromPath } from "../utils/schema-inferer";
 import fs from "fs";
 import path from "node:path";
-import {Logger} from "../utils/logger";
+import { Logger } from "../utils/logger";
 
 /**
  * processes the JSON files and generates typescript interfaces using the same folder structure

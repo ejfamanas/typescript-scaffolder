@@ -16,6 +16,13 @@ export {
 } from './features/generate-api-client';
 export { generateApiRegistry, getApiFunction } from './features/generate-api-client-registry'
 export {
+	generateWebhooksFromFile,
+	generateWebhooksFromPath,
+	generateIncomingWebhook,
+	generateOutgoingWebhook
+} from './features/generate-webhooks'
+export { generateWebhookRegistry, getWebhookFunction } from './features/generate-webhook-registry'
+export {
 	Method,
 	AuthType,
 	Endpoint,

@@ -258,3 +258,30 @@ describe('prefixDuplicateKeys', () => {
         });
     });
 });
+
+describe('toPascalCase', () => {
+    const fn = (str: string) =>
+        str
+            .replace(/([-_]\w)/g, g => g[1].toUpperCase())
+            .replace(/^\w/, c => c.toUpperCase());
+
+    it('converts kebab-case to PascalCase', () => {
+        expect(fn('user-profile')).toBe('UserProfile');
+    });
+
+    it('converts snake_case to PascalCase', () => {
+        expect(fn('order_log')).toBe('OrderLog');
+    });
+
+    it('preserves PascalCase as is', () => {
+        expect(fn('Invoice')).toBe('Invoice');
+    });
+
+    it('converts lowercase to PascalCase', () => {
+        expect(fn('profile')).toBe('Profile');
+    });
+
+    it('handles mixed separators', () => {
+        expect(fn('some_data-id')).toBe('SomeDataId');
+    });
+});

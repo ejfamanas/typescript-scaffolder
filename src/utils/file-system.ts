@@ -1,7 +1,8 @@
 import fs from 'fs';
 import path from 'path';
-import {Logger} from "./logger";
+import { Logger } from "./logger";
 import { EndpointClientConfigFile } from 'models/api-definitions';
+import { WebhookConfigFile } from 'models/webhook-definitions';
 
 /**
  * Ensures the directory exists; creates it recursively if it doesn't.
@@ -11,7 +12,7 @@ export function ensureDir(dirPath: string): void {
     const funcName = 'ensureDir';
     Logger.debug(funcName, 'testing if directory exists...')
     if (!fs.existsSync(dirPath)) {
-        fs.mkdirSync(dirPath, { recursive: true });
+        fs.mkdirSync(dirPath, {recursive: true});
     }
 }
 
@@ -30,7 +31,7 @@ export function walkDirectory(
 ): void {
     const funcName = 'walkDirectory';
     Logger.debug(funcName, 'Walking file directory...')
-    const entries = fs.readdirSync(rootDir, { withFileTypes: true });
+    const entries = fs.readdirSync(rootDir, {withFileTypes: true});
     for (const entry of entries) {
         const fullPath = path.join(rootDir, entry.name);
         if (entry.isDirectory()) {
@@ -52,7 +53,7 @@ export function readEndpointClientConfigFile(configPath: string): EndpointClient
     const funcName = 'readEndpointClientConfigFile';
     Logger.debug(funcName, `Reading config file from ${configPath}`);
     if (!fs.existsSync(configPath)) {
-        Logger.error(funcName,`Config file not found at path: ${configPath}`);
+        Logger.error(funcName, `Config file not found at path: ${configPath}`);
         return null;
     }
     const fileContent = fs.readFileSync(configPath, 'utf-8');
@@ -75,4 +76,54 @@ export function readEndpointClientConfigFile(configPath: string): EndpointClient
         Logger.error(funcName, 'Failed to parse config JSON', err);
     }
     return null;
+}
+
+export function readWebhookConfigFile(configPath: string): WebhookConfigFile | null {
+    const funcName = 'readWebhookConfigFile';
+    Logger.debug(funcName, `Reading webhook config file from ${configPath}`);
+    if (!fs.existsSync(configPath)) {
+        Logger.error(funcName, `Webhook config file not found at path: ${configPath}`);
+        return null;
+    }
+    const fileContent = fs.readFileSync(configPath, 'utf-8');
+    try {
+        const parsed: unknown = JSON.parse(fileContent);
+
+        if (
+            typeof parsed === 'object' &&
+            parsed !== null &&
+            'webhooks' in parsed &&
+            Array.isArray((parsed as any).webhooks)
+        ) {
+            return parsed as WebhookConfigFile;
+        } else {
+            Logger.error(funcName, 'Invalid structure in WebhookConfigFile');
+        }
+    } catch (err) {
+        Logger.error(funcName, 'Failed to parse webhook config JSON', err);
+    }
+    return null;
+}
+
+export function extractInterfaces(configDir: string, interfacesRootDir: string) {
+    const configFiles = fs
+        .readdirSync(configDir)
+        .filter((file) => file.endsWith('.json'))
+        .map((file) => path.join(configDir, file));
+
+    const interfaceNameToDirs: Map<string, Set<string>> = new Map();
+
+    walkDirectory(
+        interfacesRootDir,
+        (interfacePath: string) => {
+            const dir = path.dirname(interfacePath);
+            const baseName = path.basename(interfacePath, '.ts');
+            if (!interfaceNameToDirs.has(baseName)) {
+                interfaceNameToDirs.set(baseName, new Set());
+            }
+            interfaceNameToDirs.get(baseName)!.add(dir);
+        },
+        '.ts'
+    );
+    return {configFiles, interfaceNameToDirs};
 }
