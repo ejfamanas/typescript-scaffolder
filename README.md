@@ -13,7 +13,7 @@ Ideal for API integrations that expose schema via JSON — just drop the file in
 - Auto-create enums from interface keys
 - Typed `.env` accessor generator
 - Typed axios client api generation (beta)
-- Typed express sever and client webhook generation (alpha)
+- Typed express server and client webhook generation (alpha)
 - Preserves directory structure
 
 ## Table of Contents
