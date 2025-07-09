@@ -5,9 +5,9 @@ import {
 	generateEnumsFromPath,
 	generateEnvLoader,
 	generateInterfacesFromPath,
-	generateWebhookRegistry,
-	generateWebhooksFromPath,
 } from "./src";
+import { generateWebhookAppFromPath } from "./src/features/generate-webhook-app";
+import { generateWebhookAppRegistriesFromPath } from "./src/features/generate-webhook-app-registry";
 
 
 const ROOT_DIR = process.cwd();                // Base dir where the script is run
@@ -44,17 +44,14 @@ async function build() {
 	// use the enum generator from the output of the interface generator
 	await generateEnumsFromPath(INTERFACE_OUTPUT_DIR, ENUM_OUTPUT_DIR);
 
-	// Generates an object-centric api client based on a config file
+	// Generates an object-centric axios api client based on a config file
 	await generateApiClientsFromPath(ENDPOINT_CONFIG_PATH, INTERFACE_OUTPUT_DIR, CLIENT_OUTPUT_DIR);
-
-	// Generate webhook handlers/senders based on the webhook configs
-	await generateWebhooksFromPath(WEBHOOK_CONFIG_PATH, INTERFACE_OUTPUT_DIR, WEBHOOK_OUTPUT_DIR);
-
-	// Generate the webhook registry for runtime resolution
-	await generateWebhookRegistry(WEBHOOK_OUTPUT_DIR);
 
 	// Generate the api registry to access the generated client functions
 	await generateApiRegistry(CLIENT_OUTPUT_DIR);
+
+	// Generate an express webhook application
+	await generateWebhookAppFromPath(WEBHOOK_CONFIG_PATH, INTERFACE_OUTPUT_DIR, WEBHOOK_OUTPUT_DIR)
 }
 
 build();

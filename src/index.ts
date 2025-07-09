@@ -21,7 +21,14 @@ export {
 	generateIncomingWebhook,
 	generateOutgoingWebhook
 } from './features/generate-webhooks'
-export { generateWebhookRegistry, getWebhookFunction } from './features/generate-webhook-registry'
+export {
+	generateWebhookApp,
+	generateWebhookAppFromFile,
+	generateWebhookAppFromPath
+} from './features/generate-webhook-app'
+export { generateWebhookAppRegistry,
+	generateWebhookAppRegistriesFromPath
+} from './features/generate-webhook-app-registry'
 export {
 	Method,
 	AuthType,
@@ -31,3 +38,10 @@ export {
 	EndpointClientConfigFile,
 	EndpointConfigType,
 } from './models/api-definitions'
+export {
+	IncomingWebhook,
+	OutgoingWebhook,
+	BaseWebhook,
+	Webhook,
+	WebhookConfigFile
+} from './models/webhook-definitions'

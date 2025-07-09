@@ -3,9 +3,10 @@ import {
     generateClientAction,
     determineHasBody,
     constructUrlPath,
-    addRequiredImports,
+    addClientRequiredImports,
     collectRequiredSchemas,
-    findDirectoryContainingAllSchemas
+    findDirectoryContainingAllSchemas,
+    buildImportMapAndRegistryEntries
 } from '../../src/utils/client-constructors';
 import {Endpoint} from "../../src";
 import {SourceFile} from "ts-morph";
@@ -113,7 +114,7 @@ describe('client helper functions', () => {
 
             // const schemas = ['User', 'Post'];
 
-            addRequiredImports(
+            addClientRequiredImports(
                 mockSourceFile,
                 './output/User_api.ts',
                 './interfaces',
@@ -135,7 +136,7 @@ describe('client helper functions', () => {
                 addImportDeclaration: jest.fn()
             } as unknown as SourceFile;
 
-            addRequiredImports(
+            addClientRequiredImports(
                 mockSourceFile,
                 './output/User_api.ts',
                 './interfaces',
@@ -144,7 +145,7 @@ describe('client helper functions', () => {
                 false
             );
 
-            expect(mockSourceFile.addImportDeclaration).toHaveBeenCalledTimes(3);
+            expect(mockSourceFile.addImportDeclaration).toHaveBeenCalledTimes(2);
         });
 
     });
@@ -188,48 +189,130 @@ describe('client helper functions', () => {
             expect(schemas.size).toBe(3);
         });
     });
+});
 
-    describe('findDirectoryContainingAllSchemas', () => {
-        it('returns the directory containing all schemas', () => {
-            const existingFiles = new Set([
-                path.join('/path/to/dir1', 'User.ts'),
-                path.join('/path/to/dir2', 'User.ts'),
-                path.join('/path/to/dir2', 'Post.ts'),
-                path.join('/path/to/dir3', 'Post.ts'),
-            ]);
-            // TODO: This is erroring in the IDE even though the function call is correct based on the signature
-            const fsExistsSpy = jest.spyOn(fs, 'existsSync').mockImplementation((filePath) => {
-                return existingFiles.has(filePath.toString());
-            });
-
-            const requiredSchemas = new Set(['User', 'Post']);
-            const interfaceNameToDirs = new Map([
-                ['User', new Set(['/path/to/dir1', '/path/to/dir2'])],
-                ['Post', new Set(['/path/to/dir2', '/path/to/dir3'])]
-            ]);
-            const configPath = '/some/config.json';
-            const funcName = 'test';
-
-            const result = findDirectoryContainingAllSchemas(requiredSchemas, interfaceNameToDirs, configPath, funcName);
-            expect(result).toBe('/path/to/dir2');
-
-            fsExistsSpy.mockRestore();
+describe('findDirectoryContainingAllSchemas', () => {
+    it('returns the directory containing all schemas', () => {
+        const existingFiles = new Set([
+            path.join('/path/to/dir1', 'User.ts'),
+            path.join('/path/to/dir2', 'User.ts'),
+            path.join('/path/to/dir2', 'Post.ts'),
+            path.join('/path/to/dir3', 'Post.ts'),
+        ]);
+        // TODO: This is erroring in the IDE even though the function call is correct based on the signature
+        const fsExistsSpy = jest.spyOn(fs, 'existsSync').mockImplementation((filePath) => {
+            return existingFiles.has(filePath.toString());
         });
 
-        it('returns undefined if no directory contains all schemas', () => {
-            // TODO: This is erroring in the IDE even though the function call is correct based on the signature
-            jest.spyOn(fs, 'existsSync').mockReturnValue(false);
+        const requiredSchemas = new Set(['User', 'Post']);
+        const interfaceNameToDirs = new Map([
+            ['User', new Set(['/path/to/dir1', '/path/to/dir2'])],
+            ['Post', new Set(['/path/to/dir2', '/path/to/dir3'])]
+        ]);
+        const configPath = '/some/config.json';
+        const funcName = 'test';
 
-            const requiredSchemas = new Set(['A', 'B']);
-            const interfaceNameToDirs = new Map([
-                ['A', new Set(['/dir1'])],
-                ['B', new Set(['/dir2'])]
-            ]);
-            const configPath = '/some/config.json';
-            const funcName = 'test';
+        const result = findDirectoryContainingAllSchemas(requiredSchemas, interfaceNameToDirs, configPath, funcName);
+        expect(result).toBe('/path/to/dir2');
 
-            const result = findDirectoryContainingAllSchemas(requiredSchemas, interfaceNameToDirs, configPath, funcName);
-            expect(result).toBeNull();
-        });
+        fsExistsSpy.mockRestore();
     });
-})
+
+    it('returns undefined if no directory contains all schemas', () => {
+        // TODO: This is erroring in the IDE even though the function call is correct based on the signature
+        jest.spyOn(fs, 'existsSync').mockReturnValue(false);
+
+        const requiredSchemas = new Set(['A', 'B']);
+        const interfaceNameToDirs = new Map([
+            ['A', new Set(['/dir1'])],
+            ['B', new Set(['/dir2'])]
+        ]);
+        const configPath = '/some/config.json';
+        const funcName = 'test';
+
+        const result = findDirectoryContainingAllSchemas(requiredSchemas, interfaceNameToDirs, configPath, funcName);
+        expect(result).toBeNull();
+    });
+
+    it('logs warning and returns null if a required schema is not found in any directory', () => {
+        const requiredSchemas = new Set(['MissingSchema']);
+        const interfaceNameToDirs = new Map([
+            ['User', new Set(['/some/dir'])]
+        ]);
+        const configPath = '/configs/sample-client.json';
+        const funcName = 'test';
+
+        // TODO: This is erroring in the IDE even though the function call is correct based on the signature
+        const loggerWarnSpy = jest.spyOn(console, 'warn').mockImplementation(() => {});
+        const loggerDebugSpy = jest.spyOn(console, 'debug').mockImplementation(() => {});
+
+        const result = findDirectoryContainingAllSchemas(requiredSchemas, interfaceNameToDirs, configPath, funcName);
+
+        expect(result).toBeNull();
+
+        loggerWarnSpy.mockRestore();
+        loggerDebugSpy.mockRestore();
+    });
+});
+
+describe('buildImportMapAndRegistryEntries', () => {
+    it('generates correct import and registry for single file', () => {
+        const importMap = new Map<string, string[]>([
+            ['service-a', ['service-a/foo.ts']]
+        ]);
+
+        const { importStatements, registryEntries } = buildImportMapAndRegistryEntries(importMap);
+
+        expect(importStatements[0]).toBe("import * as foo from './service-a/foo';");
+        expect(registryEntries[0]).toContain("'service-a':");
+        expect(registryEntries[0]).toContain('...foo');
+    });
+
+    it('handles multiple files in one subdir', () => {
+        const importMap = new Map<string, string[]>([
+            ['service-a', ['service-a/foo.ts', 'service-a/bar.ts']]
+        ]);
+
+        const { importStatements, registryEntries } = buildImportMapAndRegistryEntries(importMap);
+
+        expect(importStatements.length).toBe(2);
+        expect(registryEntries[0]).toContain('...foo');
+        expect(registryEntries[0]).toContain('...bar');
+    });
+
+    it('handles multiple subdirectories', () => {
+        const importMap = new Map<string, string[]>([
+            ['service-a', ['service-a/foo.ts']],
+            ['service-b', ['service-b/bar.ts']]
+        ]);
+
+        const { importStatements, registryEntries } = buildImportMapAndRegistryEntries(importMap);
+
+        expect(importStatements.length).toBe(2);
+        expect(registryEntries.length).toBe(2);
+        expect(registryEntries[0]).toContain('service-a');
+        expect(registryEntries[1]).toContain('service-b');
+    });
+
+    it('sanitizes invalid import variable names', () => {
+        const importMap = new Map<string, string[]>([
+            ['service-a', ['service-a/foo-bar.ts']]
+        ]);
+
+        const { importStatements, registryEntries } = buildImportMapAndRegistryEntries(importMap);
+
+        expect(importStatements[0]).toContain('import * as foo_bar from');
+        expect(registryEntries[0]).toContain('...foo_bar');
+    });
+
+    it('normalizes backslashes in paths', () => {
+        const importMap = new Map<string, string[]>([
+            ['service\\a', ['service\\a\\foo.ts']]
+        ]);
+
+        const { importStatements, registryEntries } = buildImportMapAndRegistryEntries(importMap);
+
+        expect(importStatements[0]).toBe("import * as service_a_foo from './service/a/service/a/foo';");
+        expect(registryEntries[0]).toContain("'service/a':");
+    });
+});

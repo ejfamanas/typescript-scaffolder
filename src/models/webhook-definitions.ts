@@ -3,6 +3,7 @@ import {SchemaConsumer} from "models/api-definitions";
 export interface IncomingWebhook extends BaseWebhook {
     direction: 'incoming'
     path: string; // Required for incoming
+    handlerName: string; // required for route + handler generation
 }
 
 export interface OutgoingWebhook extends BaseWebhook {

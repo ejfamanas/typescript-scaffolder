@@ -4,7 +4,7 @@ import {Endpoint, EndpointAuthConfig, EndpointClientConfigFile, SchemaConsumer} 
 import path from 'path'
 import { ensureDir, extractInterfaces, readEndpointClientConfigFile, walkDirectory } from '../utils/file-system';
 import {
-	addRequiredImports, collectRequiredSchemas,
+	addClientRequiredImports, collectRequiredSchemas,
 	constructUrlPath, determineHasBody, findDirectoryContainingAllSchemas,
 	generateClientAction,
 	generateInlineAuthHeader
@@ -48,7 +48,7 @@ export function generateApiClientFunction(
 	const urlPath = constructUrlPath(endpoint);
 
 	// Imports
-	addRequiredImports(sourceFile, outputFilePath, interfaceInputDir, requestSchema, responseSchema!, hasBody);
+	addClientRequiredImports(sourceFile, outputFilePath, interfaceInputDir, requestSchema, responseSchema!, hasBody);
 
 	// Function parameters
 	const parameters = [

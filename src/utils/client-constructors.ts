@@ -67,13 +67,14 @@ export function constructUrlPath(endpoint: Endpoint): string {
 	return pathParams.reduce((p, param) => p.replace(`:${param}`, `\${${param}}`), endpoint.path);
 }
 
-export function addRequiredImports(
+export function addClientRequiredImports(
 	sourceFile: import('ts-morph').SourceFile,
 	outputFilePath: string,
 	interfaceInputDir: string,
 	requestSchema: string | undefined,
 	responseSchema: string,
-	hasBody: boolean
+	hasBody: boolean,
+	addAxios: boolean = true
 ) {
 	const existingImports = sourceFile.getImportDeclarations().map(decl => decl.getModuleSpecifierValue());
 	const addImportIfMissing = (specifier: string, namedImport: string, isDefault = false) => {
@@ -100,8 +101,10 @@ export function addRequiredImports(
 		.replace(/\.ts$/, '');
 	addImportIfMissing(responsePath, responseSchema); // use responseSchema verbatim
 
-	addImportIfMissing('axios', 'axios', true);
-	addImportIfMissing('axios', 'AxiosRequestConfig');
+	if (addAxios) {
+		addImportIfMissing('axios', 'axios', true);
+		addImportIfMissing('axios', 'AxiosRequestConfig');
+	}
 }
 
 
@@ -149,4 +152,26 @@ export function findDirectoryContainingAllSchemas(
 		}
 	}
 	return null;
+}
+
+export function buildImportMapAndRegistryEntries(importMap: Map<string, string[]>): { importStatements: string[], registryEntries: string[] } {
+	const importStatements: string[] = [];
+	const registryEntries: string[] = [];
+
+	for (const [subDir, files] of importMap.entries()) {
+		const registryKey = subDir.replace(/\\/g, '/'); // Normalize Windows paths
+		const entryLines: string[] = [];
+
+		for (const file of files) {
+			const fileName = path.basename(file, '.ts');
+			const importVar = `${fileName.replace(/[^a-zA-Z0-9_$]/g, '_')}`;
+			const relativePath = `./${path.join(subDir, fileName).replace(/\\/g, '/')}`;
+			importStatements.push(`import * as ${importVar} from '${relativePath}';`);
+			entryLines.push(`...${importVar}`);
+		}
+
+		registryEntries.push(`  '${registryKey}': {\n    ${entryLines.join(',\n    ')}\n  }`);
+	}
+
+	return { importStatements, registryEntries };
 }

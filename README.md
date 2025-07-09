@@ -1,5 +1,6 @@
 # TypeScript Scaffolder
 Includes beta features for REST API client generation
+Includes alpha features for Webhook Server and Client Generation
 
 ![npm version](https://img.shields.io/npm/v/typescript-scaffolder)
 ### Unit Test Coverage: 97.53%
@@ -12,6 +13,7 @@ Ideal for API integrations that expose schema via JSON — just drop the file in
 - Auto-create enums from interface keys
 - Typed `.env` accessor generator
 - Typed axios client api generation (beta)
+- Typed express sever and client webhook generation (alpha)
 - Preserves directory structure
 
 ## Table of Contents
@@ -22,6 +24,7 @@ Ideal for API integrations that expose schema via JSON — just drop the file in
 - [Environment Variable Interface](#environment-variable-interface)
 - [Enum Generation](#enum-generation-from-interface)
 - [Client Api Generation](#api-client-generation-from-interface)
+- [Webhook Server Generation](#webhook-Server-generation-from-interface)
 - [Roadmap](#roadmap)
 - [Reporting Bugs](#reporting-bugs)
 - [Contributing](#contributing)
@@ -216,11 +219,7 @@ For example, given:
 - Interface input input: `codegen/interfaces/source-charlie/GET_RES_users.ts`
 - Config file: `config/endpoint-configs/users.json`
 - Config responseSchema value: `GET_RES_users`
-- Output file: `codegen/apis/source-charlie/USER_api.ts`
-
-The output will be:
-- `codegen/apis/source-charlie/users_api.ts`
-
+- Output file: `codegen/apis/source-charlie/USESR_api.ts`
 
 The following interface is used to define the api config
 
@@ -447,6 +446,160 @@ To store the function and call it as required, or user the helper function which
 const fn = getApiFunction(apiRegistry, 'source-delta', 'GET_user');
 ```
 
+### Webhook Server Generation from interface
+When using `generateWebhookAppFromPath`, follow this pattern for best results:
+
+- Config files should be stored in a **flat** folder structure (e.g., `config/webhook-configs`)
+- Generated interfaces can be stored in a **parent folder with subdirectories** to reflect source groupings (e.g., `codegen/interfaces/source-a`, `codegen/interfaces/source-b`)
+- The output directory (e.g., `codegen/webhooks`) will **mirror** the structure of the interfaces directory
+- The names specified in the webhook config file must match the interface file name.
+
+For example, given:
+- Interface input input: `codegen/interfaces/source-echo/StripeWebhookPayload.ts`
+- Config file: `config/webhook-configs/payment.json`
+- Config responseSchema value: `StripeWebhookPayload`
+- Output files: 
+  - `codegen/webhooks/source-echo/webhookAppRegistry.ts`
+  - `codegen/webhooks/source-echo/createSourceEchoWebhookApp.ts`
+  - `codegen/webhooks/source-echo/routes/router.ts`
+  - `codegen/webhooks/source-echo/routes/handle_stripePaymentWebhook.ts`
+
+The following interface is used to define the webhook config
+```
+export interface IncomingWebhook extends BaseWebhook {
+    direction: 'incoming'
+    path: string; // Required for incoming
+    handlerName: string; // required for route + handler generation
+}
+
+export interface OutgoingWebhook extends BaseWebhook {
+    direction: 'outgoing'
+    targetUrl: string; // Required for outgoing
+}
+
+export interface BaseWebhook extends SchemaConsumer {
+    direction: 'incoming' | 'outgoing';
+    name: string;
+    requestSchema: string;
+    responseSchema?: string;
+    headers?: Record<string, string>;
+    secretVerificationKey?: string; // Optional: used for signature validation
+}
+
+export type Webhook = IncomingWebhook | OutgoingWebhook;
+
+export interface WebhookConfigFile {
+    webhooks: Webhook[];
+}
+```
+As an example, if you have interfaces generated from the following JSON files:
+```
+// StripeWebhookPayload.json (incoming)
+{
+  "id": "evt_12345",
+  "object": "event",
+  "type": "payment_intent.succeeded",
+  "data": {
+    "object": {
+      "amount": 2000,
+      "currency": "usd",
+      "status": "succeeded"
+    }
+  }
+}
+```
+And you define your JSON config as below:
+```
+{
+  "webhooks": [
+    {
+      "direction": "incoming",
+      "name": "stripe_payment",
+      "path": "/webhooks/stripe",
+      "requestSchema": "StripeWebhookPayload",
+      "handlerName": "stripePaymentWebhook"
+    }
+  ]
+}
+```
+The system will produce the following files:
+```
+// webhookAppRegistry.ts
+import * as Router from './routes/router';
+import * as handle_stripePaymentWebhook from './routes/handle_stripePaymentWebhook';
+
+export const webhookAppRegistry = {
+  'source-echo': {
+    router: Router,
+    handlers: {
+      ...handle_stripePaymentWebhook
+    }
+  }
+};
+
+// createSourceEchoWebhookApp.ts
+import express from "express";
+import { webhookAppRegistry } from "./webhookAppRegistry";
+
+export function createSourceEchoWebhookApp() {
+
+    const app = express();
+    app.use(express.json());
+
+    const handlers = webhookAppRegistry['source-echo']?.handlers || {};
+
+    for (const key of Object.keys(handlers)) {
+      app.post('/' + key, handlers[key]);
+    }
+
+    return app;
+}
+
+// routes/handle_stripePaymentWebhook.ts
+import { StripeWebhookPayload } from "../../../interfaces/source-echo/StripeWebhookPayload";
+
+export async function handleStripePaymentWebhookWebhook(payload: StripeWebhookPayload): Promise<void> {
+    // TODO: Implement webhook handler logic here
+    console.log("Received webhook payload:", payload);
+}
+
+// routes/router.ts
+import express from "express";
+import type { StripeWebhookPayload } from "../../../interfaces/source-echo/StripeWebhookPayload";
+import { handleStripePaymentWebhookWebhook } from "./handle_stripePaymentWebhook";
+const router = express.Router();
+router.use(express.json());
+router.post('/webhooks/stripe', async (req, res) => {
+	try {
+		const payload = req.body as StripeWebhookPayload;
+		await handleStripePaymentWebhookWebhook(payload);
+		res.status(200).json({ ok: true });
+	} catch (error) {
+		console.error('Webhook error:', error);
+		res.status(500).json({ ok: false });
+	}
+});
+export default router;
+```
+Alternatively, if you express an outgoing webhook, it will look like this
+```
+import { NotifyPayload } from "../../../interfaces/source-foxtrot/NotifyPayload";
+import { NotifyResponse } from "../../../interfaces/source-foxtrot/NotifyResponse";
+import axios from "axios";
+import { AxiosRequestConfig } from "axios";
+
+export async function sendNotifyPartnerWebhook(body: NotifyPayload, headers?: Record<string, string>): Promise<NotifyResponse> {
+    const response = await axios.post(`https://partner.example.com/webhook`, body, { headers });
+    return response.data;
+}
+
+```
+
+You can access the individual handlers by referencing the registry, e.g.
+```
+webhookAppRegistry['source-echo'].handlers.handle_stripePaymentWebhook
+```
+
 ## Installation
 To install the package, run the following command
 ```
@@ -463,9 +616,11 @@ For example:
 ```
 src/
   codegen/
-    interfaces/
     apis/
     config/
+    enums/
+    interfaces/
+    webhooks/
 ```
 
 This ensures:
@@ -610,6 +765,17 @@ typescript-scaffolder apiclient-registry \
   --registry-file registry.ts
 ```
 
+### Generate Webhook App
+
+Generate an Express webhook app and registry from a config file:
+
+```bash
+typescript-scaffolder webhooks \
+  --config ./config/source-bravo.json \
+  --interfaces ./codegen/interfaces \
+  --output ./codegen/webhooks
+```
+
 ---
 
 To see all available commands and options, run:
@@ -629,8 +795,10 @@ typescript-scaffolder --help
 - [x] Generate TypeScript interfaces from schema definitions
 - [x] Generate TypeScript enums to assert key names
 - [x] Generate TypeScript accessor for environment variables
+- [ ] Generate typed json schemas
 - [x] Generate TypeScript axios REST api client from interfaces
-- [ ] Generate Typescript axios webhooks
+- [x] Generate Typescript axios client webhook apps
+- [x] Generate Typescript express server webhook apps
 - [x] Command line interface access
 - [ ] Scaffolding for service mocking (GET, POST, PUT, DELETE)
 - [ ] Generate enums from definitions

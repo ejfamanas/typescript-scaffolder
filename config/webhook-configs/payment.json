@@ -4,7 +4,8 @@
       "direction": "incoming",
       "name": "stripe_payment",
       "path": "/webhooks/stripe",
-      "requestSchema": "StripeWebhookPayload"
+      "requestSchema": "StripeWebhookPayload",
+      "handlerName": "stripePaymentWebhook"
     }
   ]
 }

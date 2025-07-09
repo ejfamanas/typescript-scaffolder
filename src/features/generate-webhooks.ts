@@ -8,7 +8,7 @@ import { Project } from 'ts-morph';
 import path from 'path';
 import fs from 'fs';
 import { toPascalCase } from "../utils/object-helpers";
-import { addRequiredImports } from "../utils/client-constructors";
+import { addClientRequiredImports } from "../utils/client-constructors";
 
 export async function generateIncomingWebhook(
     webhook: IncomingWebhook,
@@ -16,11 +16,11 @@ export async function generateIncomingWebhook(
     outputDir: string
 ): Promise<void> {
     const funcName = 'generateIncomingWebhook';
-    const {name, requestSchema} = webhook;
+    const {name, requestSchema, handlerName} = webhook;
 
     Logger.debug(funcName, `Generating incoming webhook handler for "${name}"...`);
 
-    const fileName = `handle_${name}_webhook.ts`;
+    const fileName = `handle_${handlerName}.ts`;
     const outputFilePath = path.join(outputDir, fileName);
     fs.mkdirSync(path.dirname(outputFilePath), {recursive: true});
 
@@ -28,10 +28,18 @@ export async function generateIncomingWebhook(
     const sourceFile = project.createSourceFile(outputFilePath, '', {overwrite: true});
 
     // Include axios, responseSchema to avoid manual editing later
-    addRequiredImports(sourceFile, outputFilePath, interfaceInputDir, requestSchema, '', true);
+    addClientRequiredImports(
+        sourceFile,
+        outputFilePath,
+        interfaceInputDir,
+        requestSchema,
+        '',
+        true,
+        false
+    );
 
     sourceFile.addFunction({
-        name: `handle${toPascalCase(name)}Webhook`,
+        name: `handle${toPascalCase(handlerName)}Webhook`,
         isExported: true,
         isAsync: true,
         parameters: [
@@ -67,7 +75,14 @@ export async function generateOutgoingWebhook(
     const project = new Project();
     const sourceFile = project.createSourceFile(outputFilePath, '', {overwrite: true});
 
-    addRequiredImports(sourceFile, outputFilePath, interfaceInputDir, requestSchema, responseSchema || '', true);
+    addClientRequiredImports(
+        sourceFile,
+        outputFilePath,
+        interfaceInputDir,
+        requestSchema,
+        responseSchema || '',
+        true,
+    );
 
     sourceFile.addFunction({
         name: `send${toPascalCase(name)}Webhook`,
@@ -95,12 +110,18 @@ export async function generateOutgoingWebhook(
 }
 
 export async function generateWebhooksFromFile(
-    config: WebhookConfigFile,
+    configPath: string,
     interfaceInputDir: string,
     outputDir: string
 ): Promise<void> {
     const funcName = 'generateWebhooksFromFile';
     Logger.debug(funcName, 'Starting webhook handler generation...');
+
+    const config = readWebhookConfigFile(configPath);
+    if (!config) {
+        Logger.warn(funcName, `Skipping invalid config file at: ${configPath}`);
+        return;
+    }
 
     for (const webhook of config.webhooks) {
         if (webhook.direction === 'incoming') {
@@ -116,6 +137,9 @@ export async function generateWebhooksFromFile(
 
 /**
  * Generate webhook handlers/senders from all config files in a directory, mapping to interface directories.
+ * @param configDir - Path to the webhook config file.
+ * @param interfacesRootDir - Directory containing interface .ts files.
+ * @param outputRootDir - Output directory for generated routes.
  */
 export async function generateWebhooksFromPath(
     configDir: string,
@@ -151,7 +175,7 @@ export async function generateWebhooksFromPath(
         const outputDir = path.join(outputRootDir, relativeInterfaceDir);
         ensureDir(outputDir);
 
-        await generateWebhooksFromFile(config, foundDir, outputDir);
+        await generateWebhooksFromFile(configPath, foundDir, outputDir);
     }
 
     Logger.info(funcName, 'Webhook generation completed.');
