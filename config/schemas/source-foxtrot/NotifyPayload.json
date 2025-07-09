@@ -1,0 +1,6 @@
+{
+  "event": "payment_complete",
+  "userId": "user_789",
+  "amount": 2000,
+  "timestamp": "2024-01-01T12:00:00Z"
+}

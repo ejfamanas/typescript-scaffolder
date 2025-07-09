@@ -1,0 +1,11 @@
+{
+  "webhooks": [
+    {
+      "direction": "incoming",
+      "name": "stripe_payment",
+      "path": "/webhooks/stripe",
+      "requestSchema": "StripeWebhookPayload",
+      "handlerName": "stripePaymentWebhook"
+    }
+  ]
+}

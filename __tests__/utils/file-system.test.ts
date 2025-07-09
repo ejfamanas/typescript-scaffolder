@@ -1,3 +1,5 @@
+import { extractInterfaces } from "../../src/utils/file-system";
+import { readWebhookConfigFile } from "../../src/utils/file-system";
 import fs from 'fs';
 import path from 'path';
 import { ensureDir, readEndpointClientConfigFile, walkDirectory } from "../../src/utils/file-system";
@@ -228,5 +230,92 @@ describe('readEndpointClientConfigFile', () => {
         expect(() => {
             readEndpointClientConfigFile(testFilePath);
         }).toThrowError(/Invalid structure in EndpointClientConfigFile/);
+    });
+});
+
+describe('readWebhookConfigFile', () => {
+    const testFilePath = path.join(TEST_ROOT, 'webhook-config.json');
+
+    it('returns parsed config if valid', () => {
+        const validConfig = {
+            webhooks: [
+                {
+                    direction: "incoming",
+                    name: "stripe_payment",
+                    path: "/webhooks/stripe",
+                    requestSchema: "StripeWebhookPayload"
+                }
+            ]
+        };
+
+        fs.writeFileSync(testFilePath, JSON.stringify(validConfig, null, 2));
+        const result = readWebhookConfigFile(testFilePath);
+
+        expect(result).not.toBeNull();
+        expect(result?.webhooks.length).toBe(1);
+        expect(result?.webhooks[0].name).toBe("stripe_payment");
+    });
+
+    it('throws if file does not exist', () => {
+        const filePath = path.join(TEST_ROOT, 'missing-webhook.json');
+        if (fs.existsSync(filePath)) fs.unlinkSync(filePath); // ensure clean state
+
+        expect(() => {
+            readWebhookConfigFile(filePath);
+        }).toThrowError(/Webhook config file not found at path/);
+    });
+
+    it('throws on malformed JSON', () => {
+        fs.writeFileSync(testFilePath, '{ bad json ');
+        expect(() => {
+            readWebhookConfigFile(testFilePath);
+        }).toThrowError(/Failed to parse webhook config JSON/);
+    });
+
+    it('throws on structurally invalid config', () => {
+        const invalidConfig = { hello: "world" };
+        fs.writeFileSync(testFilePath, JSON.stringify(invalidConfig));
+        expect(() => {
+            readWebhookConfigFile(testFilePath);
+        }).toThrowError(/Invalid structure in WebhookConfigFile/);
+    });
+});
+
+
+describe('extractInterfaces', () => {
+    const configDir = path.join(TEST_ROOT, 'extract-interfaces-configs');
+    const interfaceDir = path.join(TEST_ROOT, 'extract-interfaces-interfaces');
+
+    beforeAll(() => {
+        fs.mkdirSync(configDir, { recursive: true });
+        fs.mkdirSync(interfaceDir, { recursive: true });
+
+        // Create sample config files
+        fs.writeFileSync(path.join(configDir, 'a.json'), '{}');
+        fs.writeFileSync(path.join(configDir, 'b.json'), '{}');
+
+        // Create sample interface files
+        const subDir = path.join(interfaceDir, 'group');
+        fs.mkdirSync(subDir, { recursive: true });
+        fs.writeFileSync(path.join(subDir, 'Alpha.ts'), 'export interface Alpha {}');
+        fs.writeFileSync(path.join(subDir, 'Beta.ts'), 'export interface Beta {}');
+    });
+
+    afterAll(() => {
+        // Cleanup
+        fs.rmSync(configDir, { recursive: true, force: true });
+        fs.rmSync(interfaceDir, { recursive: true, force: true });
+    });
+
+    it('returns config files and maps interface names to directories', () => {
+        const { configFiles, interfaceNameToDirs } = extractInterfaces(configDir, interfaceDir);
+
+        const configNames = configFiles.map(f => path.basename(f)).sort();
+        expect(configNames).toEqual(['a.json', 'b.json']);
+
+        expect(interfaceNameToDirs.has('Alpha')).toBe(true);
+        expect(interfaceNameToDirs.has('Beta')).toBe(true);
+        const alphaDirs = Array.from(interfaceNameToDirs.get('Alpha')!);
+        expect(alphaDirs[0]).toContain('group');
     });
 });

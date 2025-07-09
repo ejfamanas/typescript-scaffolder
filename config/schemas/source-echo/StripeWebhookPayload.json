@@ -1,0 +1,12 @@
+{
+  "id": "evt_12345",
+  "object": "event",
+  "type": "payment_intent.succeeded",
+  "data": {
+    "object": {
+      "amount": 2000,
+      "currency": "usd",
+      "status": "succeeded"
+    }
+  }
+}

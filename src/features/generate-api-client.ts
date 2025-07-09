@@ -1,101 +1,15 @@
 import { Project } from 'ts-morph';
 import fs from 'fs';
-import { Endpoint, EndpointAuthConfig, EndpointClientConfigFile } from 'models/api-definitions';
+import {Endpoint, EndpointAuthConfig, EndpointClientConfigFile, SchemaConsumer} from 'models/api-definitions';
 import path from 'path'
-import { ensureDir, readEndpointClientConfigFile, walkDirectory } from '../utils/file-system';
-import { generateClientAction, generateInlineAuthHeader } from '../utils/client-constructors';
+import { ensureDir, extractInterfaces, readEndpointClientConfigFile, walkDirectory } from '../utils/file-system';
+import {
+	addClientRequiredImports, collectRequiredSchemas,
+	constructUrlPath, determineHasBody, findDirectoryContainingAllSchemas,
+	generateClientAction,
+	generateInlineAuthHeader
+} from '../utils/client-constructors';
 import { Logger } from '../utils/logger';
-
-export function determineHasBody(method: string): boolean {
-	return ['post', 'put'].includes(method.toLowerCase());
-}
-
-export function constructUrlPath(endpoint: Endpoint): string {
-	const pathParams = endpoint.pathParams ?? [];
-	return pathParams.reduce((p, param) => p.replace(`:${param}`, `\${${param}}`), endpoint.path);
-}
-
-export function addRequiredImports(
-	sourceFile: import('ts-morph').SourceFile,
-	outputFilePath: string,
-	interfaceInputDir: string,
-	requestSchema: string | undefined,
-	responseSchema: string,
-	hasBody: boolean
-) {
-	const existingImports = sourceFile.getImportDeclarations().map(decl => decl.getModuleSpecifierValue());
-	const addImportIfMissing = (specifier: string, namedImport: string, isDefault = false) => {
-		if (!existingImports.includes(specifier)) {
-			sourceFile.addImportDeclaration({
-				...(isDefault ? { defaultImport: namedImport } : { namedImports: [namedImport] }),
-				moduleSpecifier: specifier,
-			});
-		}
-	};
-
-	if (requestSchema && hasBody) {
-		const requestPath = path
-			.relative(path.dirname(outputFilePath), path.join(interfaceInputDir, requestSchema))
-			.replace(/\\/g, '/')
-			.replace(/\.ts$/, '');
-		addImportIfMissing(requestPath, requestSchema); // use requestSchema verbatim
-	}
-
-	const responsePath = path
-		.relative(path.dirname(outputFilePath), path.join(interfaceInputDir, responseSchema))
-		.replace(/\\/g, '/')
-		.replace(/\.ts$/, '');
-	addImportIfMissing(responsePath, responseSchema); // use responseSchema verbatim
-
-	addImportIfMissing('axios', 'axios', true);
-	addImportIfMissing('axios', 'AxiosRequestConfig');
-}
-
-export function collectRequiredSchemas(endpoints: Endpoint[]): Set<string> {
-	const requiredSchemas = new Set<string>();
-	for (const endpoint of endpoints) {
-		if (endpoint.requestSchema) {
-			requiredSchemas.add(endpoint.requestSchema);
-		}
-		if (endpoint.responseSchema) {
-			requiredSchemas.add(endpoint.responseSchema);
-		}
-	}
-	return requiredSchemas;
-}
-
-export function findDirectoryContainingAllSchemas(
-	requiredSchemas: Set<string>,
-	interfaceNameToDirs: Map<string, Set<string>>,
-	configPath: string,
-	funcName: string
-): string | null {
-	// To find a directory that contains all required schemas:
-	// We build a map from directory to count of schemas found there
-	const dirSchemaCount: Map<string, number> = new Map();
-	for (const schema of requiredSchemas) {
-		const dirs = interfaceNameToDirs.get(schema);
-		if (!dirs) {
-			const configFileName = path.basename(configPath);
-			Logger.warn(funcName,`Schema "${schema}" not found in interface files. Referenced in config: ${configFileName}`);
-
-			const availableSchemas = Array.from(interfaceNameToDirs.keys()).join(', ');
-			Logger.debug(funcName, `Available schemas: ${availableSchemas}`);
-
-			return null;
-		}
-		for (const dir of dirs) {
-			dirSchemaCount.set(dir, (dirSchemaCount.get(dir) ?? 0) + 1);
-		}
-	}
-	const totalSchemas = requiredSchemas.size;
-	for (const [dir, count] of dirSchemaCount.entries()) {
-		if (count === totalSchemas) {
-			return dir;
-		}
-	}
-	return null;
-}
 
 export function generateApiClientFunction(
 	baseUrl: string,
@@ -134,7 +48,7 @@ export function generateApiClientFunction(
 	const urlPath = constructUrlPath(endpoint);
 
 	// Imports
-	addRequiredImports(sourceFile, outputFilePath, interfaceInputDir, requestSchema, responseSchema!, hasBody);
+	addClientRequiredImports(sourceFile, outputFilePath, interfaceInputDir, requestSchema, responseSchema!, hasBody);
 
 	// Function parameters
 	const parameters = [
@@ -234,27 +148,7 @@ export async function generateApiClientsFromPath(
 	const funcName = 'generateApiClientsFromPath'
 	Logger.debug(funcName, 'Starting API client generation from config and interface directories...');
 
-	const configFiles = fs
-		.readdirSync(configDir)
-		.filter((file) => file.endsWith('.json'))
-		.map((file) => path.join(configDir, file));
-
-	// Map from interface name (without extension) to array of directories where found
-	const interfaceNameToDirs: Map<string, Set<string>> = new Map();
-
-	// Walk interfacesRootDir and cache directories by interface filename (without .ts)
-	walkDirectory(
-		interfacesRootDir,
-		(interfacePath: string) => {
-			const dir = path.dirname(interfacePath);
-			const baseName = path.basename(interfacePath, '.ts');
-			if (!interfaceNameToDirs.has(baseName)) {
-				interfaceNameToDirs.set(baseName, new Set());
-			}
-			interfaceNameToDirs.get(baseName)!.add(dir);
-		},
-		'.ts'
-	);
+	const {configFiles, interfaceNameToDirs} = extractInterfaces(configDir, interfacesRootDir);
 
 	for (const configPath of configFiles) {
 		const config: EndpointClientConfigFile | null = readEndpointClientConfigFile(configPath);

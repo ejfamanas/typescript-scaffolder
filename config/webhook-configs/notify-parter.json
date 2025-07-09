@@ -1,0 +1,11 @@
+{
+  "webhooks": [
+    {
+      "direction": "outgoing",
+      "name": "notify_partner",
+      "targetUrl": "https://partner.example.com/webhook",
+      "requestSchema": "NotifyPayload",
+      "responseSchema": "NotifyResponse"
+    }
+  ]
+}

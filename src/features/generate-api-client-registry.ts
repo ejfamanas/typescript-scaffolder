@@ -2,6 +2,7 @@ import * as path from 'path';
 import * as fs from 'fs';
 import { walkDirectory } from '../utils/file-system';
 import { Logger } from '../utils/logger';
+import { buildImportMapAndRegistryEntries } from "../utils/client-constructors";
 
 /**
  * Creates a registry of functions within a file that can be used at runtime. This function will produce
@@ -41,26 +42,9 @@ export async function generateApiRegistry(apiRootDir: string, registryFileName =
 		return;
 	}
 
-	const importStatements: string[] = [];
-	const registryEntries: string[] = [];
-
-	for (const [subDir, files] of importMap.entries()) {
-		const registryKey = subDir.replace(/\\/g, '/'); // Normalize Windows paths
-		const entryLines: string[] = [];
-
-		for (const file of files) {
-			const fileName = path.basename(file, '.ts');
-			const importVar = `${fileName.replace(/[^a-zA-Z0-9_$]/g, '_')}`;
-			const relativePath = `./${path.join(subDir, fileName).replace(/\\/g, '/')}`;
-			importStatements.push(`import * as ${importVar} from '${relativePath}';`);
-			entryLines.push(`...${importVar}`);
-		}
-
-		registryEntries.push(`  '${registryKey}': {\n    ${entryLines.join(',\n    ')}\n  }`);
-	}
+	const { importStatements, registryEntries } = buildImportMapAndRegistryEntries(importMap);
 
 	const output = `${importStatements.join('\n')}
-
 export const apiRegistry = {
 ${registryEntries.join(',\n')}
 };

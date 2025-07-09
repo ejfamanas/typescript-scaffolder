@@ -7,6 +7,8 @@ import { generateEnumsFromPath } from './features/generate-enums';
 import { generateEnvLoader } from './features/generate-env-loader';
 import { generateApiClientFromFile, generateApiClientsFromPath } from './features/generate-api-client';
 import { generateApiRegistry } from './features/generate-api-client-registry';
+import { generateWebhookAppFromPath } from './features/generate-webhook-app';
+import { generateWebhookAppRegistry } from "./features/generate-webhook-app-registry";
 
 const program = new Command();
 
@@ -97,6 +99,22 @@ program
     await generateApiRegistry(
       path.resolve(options.apiRoot),
       options.registryFile
+    );
+  });
+
+program
+  .command('webhooks')
+  .description('Generate webhook app and registry from config file')
+  .requiredOption('-c, --config <file>', 'path to config file')
+  .requiredOption('-i, --interfaces <dir>', 'path to interfaces directory')
+  .requiredOption('-o, --output <dir>', 'output directory')
+  .action(async (options) => {
+    Logger.info('cli', `Generating webhook app and registry from config "${options.config}", interfaces "${options.interfaces}", output "${options.output}"`);
+    await generateWebhookAppRegistry(path.resolve(options.output));
+    await generateWebhookAppFromPath(
+      path.resolve(options.config),
+      path.resolve(options.interfaces),
+      path.resolve(options.output)
     );
   });
 
