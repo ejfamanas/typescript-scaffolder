@@ -135,12 +135,12 @@ describe('prefixDuplicateKeys', () => {
         const result = prefixDuplicateKeys(input, duplicateKeys);
         expect(result).toEqual({
             parent: {
-                parent_id: 1,
-                parent_name: 'Parent'
+                "parent_-_id": 1,
+                "parent_-_name": 'Parent'
             },
             child: {
-                child_id: 2,
-                child_name: 'Child'
+                "child_-_id": 2,
+                "child_-_name": 'Child'
             }
         });
     });
@@ -195,16 +195,16 @@ describe('prefixDuplicateKeys', () => {
                     "passes": [
                         {
                             "passID": 17277,
-                            "passes_errorCode": "S",
-                            "passes_errorNumber": 0,
-                            "passes_errorDesc": "Success",
-                            "passes_uniqID": 0
+                            "passes_-_errorCode": "S",
+                            "passes_-_errorNumber": 0,
+                            "passes_-_errorDesc": "Success",
+                            "passes_-_uniqID": 0
                         }
                     ],
-                    "badges_errorCode": "S",
-                    "badges_errorNumber": 0,
-                    "badges_errorDesc": "Success",
-                    "badges_uniqID": 3235,
+                    "badges_-_errorCode": "S",
+                    "badges_-_errorNumber": 0,
+                    "badges_-_errorDesc": "Success",
+                    "badges_-_uniqID": 3235,
                 }
             ],
             "errorCode": "S",
@@ -241,16 +241,16 @@ describe('prefixDuplicateKeys', () => {
             reports: [
                 {
                     reportID: 101,
-                    reports_status: "ok",
+                    "reports_-_status": "ok",
                     metadata: [
                         {
                             version: "1.0",
-                            metadata_status: "valid",
-                            metadata_timestamp: "2024-01-01T00:00:00Z"
+                            "metadata_-_status": "valid",
+                            "metadata_-_timestamp": "2024-01-01T00:00:00Z"
                         }
                     ],
                     statusCode: 200,
-                    reports_timestamp: "2024-01-01T12:00:00Z"
+                    "reports_-_timestamp": "2024-01-01T12:00:00Z"
                 }
             ],
             status: "complete",

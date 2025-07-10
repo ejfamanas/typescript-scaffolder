@@ -1,6 +1,8 @@
 import path from 'path';
 import { Logger } from "./logger";
 
+export const prefixDelimiter = '_-_'
+
 /**
  * Converts a filename (e.g. user-profile.json or order_log.json)
  * into a PascalCase TypeScript interface name (e.g. UserProfile, OrderLog).
@@ -88,7 +90,7 @@ export function prefixDuplicateKeys(input: any, duplicateKeys: Set<string>): any
 			if (parentKey) {
 				for (const key of Object.keys(node)) {
 					if (duplicateKeys.has(key)) {
-						node[`${parentKey}_${key}`] = node[key];
+						node[`${parentKey}${prefixDelimiter}${key}`] = node[key];
 						delete node[key];
 					}
 				}

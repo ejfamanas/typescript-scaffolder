@@ -7,6 +7,7 @@ import { generateWebhooksFromFile } from './generate-webhooks';
 import { generateWebhookRoutesFromFile } from './generate-webhook-routes';
 import { collectRequiredSchemas, findDirectoryContainingAllSchemas } from "../utils/client-constructors";
 import { generateWebhookAppRegistry } from "./generate-webhook-app-registry";
+import { WebhookConfigFile } from "models/webhook-definitions";
 
 export async function generateWebhookApp(serviceName: string, outputDir: string) {
 	const funcName = 'generateWebhookApp';
@@ -79,15 +80,20 @@ export async function generateWebhookAppFromPath(
 	const { configFiles, interfaceNameToDirs } = extractInterfaces(configDir, interfacesRootDir);
 
 	for (const configPath of configFiles) {
-		const config = readWebhookConfigFile(configPath);
-		if (!config) continue;
-
+		const config: WebhookConfigFile | null = readWebhookConfigFile(configPath);
+		if (!config) {
+			continue;
+		}
 		const requiredSchemas = collectRequiredSchemas(config.webhooks);
 		const foundDir = findDirectoryContainingAllSchemas(requiredSchemas, interfaceNameToDirs, configPath, funcName);
-		if (!foundDir) continue;
+		if (!foundDir) {
+			Logger.warn(funcName,`Could not find a directory containing all schemas for config: ${configPath}`);
+			continue;
+		}
 
-		const outputDir = path.join(outputRootDir, path.basename(foundDir));
-		await ensureDir(outputDir);
+		// Compute relative path of foundDir to interfacesRootDir to preserve structure in outputRootDir
+		const relativeInterfaceDir = path.relative(interfacesRootDir, foundDir);
+		const outputDir = path.join(outputRootDir, relativeInterfaceDir);		await ensureDir(outputDir);
 
 		await generateWebhookAppFromFile(configPath, foundDir, outputDir);
 	}
