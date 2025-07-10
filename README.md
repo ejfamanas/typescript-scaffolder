@@ -1,6 +1,6 @@
 # TypeScript Scaffolder
-Includes beta features for REST API client generation
-Includes alpha features for Webhook Server and Client Generation
+- Includes beta features for REST API client generation
+- Includes alpha features for Webhook Server and Client Generation
 
 ![npm version](https://img.shields.io/npm/v/typescript-scaffolder)
 ### Unit Test Coverage: 97.53%
