@@ -1,6 +1,6 @@
 {
   "name": "typescript-scaffolder",
-  "version": "1.7.0",
+  "version": "1.7.1",
   "keywords": [
     "typescript",
     "codegen",
@@ -12,7 +12,9 @@
     "api-client",
     "openapi-alternative",
     "typescript-generator",
-    "cli"
+    "cli",
+    "webhooks",
+    "express"
   ],
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
