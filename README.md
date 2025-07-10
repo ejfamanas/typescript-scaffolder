@@ -122,8 +122,8 @@ export interface Event {
 
 ### IMPORTANT: Considerations for ingested JSON
 **⚠️ JSON validators may emit warnings for structural issues. Check logs for details.**
-- If your json has an array of objects, the program will throw to avoid unpredictable behaviour from Quicktype <br>
-like unions or circular references. Please only use one object entry per array to avoid this.
+- If your json has an array of objects, the program will warn and only pick the first element. <br>
+This is to avoid unpredictable behaviour from Quicktype like unions or circular references. <br>
 
 - If a field value in the JSON is listed as "null", it will be coerced to "any" to allow for
 flexibility.
