@@ -1,7 +1,7 @@
 import {InputData, jsonInputForTargetLanguage, quicktype} from 'quicktype-core';
 import fs from 'fs';
 import {Logger} from './logger';
-import {deriveObjectName, findGloballyDuplicatedKeys, prefixDuplicateKeys} from "./object-helpers";
+import { deriveObjectName, findGloballyDuplicatedKeys, prefixDelimiter, prefixDuplicateKeys } from "./object-helpers";
 import {assertNoDuplicateKeys} from "./structure-validators";
 import path from "path";
 
@@ -72,11 +72,12 @@ export async function inferJsonSchema(json: string, interfaceName: string): Prom
 
         // Step 7: Strip prefixes from duplicated keys in field names
         if (duplicateKeys.size > 0) {
+            const prefixPattern = new RegExp(`(\\w+)${prefixDelimiter}([a-zA-Z0-9_]+)`, 'g');
+
             cleanedLines = cleanedLines.map(line =>
-                line.replace(/(\w+)_([a-zA-Z0-9_]+)/g, (_, prefix, key) => {
-                    // If `key` is a known duplicated key, we un-prefix it
-                    return duplicateKeys.has(key) ? key : `${prefix}_${key}`;
-                })
+                line.replace(prefixPattern, (fullMatch, _prefix, key) =>
+                    duplicateKeys.has(key) ? key : fullMatch
+                )
             );
         }
 

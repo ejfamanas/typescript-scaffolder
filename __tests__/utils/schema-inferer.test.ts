@@ -133,3 +133,31 @@ describe('inferSchemaFromPath - error handling', () => {
 		expect(result).toMatch(/name:\s*string/);
 	});
 });
+
+	it('should unprefix keys back to original names in final interface output', async () => {
+		const input = JSON.stringify({
+			system: {
+				uuid: "abc-123",
+				status: "ok",
+				card_uuid: "dfijosijfdlskjf"
+			},
+			module: {
+				uuid: "xyz-789",
+				status: "fail",
+				module_card_uuid: "dfijosijfdlskjf"
+			},
+			status: "pending"
+		});
+
+		const result = await inferJsonSchema(input, "SystemStatus");
+
+		// Confirm unprefixing: keys like 'status' and 'uuid' should exist as expected
+		// Confirm unprefixing: keys like 'status' and 'uuid' should exist as expected
+		expect(result).toMatch(/system:\s*System/);
+		expect(result).toMatch(/module:\s*Module/);
+		expect(result).toMatch(/status:\s*string/); // root-level key remains
+		expect(result).toMatch(/"uuid":\s*string/);   // unprefixed uuid exists with quotes
+		expect(result).toMatch(/card_uuid:\s*string/);
+		expect(result).toMatch(/module_card_uuid:\s*string/);
+		expect(result).not.toMatch(/_-_uuid/);       // prefixed key should not appear
+	});
