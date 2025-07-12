@@ -6,9 +6,12 @@ import {
 	generateEnvLoader,
 	generateInterfacesFromPath,
 } from "./src";
+<<<<<<< Updated upstream
 import { generateWebhookAppFromPath } from "./src/features/generate-webhook-app";
 import { generateWebhookAppRegistriesFromPath } from "./src/features/generate-webhook-app-registry";
 
+=======
+>>>>>>> Stashed changes
 
 const ROOT_DIR = process.cwd();                // Base dir where the script is run
 const LOCAL_DIR = __dirname;                   // Base dir where this file lives
@@ -50,8 +53,25 @@ async function build() {
 	// Generate the api registry to access the generated client functions
 	await generateApiRegistry(CLIENT_OUTPUT_DIR);
 
+<<<<<<< Updated upstream
 	// Generate an express webhook application
 	await generateWebhookAppFromPath(WEBHOOK_CONFIG_PATH, INTERFACE_OUTPUT_DIR, WEBHOOK_OUTPUT_DIR)
 }
 
 build();
+=======
+// this test will check if the registry is working. axios should be called if the generation was successful
+// async function testApiFunction() {
+// 	try {
+// 		// use the getApiFunction in combination with the registry, service name, and function name to activate
+// 		const fn = getApiFunction(apiRegistry, 'source-delta', 'GET_user');
+// 		const result = await fn(); // You might need to pass args depending on the signature
+// 		console.log('Function executed successfully:', result);
+// 	} catch (error) {
+// 		console.error('Function invocation failed:', error);
+// 	}
+// }
+
+build()
+// build().then(testApiFunction);
+>>>>>>> Stashed changes

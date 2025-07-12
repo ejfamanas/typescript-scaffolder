@@ -1,7 +1,7 @@
 import path from 'path';
 import { Logger } from "./logger";
 
-export const prefixDelimiter = '_-_'
+export const prefixDelimiter = '__PREFIX__'
 
 /**
  * Converts a filename (e.g. user-profile.json or order_log.json)

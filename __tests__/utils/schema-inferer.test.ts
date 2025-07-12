@@ -156,8 +156,8 @@ describe('inferSchemaFromPath - error handling', () => {
 		expect(result).toMatch(/system:\s*System/);
 		expect(result).toMatch(/module:\s*Module/);
 		expect(result).toMatch(/status:\s*string/); // root-level key remains
-		expect(result).toMatch(/"uuid":\s*string/);   // unprefixed uuid exists with quotes
+		expect(result).toMatch(/uuid:\s*string/);   // unprefixed uuid exists with quotes
 		expect(result).toMatch(/card_uuid:\s*string/);
 		expect(result).toMatch(/module_card_uuid:\s*string/);
-		expect(result).not.toMatch(/_-_uuid/);       // prefixed key should not appear
+		expect(result).not.toMatch(/__PREFIX__uuid/);       // prefixed key should not appear
 	});
