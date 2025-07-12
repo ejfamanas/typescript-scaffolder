@@ -1,6 +1,7 @@
 import fs from 'fs';
 import path from 'path';
 import * as fileSystemUtils from '../../src/utils/file-system';
+import { ensureDir } from '../../src/utils/file-system';
 import {
     extractInterfaceKeysFromFile,
     generateEnum,
@@ -8,7 +9,6 @@ import {
     generateEnumsFromPath,
     isValidIdentifier
 } from '../../src/features/generate-enums';
-import {ensureDir} from "../../src/utils/file-system";
 
 const tempFilePath = path.resolve(__dirname, 'temp-interface.ts');
 const samplePath = path.resolve(__dirname, 'sample.ts');
@@ -73,9 +73,12 @@ describe('generate-enums module', () => {
 
             // Ensure the file is really flushed
             expect(fs.existsSync(samplePath)).toBe(true);
-
+            // TODO: This is erroring in the IDE even though the function call is correct based on the signature
+            // @ts-ignore
             const spy = jest.spyOn(fs, 'writeFileSync').mockImplementation(() => {
             });
+            // TODO: This is erroring in the IDE even though the function call is correct based on the signature
+            // @ts-ignore
             jest.spyOn(fileSystemUtils, 'ensureDir').mockImplementation(() => {
             });
 
@@ -100,8 +103,10 @@ describe('generate-enums module', () => {
                     generateEnums: jest.fn(() => Promise.resolve()),
                 };
             });
-
-            jest.spyOn(fileSystemUtils, 'ensureDir').mockImplementation(() => {});
+            // TODO: This is erroring in the IDE even though the function call is correct based on the signature
+            // @ts-ignore
+            jest.spyOn(fileSystemUtils, 'ensureDir').mockImplementation(() => {
+            });
 
             const mod = await import('../../src/features/generate-enums');
             generateEnums = mod.generateEnums as jest.Mock;
@@ -113,7 +118,7 @@ describe('generate-enums module', () => {
             const fakeFilePath = path.join(fakeInputDir, filename);
             const fakeOutputDir = '/fake/output';
 
-            fs.mkdirSync(fakeInputDir, { recursive: true });
+            fs.mkdirSync(fakeInputDir, {recursive: true});
             fs.writeFileSync(fakeFilePath, `export interface Product { sku: string; }`, 'utf-8');
 
             await generateEnumsFromPath(fakeInputDir, fakeOutputDir);

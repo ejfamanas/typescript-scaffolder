@@ -1,11 +1,18 @@
 import path from "path";
 import { convertToJsonSchema } from "../utils/ts-to-json-schema-mapper";
 import { ensureDir, walkDirectory } from "../utils/file-system";
-import { extractInterfacesFromFile, ParsedInterface } from "../utils/interface-parser";
 import { Logger } from "../utils/logger";
 import fs from "fs";
+import { ParsedInterface } from "models/interface-definitions";
+import { extractInterfacesFromFile } from "../utils/interface-parser";
 
+/**
+ * Consumes an array of parsed interfaces and produces a JSON schema
+ * @param interfaces
+ */
 export function generateJsonSchemaFromInterface(interfaces: ParsedInterface[]): any {
+    const funcName = "generateJsonSchemaFromInterface";
+    Logger.debug(funcName, "generating json schema from interfaces")
     if (interfaces.length === 0) return {};
 
     const root = convertToJsonSchema(interfaces[0], interfaces);
@@ -52,28 +59,26 @@ export async function generateJsonSchemaFromFile(
 
 /**
  * Walks a directory tree, generating JSON schemas from TypeScript files and writing them out.
- * @param tsSourceDir
- * @param outputBaseDir
- * @param ext
+ * @param interfaceDir
+ * @param outputDir
  */
 export async function generateJsonSchemasFromPath(
-    tsSourceDir: string,
-    outputBaseDir: string,
-    ext: string = ".ts"
+    interfaceDir: string,
+    outputDir: string,
 ): Promise<void> {
     const funcName = "generateJsonSchemas";
-    Logger.debug(funcName, `Walking directory for interfaces: ${tsSourceDir}`);
-    ensureDir(outputBaseDir);
+    Logger.debug(funcName, `Walking directory for interfaces: ${interfaceDir}`);
+    ensureDir(outputDir);
 
     const tasks: Promise<void>[] = [];
 
     walkDirectory(
-        tsSourceDir,
+        interfaceDir,
         (filePath: string, relativePath: string) => {
-            const task = generateJsonSchemaFromFile(filePath, relativePath, outputBaseDir);
+            const task = generateJsonSchemaFromFile(filePath, relativePath, outputDir);
             tasks.push(task);
         },
-        ext
+        ".ts"
     );
 
     await Promise.all(tasks);

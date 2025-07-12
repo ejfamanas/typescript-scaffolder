@@ -1,4 +1,4 @@
-import { ParsedInterface, ParsedProperty } from "./interface-parser";
+import { ParsedInterface, ParsedProperty } from "models/interface-definitions";
 
 export function convertToJsonSchema(parsed: ParsedInterface, knownInterfaces: ParsedInterface[]): any {
   const schema: any = {

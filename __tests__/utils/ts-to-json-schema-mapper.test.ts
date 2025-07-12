@@ -1,5 +1,5 @@
 import { convertToJsonSchema, mapType } from "../../src/utils/ts-to-json-schema-mapper";
-import { ParsedInterface } from "../../src/utils/interface-parser";
+import { ParsedInterface } from "../../src/models/interface-definitions";
 
 describe("mapType", () => {
   it("maps primitive types", () => {

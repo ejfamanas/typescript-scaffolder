@@ -67,7 +67,7 @@ export async function inferJsonSchema(json: string, interfaceName: string): Prom
 
         // Step 6: Clean up nullable fields
         let cleanedLines = result.lines.map((line: string) =>
-            line.replace(/(:\s*)null\b/, (_, group1) => `${group1}any`)
+            line.replace(/(\s*)(\w+):\s*null\b/, (_, spacing, key) => `${spacing}${key}?: any`)
         );
 
         // Step 7: Strip prefixes from duplicated keys in field names

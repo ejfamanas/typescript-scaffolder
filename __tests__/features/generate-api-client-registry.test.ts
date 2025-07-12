@@ -20,7 +20,8 @@ describe('generateApiRegistry', () => {
     it('should log a warning and not write a file if no .ts files are found', async () => {
         (walkDirectory as jest.Mock).mockImplementation((_dir, cb) => {});
 
-        // TODO: This is coming up as an error in the IDE even though the call matches the signature
+        // TODO: This is erroring in the IDE even though the function call is correct based on the signature
+        // @ts-ignore
         const loggerSpy = jest.spyOn(Logger, 'warn').mockImplementation(() => {});
 
         await generateApiRegistry(apiRootDir);
@@ -40,7 +41,8 @@ describe('generateApiRegistry', () => {
         (walkDirectory as jest.Mock).mockImplementation((_dir, cb) => {
             files.forEach(f => cb(f));
         });
-        // TODO: This is coming up as an error in the IDE even though the call matches the signature
+        // TODO: This is erroring in the IDE even though the function call is correct based on the signature
+        // @ts-ignore
         const writeFileSpy = jest.spyOn(fs, 'writeFileSync').mockImplementation(() => {});
 
         await generateApiRegistry(apiRootDir);

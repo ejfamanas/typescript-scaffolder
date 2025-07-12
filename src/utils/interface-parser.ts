@@ -1,21 +1,5 @@
 import { InterfaceDeclaration, Project, ProjectOptions, ts } from "ts-morph";
-
-export interface ParsedProperty {
-  name: string;
-  type: string;
-  optional: boolean;
-  jsDoc?: string;
-  unionTypes?: (string | number)[];
-  elementType?: string;
-  enumValues?: (string | number)[];
-}
-
-export interface ParsedInterface {
-  name: string;
-  properties: ParsedProperty[];
-  typeParameters?: string[];
-}
-
+import { ParsedInterface, ParsedProperty } from "models/interface-definitions";
 export function parseProperty(prop: import("ts-morph").PropertySignature): ParsedProperty {
   const name = prop.getName();
   const typeObj = prop.getType();

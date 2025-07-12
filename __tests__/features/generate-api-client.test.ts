@@ -29,6 +29,7 @@ describe('generate-api-client', () => {
     describe('generateApiClientFunction', () => {
         it('generates function code and appends to source file', async () => {
             // TODO: This is erroring in the IDE even though the function call is correct based on the signature
+            // @ts-ignore
             const spy = jest.spyOn(fs, 'writeFileSync');
 
             await generateApiClientFunction(
@@ -69,6 +70,7 @@ describe('generate-api-client', () => {
                 endpoints: [sampleEndpoint],
             };
             // TODO: This is erroring in the IDE even though the function call is correct based on the signature
+            // @ts-ignore
             const spy = jest.spyOn(fs, 'writeFileSync');
 
             fs.writeFileSync(tempFilePath, JSON.stringify(endpointConfig), 'utf8');

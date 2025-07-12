@@ -10,6 +10,7 @@ Ideal for API integrations that expose schema via JSON — just drop the file in
 
 ## Features
 - Generate TypeScript interfaces from JSON or schemas
+- Generate JSON schemas from TypeScript interfaces
 - Auto-create enums from interface keys
 - Typed `.env` accessor generator
 - Typed axios client api generation (beta)
@@ -122,11 +123,12 @@ export interface Event {
 
 ### IMPORTANT: Considerations for ingested JSON
 **⚠️ JSON validators may emit warnings for structural issues. Check logs for details.**
+
 - If your json has an array of objects, the program will warn and only pick the first element. <br>
 This is to avoid unpredictable behaviour from Quicktype like unions or circular references. <br>
 
 - If a field value in the JSON is listed as "null", it will be coerced to "any" to allow for
-flexibility.
+flexibility. The field will be type as optional
 
 - The scaffolder expects correct values in all fields to infer typings. If a field is optional,
 use the correct value type or see point two when considering "null"
@@ -199,6 +201,128 @@ export enum UserKeys {
 export enum PreferencesKeys {
   newsletter = "newsletter",
   theme = "theme"
+}
+```
+### JSON Schema generation from interface
+Generate JSON schemas automatically from existing interfaces.
+
+- Handles multiple interfaces per file
+- Preserves directory structure from i.e. `interfaces/<folder_name>` into `codegen/schemas/<folder_name>`
+- Automatically creates output folders if they don't exist
+
+This file:
+```
+export interface GET_RES_user {
+    id:          string;
+    firstName:   string;
+    lastName:    string;
+    title:       string;
+    email:       string;
+    metadata:    Metadata;
+    phoneNumber: string;
+    country:     string;
+    address:     Address;
+}
+
+export interface Address {
+    streetAddress: string;
+    zipCode:       string;
+    state:         string;
+}
+
+export interface Metadata {
+    employeeId: string;
+    department: string;
+}
+```
+Will give you:
+```
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "GET_RES_user",
+  "type": "object",
+  "properties": {
+    "id": {
+      "type": "string"
+    },
+    "firstName": {
+      "type": "string"
+    },
+    "lastName": {
+      "type": "string"
+    },
+    "title": {
+      "type": "string"
+    },
+    "email": {
+      "type": "string"
+    },
+    "metadata": {
+      "$ref": "#/definitions/Metadata"
+    },
+    "phoneNumber": {
+      "type": "string"
+    },
+    "country": {
+      "type": "string"
+    },
+    "address": {
+      "$ref": "#/definitions/Address"
+    }
+  },
+  "required": [
+    "id",
+    "firstName",
+    "lastName",
+    "title",
+    "email",
+    "metadata",
+    "phoneNumber",
+    "country",
+    "address"
+  ],
+  "definitions": {
+    "Address": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Address",
+      "type": "object",
+      "properties": {
+        "streetAddress": {
+          "type": "string"
+        },
+        "zipCode": {
+          "type": "string"
+        },
+        "state": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "streetAddress",
+        "zipCode",
+        "state"
+      ],
+      "definitions": {}
+    },
+    "Metadata": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Metadata",
+      "type": "object",
+      "properties": {
+        "employeeId": {
+          "type": "string"
+        },
+        "department": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "employeeId",
+        "department"
+      ],
+      "definitions": {}
+    }
+  }
 }
 ```
 
@@ -620,6 +744,7 @@ src/
     config/
     enums/
     interfaces/
+    schemas/
     webhooks/
 ```
 
@@ -635,18 +760,6 @@ or manually relocate usable outputs into `src/` after generation.
 
 Please refer to the following code block for example usages:
 ```
-import path from "path";
-import {
-	generateApiClientsFromPath,
-	generateApiRegistry,
-	generateEnumsFromPath,
-	generateEnvLoader,
-	generateInterfacesFromPath,
-	getApiFunction
-} from "./src";
-import { apiRegistry } from './src/codegen/apis/registry';
-
-
 const ROOT_DIR = process.cwd();                // Base dir where the script is run
 const LOCAL_DIR = __dirname;                   // Base dir where this file lives
 const CODEGEN_DIR = path.resolve(LOCAL_DIR, 'src/codegen')
@@ -655,12 +768,19 @@ const CODEGEN_DIR = path.resolve(LOCAL_DIR, 'src/codegen')
 const SCHEMA_INPUT_DIR = path.resolve(LOCAL_DIR, 'config/schemas');
 const INTERFACE_OUTPUT_DIR = path.resolve(CODEGEN_DIR, 'interfaces');
 
+// Generate enums, this will use the previously generated interface output
+const ENUM_OUTPUT_DIR = path.resolve(CODEGEN_DIR, 'enums');
+
+// Generate typed json schemas, this will use the previously generated interface output
+const SCHEMA_OUTPUT_DIR = path.resolve(CODEGEN_DIR, 'schemas');
+
 // Client endpoint generation config
 const ENDPOINT_CONFIG_PATH = path.resolve(LOCAL_DIR, 'config/endpoint-configs');
 const CLIENT_OUTPUT_DIR = path.resolve(CODEGEN_DIR, 'apis')
 
-// Generate enums, this will use the previously generated interface output
-const ENUM_OUTPUT_DIR = path.resolve(CODEGEN_DIR, 'enums');
+// Webhook server generation config
+const WEBHOOK_CONFIG_PATH = path.resolve(LOCAL_DIR, 'config/webhook-configs');
+const WEBHOOK_OUTPUT_DIR = path.resolve(CODEGEN_DIR, 'webhooks');
 
 // Env accessor config
 const ENV_FILE = path.resolve(ROOT_DIR, '.env');
@@ -678,26 +798,20 @@ async function build() {
 	// use the enum generator from the output of the interface generator
 	await generateEnumsFromPath(INTERFACE_OUTPUT_DIR, ENUM_OUTPUT_DIR);
 
-	// Generates an object-centric api client based on a config file
+	// use the json schema generator from the output of the interface generator
+	await generateJsonSchemasFromPath(INTERFACE_OUTPUT_DIR, SCHEMA_OUTPUT_DIR)
+
+	// Generates an object-centric axios api client based on a config file
 	await generateApiClientsFromPath(ENDPOINT_CONFIG_PATH, INTERFACE_OUTPUT_DIR, CLIENT_OUTPUT_DIR);
 
 	// Generate the api registry to access the generated client functions
 	await generateApiRegistry(CLIENT_OUTPUT_DIR);
+
+	// Generate an express webhook application
+	await generateWebhookAppFromPath(WEBHOOK_CONFIG_PATH, INTERFACE_OUTPUT_DIR, WEBHOOK_OUTPUT_DIR)
 }
 
-// this test will check if the registry is working. axios should be called if the generation was successful
-async function testApiFunction() {
-	try {
-		// use the getApiFunction in combination with the registry, service name, and function name to activate
-		const fn = getApiFunction(apiRegistry, 'source-delta', 'GET_user');
-		const result = await fn(); // You might need to pass args depending on the signature
-		console.log('Function executed successfully:', result);
-	} catch (error) {
-		console.error('Function invocation failed:', error);
-	}
-}
-
-build().then(testApiFunction);
+build();
 ```
 
 ## CLI Usage Examples
@@ -709,7 +823,17 @@ Below are example commands to run each of the CLI subcommands available in `type
 Generate TypeScript interfaces from JSON schema files:
 
 ```bash
-typescript-scaffolder interfaces -i ./schemas -o ./codegen/interfaces
+typescript-scaffolder interfaces \
+  --input ./schemas \
+  --output ./codegen/interfaces
+```
+
+### Generate Schemas
+
+```bash
+typescript-scaffolder jsonschemas \
+  --input ./codegen/interfaces \
+  --output ./codegen/schemas
 ```
 
 ### Generate Enums
@@ -775,6 +899,8 @@ typescript-scaffolder webhooks \
   --interfaces ./codegen/interfaces \
   --output ./codegen/webhooks
 ```
+
+
 
 ---
 
