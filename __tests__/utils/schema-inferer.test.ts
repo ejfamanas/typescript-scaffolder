@@ -18,6 +18,16 @@ const sampleObject = {
 const sampleJson = JSON.stringify(sampleObject, null, 2);
 
 describe('inferSchemaFromJson', () => {
+	it('should convert union null types to optional any', async () => {
+		const input = JSON.stringify({
+			nickname: "Ally",
+			notes: null
+		});
+
+		const result = await inferJsonSchema(input, "NullableUnion");
+		expect(result).toMatch(/nickname:\s*string/);
+		expect(result).toMatch(/notes\?:\s*any/);
+	});
 	it('should infer correct TypeScript interface from JSON string', async () => {
 		const result = await inferJsonSchema(sampleJson, "User");
 
@@ -128,8 +138,8 @@ describe('inferSchemaFromPath - error handling', () => {
 		});
 
 		const result = await inferJsonSchema(input, "NullableExample");
-		expect(result).toMatch(/id:\s*any/);
-		expect(result).toMatch(/metadata:\s*any/);
+		expect(result).toMatch(/id\?:\s*any/);
+		expect(result).toMatch(/metadata\?:\s*any/);
 		expect(result).toMatch(/name:\s*string/);
 	});
 });
@@ -152,12 +162,11 @@ describe('inferSchemaFromPath - error handling', () => {
 		const result = await inferJsonSchema(input, "SystemStatus");
 
 		// Confirm unprefixing: keys like 'status' and 'uuid' should exist as expected
-		// Confirm unprefixing: keys like 'status' and 'uuid' should exist as expected
 		expect(result).toMatch(/system:\s*System/);
 		expect(result).toMatch(/module:\s*Module/);
 		expect(result).toMatch(/status:\s*string/); // root-level key remains
-		expect(result).toMatch(/"uuid":\s*string/);   // unprefixed uuid exists with quotes
+		expect(result).toMatch(/uuid:\s*string/);   // unprefixed uuid exists with quotes
 		expect(result).toMatch(/card_uuid:\s*string/);
 		expect(result).toMatch(/module_card_uuid:\s*string/);
-		expect(result).not.toMatch(/_-_uuid/);       // prefixed key should not appear
+		expect(result).not.toMatch(/__PREFIX__uuid/);       // prefixed key should not appear
 	});

@@ -1,4 +1,7 @@
-export { inferJsonSchema, inferJsonSchemaFromPath } from './utils/schema-inferer';
+export {
+	inferJsonSchema,
+	inferJsonSchemaFromPath
+} from './utils/schema-inferer';
 export {
 	assertStructure,
 	assertInRange,
@@ -6,15 +9,31 @@ export {
 	assertEnumValue,
 	assertNoDuplicateKeys
 } from './utils/structure-validators';
-export { generateInterfaces, generateInterfacesFromPath } from './features/generate-interfaces';
-export { generateEnvLoader } from './features/generate-env-loader';
-export { generateEnums, generateEnumsFromPath } from './features/generate-enums';
+export {
+	generateInterfaces,
+	generateInterfacesFromPath
+} from './features/generate-interfaces';
+export {
+	generateJsonSchemaFromInterface,
+	generateJsonSchemaFromFile,
+	generateJsonSchemasFromPath
+} from './features/generate-json-schemas'
+export {
+	generateEnvLoader
+} from './features/generate-env-loader';
+export {
+	generateEnums,
+	generateEnumsFromPath
+} from './features/generate-enums';
 export {
 	generateApiClientsFromPath,
 	generateApiClientFromFile,
 	generateApiClientFunction
 } from './features/generate-api-client';
-export { generateApiRegistry, getApiFunction } from './features/generate-api-client-registry'
+export {
+	generateApiRegistry,
+	getApiFunction
+} from './features/generate-api-client-registry'
 export {
 	generateWebhooksFromFile,
 	generateWebhooksFromPath,
@@ -29,6 +48,10 @@ export {
 export { generateWebhookAppRegistry,
 	generateWebhookAppRegistriesFromPath
 } from './features/generate-webhook-app-registry'
+export {
+	ParsedProperty,
+	ParsedInterface
+} from './models/interface-definitions'
 export {
 	Method,
 	AuthType,
