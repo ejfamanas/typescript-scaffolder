@@ -901,8 +901,6 @@ typescript-scaffolder webhooks \
   --output ./codegen/webhooks
 ```
 
-
-
 ---
 
 To see all available commands and options, run:
