@@ -24,6 +24,7 @@ Ideal for API integrations that expose schema via JSON — just drop the file in
 - [Interface Generation](#interface-generation)
 - [Environment Variable Interface](#environment-variable-interface)
 - [Enum Generation](#enum-generation-from-interface)
+- [Schema Generation](#json-schema-generation-from-interface)
 - [Client Api Generation](#api-client-generation-from-interface)
 - [Webhook Server Generation](#webhook-Server-generation-from-interface)
 - [Roadmap](#roadmap)
@@ -900,8 +901,6 @@ typescript-scaffolder webhooks \
   --output ./codegen/webhooks
 ```
 
-
-
 ---
 
 To see all available commands and options, run:
@@ -921,7 +920,7 @@ typescript-scaffolder --help
 - [x] Generate TypeScript interfaces from schema definitions
 - [x] Generate TypeScript enums to assert key names
 - [x] Generate TypeScript accessor for environment variables
-- [ ] Generate typed json schemas
+- [x] Generate typed json schemas
 - [x] Generate TypeScript axios REST api client from interfaces
 - [x] Generate Typescript axios client webhook apps
 - [x] Generate Typescript express server webhook apps
