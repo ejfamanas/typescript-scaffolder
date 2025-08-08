@@ -35,6 +35,11 @@ export {
 	getApiFunction
 } from './features/generate-api-client-registry'
 export {
+	generateSequenceRunner,
+	generateSequenceFromFile,
+	generateSequencesFromPath
+} from './features/generate-sequence-runner'
+export {
 	generateWebhooksFromFile,
 	generateWebhooksFromPath,
 	generateIncomingWebhook,

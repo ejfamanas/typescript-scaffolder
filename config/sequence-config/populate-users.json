@@ -1,0 +1,82 @@
+{
+  "serviceName": "populate-users",
+  "baseUrl": "https://api.example.com",
+  "authType": "apikey",
+  "credentials": {
+    "apiKey": "ENV_API_KEY"
+  },
+  "sequences": [
+    {
+      "name": "PopulatePeople",
+      "steps": [
+        {
+          "id": "fetchPeople",
+          "type": "fetchList",
+          "endpoint": "/people",
+          "extract": {
+            "as": "people",
+            "field": "data"
+          }
+        },
+        {
+          "id": "loopPeople",
+          "type": "loop",
+          "over": "people",
+          "itemName": "person",
+          "steps": [
+            {
+              "id": "updatePerson",
+              "type": "action",
+              "method": "put",
+              "endpoint": "/people/:person.id",
+              "body": {
+                "active": true,
+                "source": "smoke-test"
+              },
+              "extract": {
+                "as": "updatedId",
+                "field": "id"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "PopulatePeopleWithEmails",
+      "steps": [
+        {
+          "id": "fetchPeople",
+          "type": "fetchList",
+          "endpoint": "/people",
+          "extract": {
+            "as": "people",
+            "field": "data"
+          }
+        },
+        {
+          "id": "loopPeople",
+          "type": "loop",
+          "over": "people",
+          "itemName": "person",
+          "steps": [
+            {
+              "id": "updatePersonWithEmail",
+              "type": "action",
+              "method": "put",
+              "endpoint": "/people/:person.id",
+              "body": {
+                "email": "{{person.email}}",
+                "updatedBy": "interpolator"
+              },
+              "extract": {
+                "as": "updatedEmailId",
+                "field": "id"
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -117,6 +117,5 @@
     "skipLibCheck": true
     /* Skip type checking all .d.ts files. */
     },
-  "include": ["src/**/*", "src/cli.ts"],
   "exclude": ["src/codegen/**/*"]
   }
