@@ -1,0 +1,157 @@
+"use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+const fs_1 = __importDefault(require("fs"));
+const path_1 = __importDefault(require("path"));
+const src_1 = require("../../src");
+const sampleObject = {
+    id: 'u_123',
+    email: 'alice@example.com',
+    age: 29,
+    isActive: true,
+    roles: ['admin', 'editor'],
+    preferences: {
+        newsletter: true,
+        theme: 'dark'
+    },
+    lastLogin: '2024-12-01T10:15:30Z'
+};
+const sampleJson = JSON.stringify(sampleObject, null, 2);
+describe('inferSchemaFromJson', () => {
+    it('should convert union null types to optional any', async () => {
+        const input = JSON.stringify({
+            nickname: "Ally",
+            notes: null
+        });
+        const result = await (0, src_1.inferJsonSchema)(input, "NullableUnion");
+        expect(result).toMatch(/nickname:\s*string/);
+        expect(result).toMatch(/notes\?:\s*any/);
+    });
+    it('should infer correct TypeScript interface from JSON string', async () => {
+        const result = await (0, src_1.inferJsonSchema)(sampleJson, "User");
+        expect(result).toMatch(/export interface User/);
+        expect(result).toMatch(/id:\s*string/);
+        expect(result).toMatch(/email:\s*string/);
+        expect(result).toMatch(/age:\s*number/);
+        expect(result).toMatch(/isActive:\s*boolean/);
+        expect(result).toMatch(/roles:\s*string\[\]/);
+        expect(result).toMatch(/lastLogin:\s*(string|Date)/); // quicktype may use either
+    });
+    it('should infer schema from a JSON file', async () => {
+        const tempPath = path_1.default.join(__dirname, 'temp-user.json');
+        fs_1.default.writeFileSync(tempPath, sampleJson, 'utf-8');
+        const result = await (0, src_1.inferJsonSchemaFromPath)(tempPath);
+        expect(result).toContain('export interface tempuser');
+        expect(result).toContain('preferences: Preferences');
+        fs_1.default.unlinkSync(tempPath); // Cleanup
+    });
+    it('should return null on invalid JSON input', async () => {
+        await expect((0, src_1.inferJsonSchema)('{"id": "1", "name": "test"', "test")).resolves.toBeNull();
+    });
+    it('should handle empty object input', async () => {
+        const result = await (0, src_1.inferJsonSchema)('{}', "User");
+        expect(result).toMatch(/export interface User\s*{[^}]*}/);
+        expect(result).not.toMatch(/:/);
+    });
+    it('should infer interfaces from nested duplicate-key JSON correctly', async () => {
+        const json = JSON.stringify({
+            badges: [
+                {
+                    fgB_EmployeeID: 15579,
+                    externalEmployeeID: "1008888998",
+                    passes: [
+                        {
+                            passID: 17277,
+                            errorCode: "S",
+                            errorNumber: 0,
+                            errorDesc: "Success",
+                            uniqID: 0
+                        }
+                    ],
+                    errorCode: "S",
+                    errorNumber: 0,
+                    errorDesc: "Success",
+                    uniqID: 3235
+                }
+            ],
+            errorCode: "S",
+            errorNumber: 0,
+            errorDesc: "Success",
+            uniqID: 3235
+        });
+        const result = await (0, src_1.inferJsonSchema)(json, "POST_RES_Create_Badge");
+        // Top-level interface
+        expect(result).toMatch(/export interface POST_RES_Create_Badge/);
+        expect(result).toMatch(/badges:\s*Badge\[\]/);
+        expect(result).toMatch(/errorCode:\s*string/);
+        expect(result).toMatch(/errorNumber:\s*number/);
+        expect(result).toMatch(/errorDesc:\s*string/);
+        expect(result).toMatch(/uniqID:\s*number/);
+        // Badge interface
+        expect(result).toMatch(/export interface Badge/);
+        expect(result).toMatch(/fgB_EmployeeID:\s*number/);
+        expect(result).toMatch(/externalEmployeeID:\s*string/);
+        expect(result).toMatch(/passes:\s*Pass\[\]/);
+        expect(result).toMatch(/errorCode:\s*string/);
+        expect(result).toMatch(/errorNumber:\s*number/);
+        expect(result).toMatch(/errorDesc:\s*string/);
+        expect(result).toMatch(/uniqID:\s*number/);
+        // Pass interface
+        expect(result).toMatch(/export interface Pass/);
+        expect(result).toMatch(/passID:\s*number/);
+        expect(result).toMatch(/errorCode:\s*string/);
+        expect(result).toMatch(/errorNumber:\s*number/);
+        expect(result).toMatch(/errorDesc:\s*string/);
+        expect(result).toMatch(/uniqID:\s*number/);
+    });
+});
+describe('inferSchemaFromPath - error handling', () => {
+    const originalReadFileSync = fs_1.default.readFileSync;
+    afterEach(() => {
+        fs_1.default.readFileSync = originalReadFileSync;
+    });
+    it('returns null and logs a warning when file read fails', async () => {
+        fs_1.default.readFileSync = jest.fn(() => {
+            throw new Error('ENOENT: no such file or directory');
+        });
+        const result = await (0, src_1.inferJsonSchemaFromPath)('/nonexistent/file.json');
+        expect(result).toBeNull();
+    });
+    it('should convert null values to any type', async () => {
+        const input = JSON.stringify({
+            id: null,
+            name: "Alice",
+            metadata: null
+        });
+        const result = await (0, src_1.inferJsonSchema)(input, "NullableExample");
+        expect(result).toMatch(/id\?:\s*any/);
+        expect(result).toMatch(/metadata\?:\s*any/);
+        expect(result).toMatch(/name:\s*string/);
+    });
+});
+it('should unprefix keys back to original names in final interface output', async () => {
+    const input = JSON.stringify({
+        system: {
+            uuid: "abc-123",
+            status: "ok",
+            card_uuid: "dfijosijfdlskjf"
+        },
+        module: {
+            uuid: "xyz-789",
+            status: "fail",
+            module_card_uuid: "dfijosijfdlskjf"
+        },
+        status: "pending"
+    });
+    const result = await (0, src_1.inferJsonSchema)(input, "SystemStatus");
+    // Confirm unprefixing: keys like 'status' and 'uuid' should exist as expected
+    expect(result).toMatch(/system:\s*System/);
+    expect(result).toMatch(/module:\s*Module/);
+    expect(result).toMatch(/status:\s*string/); // root-level key remains
+    expect(result).toMatch(/uuid:\s*string/); // unprefixed uuid exists with quotes
+    expect(result).toMatch(/card_uuid:\s*string/);
+    expect(result).toMatch(/module_card_uuid:\s*string/);
+    expect(result).not.toMatch(/__PREFIX__uuid/); // prefixed key should not appear
+});

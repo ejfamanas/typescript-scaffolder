@@ -67,6 +67,15 @@ export {
 	EndpointConfigType,
 } from './models/api-definitions'
 export {
+	Sequence,
+	SequenceStep,
+	SequenceStepBase,
+	ActionStep,
+	LoopStep,
+	FetchListStep,
+	SequenceConfigFile
+} from './models/sequence-definitions'
+export {
 	IncomingWebhook,
 	OutgoingWebhook,
 	BaseWebhook,
