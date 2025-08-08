@@ -13,8 +13,9 @@ Ideal for API integrations that expose schema via JSON — just drop the file in
 - Generate JSON schemas from TypeScript interfaces
 - Auto-create enums from interface keys
 - Typed `.env` accessor generator
-- Typed axios client api generation (beta)
-- Typed express server and client webhook generation (alpha)
+- Typed axios client api generation
+- Command sequence generator
+- Typed express server and client webhook generation (beta)
 - Preserves directory structure
 
 ## Table of Contents
@@ -26,6 +27,7 @@ Ideal for API integrations that expose schema via JSON — just drop the file in
 - [Enum Generation](#enum-generation-from-interface)
 - [Schema Generation](#json-schema-generation-from-interface)
 - [Client Api Generation](#api-client-generation-from-interface)
+- [Sequence_Runner_Generation](#sequence-runner-generation--beta-)
 - [Webhook Server Generation](#webhook-Server-generation-from-interface)
 - [Roadmap](#roadmap)
 - [Reporting Bugs](#reporting-bugs)
@@ -571,6 +573,92 @@ To store the function and call it as required, or user the helper function which
 const fn = getApiFunction(apiRegistry, 'source-delta', 'GET_user');
 ```
 
+### Sequence Runner Generation (beta)
+
+Generate TypeScript workflows that combine multiple API operations in order, using a declarative JSON config format.
+
+- Supports `fetchList`, `loop`, and `action` steps
+- Allows use of `extract` to assign response fields to variables
+- Supports `{{variable}}` interpolation in action bodies
+- Multi-service support via per-step `service` routing
+- Emitted runners import and use `apiRegistry` functions
+- Output to `src/codegen/sequences/<SequenceName>.runner.ts`
+
+#### Example Config
+
+```json
+{
+  "serviceName": "source-alpha",
+  "sequences": [
+    {
+      "name": "PopulatePeople",
+      "steps": [
+        {
+          "id": "fetchPeople",
+          "type": "fetchList",
+          "endpoint": "/people",
+          "extract": {
+            "as": "people",
+            "field": "data"
+          }
+        },
+        {
+          "id": "loopPeople",
+          "type": "loop",
+          "over": "people",
+          "itemName": "person",
+          "steps": [
+            {
+              "id": "updatePerson",
+              "type": "action",
+              "method": "put",
+              "endpoint": "/people/:person.id",
+              "body": {
+                "email": "{{person.email}}"
+              },
+              "extract": {
+                "as": "updatedId",
+                "field": "id"
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
+```
+Will generate:
+```
+PopulatePeople.runner.ts
+// Auto-generated runner for sequence: PopulatePeople
+// Service: populate-users
+import { apiRegistry } from "../registry";
+
+export async function runPopulatePeople() {
+  const response = await apiRegistry["populate-users"].getAll_people();
+  const people = response.data;
+  for (const person of people) {
+    const response = await apiRegistry["populate-users"].put_people(person.id, { active: true, source: "smoke-test" });
+    const updatedId = response.id;
+  }
+}
+
+PopulatePeopleWithEmail.runner.ts
+// Auto-generated runner for sequence: PopulatePeopleWithEmails
+// Service: populate-users
+import { apiRegistry } from "../registry";
+
+export async function runPopulatePeopleWithEmails() {
+  const response = await apiRegistry["populate-users"].getAll_people();
+  const people = response.data;
+  for (const person of people) {
+    const response = await apiRegistry["populate-users"].put_people(person.id, { email: person.email, updatedBy: "interpolator" });
+    const updatedEmailId = response.id;
+  }
+}
+```
+
 ### Webhook Server Generation from interface
 When using `generateWebhookAppFromPath`, follow this pattern for best results:
 
@@ -742,6 +830,7 @@ For example:
 src/
   codegen/
     apis/
+    apis/sequences
     config/
     enums/
     interfaces/
@@ -807,6 +896,9 @@ async function build() {
 
 	// Generate the api registry to access the generated client functions
 	await generateApiRegistry(CLIENT_OUTPUT_DIR);
+	
+	// Generates a command sequence file based on the generated client-api registry
+	await generateSequencesFromPath(SEQUENCE_CONFIG_PATH, CLIENT_OUTPUT_DIR);
 
 	// Generate an express webhook application
 	await generateWebhookAppFromPath(WEBHOOK_CONFIG_PATH, INTERFACE_OUTPUT_DIR, WEBHOOK_OUTPUT_DIR)
@@ -890,6 +982,16 @@ typescript-scaffolder apiclient-registry \
   --registry-file registry.ts
 ```
 
+### Generate Sequence Runner (Beta)
+
+Generate command functions to call certain API points in sequence
+
+```bash
+typescript-scaffolder sequences \
+  --config-dir ./config/sequences \
+  --output ./src/codegen/sequences
+```
+
 ### Generate Webhook App
 
 Generate an Express webhook app and registry from a config file:
@@ -922,6 +1024,7 @@ typescript-scaffolder --help
 - [x] Generate TypeScript accessor for environment variables
 - [x] Generate typed json schemas
 - [x] Generate TypeScript axios REST api client from interfaces
+- [x] Generate Typescript command sequences for REST api calls
 - [x] Generate Typescript axios client webhook apps
 - [x] Generate Typescript express server webhook apps
 - [x] Command line interface access

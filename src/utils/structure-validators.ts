@@ -91,3 +91,111 @@ export function assertInRange(field: string, value: any, min: number, max: numbe
     Logger.debug(funcName, 'Asserted fields are in range');
 }
 
+
+/**
+ * Validates a top-level sequences array, if present.
+ * @param config The full parsed configuration object
+ */
+export function assertSequences(config: any) {
+    const funcName = 'assertSequences';
+    Logger.debug(funcName, 'Validating sequences block');
+    const sequences = config.sequences;
+    if (sequences === undefined || sequences === null) {
+        Logger.error(funcName, 'No sequences defined');
+        return;
+    }
+    if (!Array.isArray(sequences)) {
+        Logger.error(funcName, '`sequences` must be an array');
+        return;
+    }
+    for (const seq of sequences) {
+        assertSequence(seq);
+    }
+    Logger.debug(funcName, 'Sequences block validated');
+}
+
+/**
+ * Validates a single sequence object.
+ * Ensures required fields and step-array structure before recursing.
+ * @param seq The sequence object to validate
+ */
+export function assertSequence(seq: any) {
+    const funcName = 'assertSequence';
+    Logger.debug(funcName, 'Validating sequence', seq.name);
+
+    if (seq.name === undefined) {
+        Logger.error(funcName, "Missing required field 'name'");
+        return;
+    }
+    if (seq.steps === undefined) {
+        Logger.error(funcName, "Missing required field 'steps'");
+        return;
+    }
+    if (!Array.isArray(seq.steps)) {
+        Logger.error(funcName, `\`steps\` must be an array in sequence ${seq.name}`);
+        return;
+    }
+    for (const step of seq.steps) {
+        assertSequenceStep(step);
+    }
+    Logger.debug(funcName, 'Sequence validated', seq.name);
+}
+
+/** Validate a single step based on its type */
+export function assertSequenceStep(step: any) {
+    const funcName = 'assertSequenceStep';
+    Logger.debug(funcName, 'Validating step', step.id);
+    assertRequiredFields(step, ['id', 'type']);
+    switch (step.type) {
+        case 'fetchList':
+            assertFetchListStep(step);
+            break;
+        case 'action':
+            assertActionStep(step);
+            break;
+        case 'loop':
+            assertLoopStep(step);
+            break;
+        default:
+            Logger.error(funcName, `Unknown step type '${step.type}' in step ${step.id}`);
+    }
+}
+
+/** Validate a fetchList step */
+function assertFetchListStep(step: any) {
+    const funcName = 'assertFetchListStep';
+    Logger.debug(funcName, 'Validating fetchList step', step.id);
+    assertRequiredFields(step, ['endpoint', 'extract']);
+    assertStructure(step, { endpoint: 'string', extract: 'object' });
+    if (step.extract) {
+        assertStructure(step.extract, { as: 'string', field: 'string' });
+    }
+    Logger.debug(funcName, 'fetchList step validated', step.id);
+}
+
+/** Validate an action step */
+function assertActionStep(step: any) {
+    const funcName = 'assertActionStep';
+    Logger.debug(funcName, 'Validating action step', step.id);
+    assertRequiredFields(step, ['endpoint']);
+    assertStructure(step, { endpoint: 'string' });
+    if (step.extract) {
+        assertStructure(step.extract, { as: 'string', field: 'string' });
+    }
+    Logger.debug(funcName, 'action step validated', step.id);
+}
+
+/** Validate a loop step */
+function assertLoopStep(step: any) {
+    const funcName = 'assertLoopStep';
+    Logger.debug(funcName, 'Validating loop step', step.id);
+    assertRequiredFields(step, ['over', 'itemName', 'steps']);
+    assertStructure(step, { over: 'string', itemName: 'string', steps: 'object' });
+    if (Array.isArray(step.steps)) {
+        for (const nested of step.steps) {
+            assertSequenceStep(nested);
+        }
+    }
+    Logger.debug(funcName, 'loop step validated', step.id);
+}
+

@@ -2,6 +2,7 @@ import path from "path";
 import {
 	generateApiClientsFromPath,
 	generateApiRegistry,
+	generateSequencesFromPath,
 	generateEnumsFromPath,
 	generateEnvLoader,
 	generateInterfacesFromPath,
@@ -23,9 +24,12 @@ const ENUM_OUTPUT_DIR = path.resolve(CODEGEN_DIR, 'enums');
 // Generate typed json schemas, this will use the previously generated interface output
 const SCHEMA_OUTPUT_DIR = path.resolve(CODEGEN_DIR, 'schemas');
 
-// Client endpoint generation config
+// Client API endpoint generation config
 const ENDPOINT_CONFIG_PATH = path.resolve(LOCAL_DIR, 'config/endpoint-configs');
 const CLIENT_OUTPUT_DIR = path.resolve(CODEGEN_DIR, 'apis')
+
+// Client API sequence generation config
+const SEQUENCE_CONFIG_PATH = path.resolve(LOCAL_DIR, 'config/sequence-config');
 
 // Webhook server generation config
 const WEBHOOK_CONFIG_PATH = path.resolve(LOCAL_DIR, 'config/webhook-configs');
@@ -42,13 +46,13 @@ async function build() {
 	generateEnvLoader(ENV_FILE, ENV_OUTPUT_DIR, ENV_OUTPUT_FILE);
 
 	// using the interface generator
-	await generateInterfacesFromPath(SCHEMA_INPUT_DIR, INTERFACE_OUTPUT_DIR)
+	await generateInterfacesFromPath(SCHEMA_INPUT_DIR, INTERFACE_OUTPUT_DIR);
 
 	// use the enum generator from the output of the interface generator
 	await generateEnumsFromPath(INTERFACE_OUTPUT_DIR, ENUM_OUTPUT_DIR);
 
 	// use the json schema generator from the output of the interface generator
-	await generateJsonSchemasFromPath(INTERFACE_OUTPUT_DIR, SCHEMA_OUTPUT_DIR)
+	await generateJsonSchemasFromPath(INTERFACE_OUTPUT_DIR, SCHEMA_OUTPUT_DIR);
 
 	// Generates an object-centric axios api client based on a config file
 	await generateApiClientsFromPath(ENDPOINT_CONFIG_PATH, INTERFACE_OUTPUT_DIR, CLIENT_OUTPUT_DIR);
@@ -56,8 +60,11 @@ async function build() {
 	// Generate the api registry to access the generated client functions
 	await generateApiRegistry(CLIENT_OUTPUT_DIR);
 
+	// Generates a command sequence file based on the generated client-api registry
+	await generateSequencesFromPath(SEQUENCE_CONFIG_PATH, CLIENT_OUTPUT_DIR);
+
 	// Generate an express webhook application
-	await generateWebhookAppFromPath(WEBHOOK_CONFIG_PATH, INTERFACE_OUTPUT_DIR, WEBHOOK_OUTPUT_DIR)
+	await generateWebhookAppFromPath(WEBHOOK_CONFIG_PATH, INTERFACE_OUTPUT_DIR, WEBHOOK_OUTPUT_DIR);
 }
 
 build();

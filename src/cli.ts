@@ -133,6 +133,20 @@ program
     });
 
 program
+    .command('sequences')
+    .description('Generate sequence runners from JSON config files')
+    .requiredOption('-c, --config-dir <dir>', 'Directory with sequence JSON config files')
+    .requiredOption('-o, --output <dir>', 'Output directory for generated runners')
+    .action(async (options) => {
+        Logger.info('cli', `Generating sequence runners from "${options.configDir}" to "${options.output}"`);
+        const { generateSequencesFromPath } = await import('./features/generate-sequence-runner');
+        await generateSequencesFromPath(
+            path.resolve(options.configDir),
+            path.resolve(options.output)
+        );
+    });
+
+program
     .command('help')
     .description('Display help information')
     .action(() => {
