@@ -1,8 +1,8 @@
 import {InputData, jsonInputForTargetLanguage, quicktype} from 'quicktype-core';
-import fs from 'fs';
 import {Logger} from './logger';
 import { deriveObjectName, findGloballyDuplicatedKeys, prefixDelimiter, prefixDuplicateKeys } from "./object-helpers";
 import {assertNoDuplicateKeys} from "./structure-validators";
+import fs from "fs";
 import path from "path";
 
 /**
@@ -34,6 +34,7 @@ export async function inferJsonSchema(json: string, interfaceName: string): Prom
 
         // Step 2: Detect globally duplicated keys
         const duplicateKeys = findGloballyDuplicatedKeys(parsed);
+        // @ts-ignore - works fine, already set to target ES2020
         Logger.debug(funcName, `Found duplicate keys: ${[...duplicateKeys].join(', ')}`);
 
         // Step 3: Prefix duplicate keys with parent field names

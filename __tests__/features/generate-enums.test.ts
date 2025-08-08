@@ -37,6 +37,37 @@ describe('generate-enums module', () => {
 
             expect(result).toEqual([{name: 'User', keys: ['id', 'name']}]);
         });
+
+        it('should strip surrounding quotes and return raw keys', () => {
+            const source = `
+                export interface AdditionalInfo {
+                    "Card Number": string;
+                    "User-ID": string;
+                }
+            `;
+            fs.writeFileSync(tempFilePath, source, 'utf-8');
+
+            const result = extractInterfaceKeysFromFile(tempFilePath);
+
+            // Keys should be returned without surrounding quotes, ready for enum generation
+            expect(result).toEqual([{ name: 'AdditionalInfo', keys: ['Card Number', 'User-ID'] }]);
+        });
+
+        it('should dedupe duplicate properties within an interface', () => {
+            const source = `
+                export interface CustomAttribute {
+                    uuid: string;
+                    name: string;
+                    uuid: string; // duplicate
+                    name: string; // duplicate
+                }
+            `;
+            fs.writeFileSync(tempFilePath, source, 'utf-8');
+
+            const result = extractInterfaceKeysFromFile(tempFilePath);
+
+            expect(result).toEqual([{ name: 'CustomAttribute', keys: ['uuid', 'name'] }]);
+        });
     });
 
     describe('generateEnum', () => {
@@ -50,6 +81,13 @@ describe('generate-enums module', () => {
         it('should quote keys if invalid identifier', () => {
             const result = generateEnum('Thing', ['valid', 'not-valid']);
             expect(result).toContain('"not-valid" = "not-valid"');
+        });
+
+        it('should not double-quote keys that already include quotes in input', () => {
+            // Simulate upstream passing a string that already contains quotes (e.g., ts-morph literal name)
+            const result = generateEnum('Info', ['"Card Number"']);
+            expect(result).toContain('"Card Number" = "Card Number"');
+            expect(result).not.toContain('""Card Number""');
         });
     });
 

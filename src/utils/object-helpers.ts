@@ -78,8 +78,8 @@ export function prefixDuplicateKeys(input: any, duplicateKeys: Set<string>): any
 			const objectElements = node.filter(item => typeof item === 'object' && item !== null);
 
 			if (objectElements.length > 0) {
-				Logger.debug(funcName, `Processing array at key '${parentKey}' with ${objectElements.length} object(s). Using first for inference.`);
-				transform(objectElements[0], parentKey);
+				Logger.debug(funcName, `Processing array at key '${parentKey}' with ${objectElements.length} object(s). Transforming all object elements.`);
+				objectElements.forEach(obj => transform(obj, parentKey));
 			}
 
 			// Primitive arrays or empty arrays are ignored

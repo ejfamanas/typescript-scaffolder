@@ -122,6 +122,7 @@
     "node_modules",
     "dist",
     "__tests__",
+    "__tests__/**/*",
     "index.dev.ts"
   ]
 }
