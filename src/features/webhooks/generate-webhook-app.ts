@@ -4,7 +4,7 @@ import { Project } from 'ts-morph';
 import { Logger } from '../../utils/logger';
 import { toPascalCase } from "../../utils/object-helpers";
 import { generateWebhooksFromFile } from './generate-webhooks';
-import { generateWebhookRoutesFromFile } from './generate-webhook-routes';
+import { generateWebhookRoutesFromFile } from './generate-webhook-router';
 import { collectRequiredSchemas, findDirectoryContainingAllSchemas } from "../../utils/client-constructors";
 import { generateWebhookAppRegistry } from "./generate-webhook-app-registry";
 import { WebhookConfigFile } from "models/webhook-definitions";

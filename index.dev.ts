@@ -29,7 +29,7 @@ const ENDPOINT_CONFIG_PATH = path.resolve(LOCAL_DIR, 'config/endpoint-configs');
 const CLIENT_OUTPUT_DIR = path.resolve(CODEGEN_DIR, 'apis')
 
 // Client API sequence generation config
-const SEQUENCE_CONFIG_PATH = path.resolve(LOCAL_DIR, 'config/sequence-config');
+const SEQUENCE_CONFIG_PATH = path.resolve(LOCAL_DIR, 'config/sequence-configs');
 
 // Webhook server generation config
 const WEBHOOK_CONFIG_PATH = path.resolve(LOCAL_DIR, 'config/webhook-configs');

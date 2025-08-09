@@ -53,7 +53,7 @@ export function generateWebhookFixture(
       objectLines = iface.getProperties().map((prop) => {
         const name = prop.getName();
         const type = prop.getType();
-        const valueExpr = fakerExprFor(name, type);
+        const valueExpr = fakerExprFor(name, type, 2, 2);
         return `  ${name}: ${valueExpr},`;
       });
     }
@@ -76,7 +76,7 @@ export function generateWebhookFixture(
   ]);
 }
 
-function fakerExprFor(name: string, type: Type): string {
+function fakerExprFor(name: string, type: Type, depth = 1, indent = 0): string {
   // Handle unions of string literals: pick the first literal value
   if (type.isUnion()) {
     const parts = type.getUnionTypes();
@@ -87,7 +87,7 @@ function fakerExprFor(name: string, type: Type): string {
     // If union includes null/undefined with a primary type, take the primary
     const nonNullable = parts.filter((t) => !t.isNull() && !t.isUndefined());
     if (nonNullable.length === 1) {
-      return fakerExprFor(name, nonNullable[0]);
+      return fakerExprFor(name, nonNullable[0], depth, indent);
     }
   }
 
@@ -112,8 +112,8 @@ function fakerExprFor(name: string, type: Type): string {
   if (type.isArray()) {
     const elem = type.getArrayElementType();
     if (elem) {
-      const inner = fakerExprFor(name.replace(/s$/,'') || 'item', elem);
-      return `[${inner}]`;
+      const inner = fakerExprFor(name.replace(/s$/,'') || 'item', elem, Math.max(0, depth - 1), indent + 2);
+      return inner.includes('\n') ? `[\n${inner}\n${' '.repeat(indent)}]` : `[${inner}]`;
     }
     return '[]';
   }
@@ -132,8 +132,33 @@ function fakerExprFor(name: string, type: Type): string {
     return `(Object.values(${enumName}) as any)[0]`;
   }
 
-  // Object or anything else: shallow placeholder
-  return '{} as any';
+  // Object or anything else: shallow placeholder or nested object
+  return buildObjectLiteralForType(type, depth, indent);
+}
+
+function buildObjectLiteralForType(type: Type, depth: number, indent: number): string {
+  if (depth <= 0) {
+    return '{} as any';
+  }
+  const props = type.getProperties();
+  if (props.length === 0) {
+    return '{} as any';
+  }
+  const pad = ' '.repeat(indent);
+  const pad2 = ' '.repeat(indent + 2);
+  const lines: string[] = [`${pad}{`];
+  for (const sym of props) {
+    const name = sym.getName();
+    const decls = sym.getDeclarations();
+    if (decls.length === 0) {
+      continue;
+    }
+    const propType = decls[0].getType();
+    const valueExpr = fakerExprFor(name, propType, depth - 1, indent + 2);
+    lines.push(`${pad2}${name}: ${valueExpr},`);
+  }
+  lines.push(`${pad}}`);
+  return lines.join('\n');
 }
 
 function fakerStringByName(name: string): string {

@@ -32,34 +32,54 @@ export async function generateWebhookRoute(
     // Handler files are now generated in the same routes/ directory, so use a relative local import.
     const handlerImportPath = `./handle_${handlerName}`;
     const serviceName = path.basename(interfaceInputDir);
+    const fixtureExportName = `mock${toPascalCase(requestSchema)}`;
 
     const project = new Project();
-    const sourceFile = project.createSourceFile(routeFile, '', {overwrite: true});
+    const existing = project.addSourceFileAtPathIfExists(routeFile);
+    const sourceFile = existing ?? project.createSourceFile(routeFile, '', { overwrite: true });
 
-    sourceFile.addImportDeclaration({
-        defaultImport: 'express',
-        moduleSpecifier: 'express',
-    });
-    sourceFile.addImportDeclaration({
-        isTypeOnly: true,
-        namedImports: [requestSchema],
-        moduleSpecifier: interfaceImportPath.startsWith('.') ? interfaceImportPath : `./${interfaceImportPath}`,
-    });
-    sourceFile.addImportDeclaration({
-        namedImports: [`handle${pascalHandlerName}Webhook`],
-        moduleSpecifier: handlerImportPath.startsWith('.') ? handlerImportPath : `./${handlerImportPath}`,
-    });
-    sourceFile.addImportDeclaration({
-        namedImports: ['simulatedWebhookPayload'],
-        moduleSpecifier: `./${requestSchema}.fixture`,
-    });
+    // --- Helper functions for idempotency ---
+    const ensureDefaultImport = (moduleSpecifier: string, defaultName: string) => {
+      const imp = sourceFile.getImportDeclarations().find(d => d.getModuleSpecifierValue() === moduleSpecifier);
+      if (!imp) { sourceFile.addImportDeclaration({ moduleSpecifier, defaultImport: defaultName }); return; }
+      if (!imp.getDefaultImport()) { imp.setDefaultImport(defaultName); }
+    };
 
-    sourceFile.addStatements([
+    const ensureNamedImport = (moduleSpecifier: string, name: string, isTypeOnly = false) => {
+      const imp = sourceFile.getImportDeclarations().find(d => d.getModuleSpecifierValue() === moduleSpecifier);
+      if (!imp) { sourceFile.addImportDeclaration({ moduleSpecifier, namedImports: [name], isTypeOnly }); return; }
+      const has = imp.getNamedImports().some(n => n.getName() === name);
+      if (!has) { imp.addNamedImport(name); }
+      if (isTypeOnly && !imp.isTypeOnly()) imp.setIsTypeOnly(true);
+    };
+
+    const ensureNamedImportWithAlias = (moduleSpecifier: string, name: string, alias?: string) => {
+      const imp = sourceFile.getImportDeclarations().find(d => d.getModuleSpecifierValue() === moduleSpecifier);
+      const toAdd = alias ? { name, alias } : name;
+      if (!imp) { sourceFile.addImportDeclaration({ moduleSpecifier, namedImports: [toAdd] }); return; }
+      const exists = imp.getNamedImports().some(n => n.getName() === name && (alias ? n.getAliasNode()?.getText() === alias : true));
+      if (!exists) imp.addNamedImport(toAdd as any);
+    };
+
+    const hasText = (snippet: string) => sourceFile.getFullText().includes(snippet);
+
+    // --- Idempotent imports ---
+    ensureDefaultImport('express', 'express');
+    ensureNamedImport(interfaceImportPath.startsWith('.') ? interfaceImportPath : `./${interfaceImportPath}`, requestSchema, true);
+    ensureNamedImport(handlerImportPath.startsWith('.') ? handlerImportPath : `./${handlerImportPath}`, `handle${pascalHandlerName}Webhook`);
+    ensureNamedImport(`./${requestSchema}.fixture`, fixtureExportName);
+
+    // --- Router bootstrap only once ---
+    if (!hasText('const router = express.Router()')) {
+      sourceFile.addStatements([
         'const router = express.Router();',
         'router.use(express.json());'
-    ]);
+      ]);
+    }
 
-    sourceFile.addStatements([
+    // --- Main webhook route only once ---
+    if (!hasText(`router.post('${webhookPath}'`)) {
+      sourceFile.addStatements([
         `router.post('${webhookPath}', async (req, res) => {
 	try {
 		const payload = req.body as ${requestSchema};
@@ -70,22 +90,38 @@ export async function generateWebhookRoute(
 		res.status(500).json({ ok: false });
 	}
 });`
-    ]);
+      ]);
+    }
 
-    sourceFile.addStatements([
-        `router.post('/test/${serviceName}-webhook', async (_req, res) => {\n\ttry {\n\t\tawait handle${pascalHandlerName}Webhook(simulatedWebhookPayload);\n\t\tres.status(200).json({ ok: true, message: 'Simulated webhook sent.' });\n\t} catch (error) {\n\t\tconsole.error('Webhook test error:', error);\n\t\tres.status(500).json({ ok: false });\n\t}\n});`
-    ]);
+    // --- Test route only once ---
+    const testPath = `/test/${serviceName}-${handlerName}-webhook`;
+    if (!hasText(`router.post('${testPath}'`)) {
+      sourceFile.addStatements([
+        `router.post('${testPath}', async (_req, res) => {
+	try {
+		await handle${pascalHandlerName}Webhook(${fixtureExportName});
+		res.status(200).json({ ok: true, message: 'Simulated webhook sent.' });
+	} catch (error) {
+		console.error('Webhook test error:', error);
+		res.status(500).json({ ok: false });
+	}
+});`
+      ]);
+    }
 
     generateWebhookFixture(
         requestSchema,
         interfaceImportPath,
         outputDir,
         project,
-        fixtureName
+        fixtureName ?? fixtureExportName
     );
 
-	sourceFile.addStatements(['export default router;']);
-	Logger.debug(funcName, 'Webhook route generation complete')
+    // --- Default export only once ---
+    if (!hasText('export default router')) {
+      sourceFile.addStatements(['export default router;']);
+    }
+    Logger.debug(funcName, 'Webhook route generation complete')
     await project.save();
 }
 /**
