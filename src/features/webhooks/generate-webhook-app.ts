@@ -1,11 +1,11 @@
-import { readWebhookConfigFile, extractInterfaces, ensureDir } from '../utils/file-system';
+import { readWebhookConfigFile, extractInterfaces, ensureDir } from '../../utils/file-system';
 import * as path from 'path';
 import { Project } from 'ts-morph';
-import { Logger } from '../utils/logger';
-import { toPascalCase } from "../utils/object-helpers";
+import { Logger } from '../../utils/logger';
+import { toPascalCase } from "../../utils/object-helpers";
 import { generateWebhooksFromFile } from './generate-webhooks';
 import { generateWebhookRoutesFromFile } from './generate-webhook-routes';
-import { collectRequiredSchemas, findDirectoryContainingAllSchemas } from "../utils/client-constructors";
+import { collectRequiredSchemas, findDirectoryContainingAllSchemas } from "../../utils/client-constructors";
 import { generateWebhookAppRegistry } from "./generate-webhook-app-registry";
 import { WebhookConfigFile } from "models/webhook-definitions";
 

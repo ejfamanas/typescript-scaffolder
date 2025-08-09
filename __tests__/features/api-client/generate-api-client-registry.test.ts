@@ -1,11 +1,11 @@
 import fs from 'fs';
 import path from 'path';
-import {generateApiRegistry, getApiFunction} from '../../src';
-import { Logger } from '../../src/utils/logger';
-import { walkDirectory } from '../../src/utils/file-system';
+import {generateApiRegistry, getApiFunction} from '../../../src';
+import { Logger } from '../../../src/utils/logger';
+import { walkDirectory } from '../../../src/utils/file-system';
 
 jest.mock('fs');
-jest.mock('../../src/utils/file-system', () => ({
+jest.mock('../../../src/utils/file-system', () => ({
     walkDirectory: jest.fn()
 }));
 

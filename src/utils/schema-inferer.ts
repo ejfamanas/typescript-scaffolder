@@ -101,6 +101,19 @@ export async function inferJsonSchema(json: string, interfaceName: string): Prom
             });
         }
 
+        // Step 7.a: Remove delimiter core left inside identifier names by Quicktype (e.g., DataPREFIXObject)
+        {
+            const core = prefixDelimiter.replace(/_/g, ''); // e.g., "PREFIX"
+            const coreCapitalized = core.charAt(0) + core.slice(1).toLowerCase(); // e.g., "Prefix"
+
+            const idToken = new RegExp(`([A-Za-z0-9_])${core}(?=[A-Za-z0-9_])`, 'g');
+            const idTokenCap = new RegExp(`([A-Za-z0-9_])${coreCapitalized}(?=[A-Za-z0-9_])`, 'g');
+
+            cleanedLines = cleanedLines.map((line: string) =>
+                line.replace(idToken, '$1').replace(idTokenCap, '$1')
+            );
+        }
+
         // Step 7.5: Validate no accidental duplicate keys in final TypeScript output
         {
             const interfaceStart = /^\s*export interface\s+(\w+)\s*\{/;

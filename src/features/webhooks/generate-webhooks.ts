@@ -1,14 +1,14 @@
-import { findDirectoryContainingAllSchemas } from "../utils/client-constructors";
-import { walkDirectory, ensureDir, readWebhookConfigFile, extractInterfaces } from "../utils/file-system";
-import { Logger } from "../utils/logger";
+import { findDirectoryContainingAllSchemas } from "../../utils/client-constructors";
+import { walkDirectory, ensureDir, readWebhookConfigFile, extractInterfaces } from "../../utils/file-system";
+import { Logger } from "../../utils/logger";
 import { BaseWebhook, WebhookConfigFile } from 'models/webhook-definitions';
 import { IncomingWebhook } from 'models/webhook-definitions';
 import { OutgoingWebhook } from 'models/webhook-definitions';
 import { Project } from 'ts-morph';
 import path from 'path';
 import fs from 'fs';
-import { toPascalCase } from "../utils/object-helpers";
-import { addClientRequiredImports } from "../utils/client-constructors";
+import { toPascalCase } from "../../utils/object-helpers";
+import { addClientRequiredImports } from "../../utils/client-constructors";
 
 export async function generateIncomingWebhook(
     webhook: IncomingWebhook,

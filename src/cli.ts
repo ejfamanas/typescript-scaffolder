@@ -5,10 +5,10 @@ import { Logger } from './utils/logger';
 import { generateInterfacesFromPath } from "./features/generate-interfaces";
 import { generateEnumsFromPath } from './features/generate-enums';
 import { generateEnvLoader } from './features/generate-env-loader';
-import { generateApiClientFromFile, generateApiClientsFromPath } from './features/generate-api-client';
-import { generateApiRegistry } from './features/generate-api-client-registry';
-import { generateWebhookAppFromPath } from './features/generate-webhook-app';
-import { generateWebhookAppRegistry } from "./features/generate-webhook-app-registry";
+import { generateApiClientFromFile, generateApiClientsFromPath } from './features/api-client/generate-api-client';
+import { generateApiRegistry } from './features/api-client/generate-api-client-registry';
+import { generateWebhookAppFromPath } from './features/webhooks/generate-webhook-app';
+import { generateWebhookAppRegistry } from "./features/webhooks/generate-webhook-app-registry";
 import { generateJsonSchemasFromPath } from "./features/generate-json-schemas";
 
 const program = new Command();
@@ -139,7 +139,7 @@ program
     .requiredOption('-o, --output <dir>', 'Output directory for generated runners')
     .action(async (options) => {
         Logger.info('cli', `Generating sequence runners from "${options.configDir}" to "${options.output}"`);
-        const { generateSequencesFromPath } = await import('./features/generate-sequence-runner');
+        const { generateSequencesFromPath } = await import('./features/api-client/generate-sequence-runner');
         await generateSequencesFromPath(
             path.resolve(options.configDir),
             path.resolve(options.output)

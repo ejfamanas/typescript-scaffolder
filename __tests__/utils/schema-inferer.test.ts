@@ -111,6 +111,21 @@ describe('inferSchemaFromJson', () => {
         expect(result).toMatch(/"Card Number"\?:\s*any/);
         expect(result).toMatch(/method:\s*string/);
     });
+
+    it('does not strip real keys that merely contain the delimiter substring', async () => {
+        const input = JSON.stringify({
+            "module__PREFIX__card": "keep-this",
+            module: {
+                "module__PREFIX__card": "also-keep"
+            }
+        });
+
+        const result = await inferJsonSchema(input, "DelimiterEscape");
+        expect(result).toMatch(/module\s*:\s*Module/);
+        // Ensure we did not accidentally produce a stripped variant such as `module_card`
+        expect(result).not.toMatch(/module_card/);
+    });
+
     it('should infer interfaces from nested duplicate-key JSON correctly', async () => {
         const json = JSON.stringify({
             badges: [

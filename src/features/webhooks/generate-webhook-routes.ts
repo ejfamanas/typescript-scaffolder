@@ -1,10 +1,11 @@
 import * as path from 'path';
 import { Project } from 'ts-morph';
-import { ensureDir, extractInterfaces, readWebhookConfigFile } from '../utils/file-system';
-import { IncomingWebhook, OutgoingWebhook, WebhookConfigFile } from "models/webhook-definitions";
-import { toPascalCase } from "../utils/object-helpers";
-import { findDirectoryContainingAllSchemas } from "../utils/client-constructors";
-import { Logger } from "../utils/logger";
+import { ensureDir, extractInterfaces, readWebhookConfigFile } from '../../utils/file-system';
+import { IncomingWebhook, WebhookConfigFile } from "models/webhook-definitions";
+import { toPascalCase } from "../../utils/object-helpers";
+import { findDirectoryContainingAllSchemas } from "../../utils/client-constructors";
+import { Logger } from "../../utils/logger";
+import { generateWebhookFixture } from './generate-webhook-fixture';
 
 /**
  * Generates an Express router file for a single incoming webhook.
@@ -16,7 +17,8 @@ import { Logger } from "../utils/logger";
 export async function generateWebhookRoute(
     webhook: IncomingWebhook,
     interfaceInputDir: string,
-    outputDir: string
+    outputDir: string,
+    fixtureName?: string
 ): Promise<void> {
     const {handlerName, path: webhookPath, requestSchema} = webhook;
     const funcName = `generateWebhookRoute`;
@@ -29,6 +31,7 @@ export async function generateWebhookRoute(
     const interfaceImportPath = path.relative(outputDir, path.join(interfaceInputDir, requestSchema)).replace(/\\/g, '/');
     // Handler files are now generated in the same routes/ directory, so use a relative local import.
     const handlerImportPath = `./handle_${handlerName}`;
+    const serviceName = path.basename(interfaceInputDir);
 
     const project = new Project();
     const sourceFile = project.createSourceFile(routeFile, '', {overwrite: true});
@@ -45,6 +48,10 @@ export async function generateWebhookRoute(
     sourceFile.addImportDeclaration({
         namedImports: [`handle${pascalHandlerName}Webhook`],
         moduleSpecifier: handlerImportPath.startsWith('.') ? handlerImportPath : `./${handlerImportPath}`,
+    });
+    sourceFile.addImportDeclaration({
+        namedImports: ['simulatedWebhookPayload'],
+        moduleSpecifier: `./${requestSchema}.fixture`,
     });
 
     sourceFile.addStatements([
@@ -65,9 +72,21 @@ export async function generateWebhookRoute(
 });`
     ]);
 
+    sourceFile.addStatements([
+        `router.post('/test/${serviceName}-webhook', async (_req, res) => {\n\ttry {\n\t\tawait handle${pascalHandlerName}Webhook(simulatedWebhookPayload);\n\t\tres.status(200).json({ ok: true, message: 'Simulated webhook sent.' });\n\t} catch (error) {\n\t\tconsole.error('Webhook test error:', error);\n\t\tres.status(500).json({ ok: false });\n\t}\n});`
+    ]);
+
+    generateWebhookFixture(
+        requestSchema,
+        interfaceImportPath,
+        outputDir,
+        project,
+        fixtureName
+    );
+
 	sourceFile.addStatements(['export default router;']);
 	Logger.debug(funcName, 'Webhook route generation complete')
-    await sourceFile.save();
+    await project.save();
 }
 /**
  * Reads a WebhookConfigFile and generates Express routes for each incoming webhook.

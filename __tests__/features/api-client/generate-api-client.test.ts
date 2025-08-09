@@ -4,8 +4,8 @@ import {
     generateApiClientFunction,
     generateApiClientFromFile,
     generateApiClientsFromPath,
-} from '../../src';
-import {Endpoint, EndpointClientConfigFile} from '../../src';
+} from '../../../src';
+import {Endpoint, EndpointClientConfigFile} from '../../../src';
 import fs from "fs";
 import { SourceFile } from 'ts-morph';
 

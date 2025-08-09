@@ -2,14 +2,14 @@ import { Project } from 'ts-morph';
 import fs from 'fs';
 import {Endpoint, EndpointAuthConfig, EndpointClientConfigFile, SchemaConsumer} from 'models/api-definitions';
 import path from 'path'
-import { ensureDir, extractInterfaces, readEndpointClientConfigFile, walkDirectory } from '../utils/file-system';
+import { ensureDir, extractInterfaces, readEndpointClientConfigFile, walkDirectory } from '../../utils/file-system';
 import {
 	addClientRequiredImports, collectRequiredSchemas,
 	constructUrlPath, determineHasBody, findDirectoryContainingAllSchemas,
 	generateClientAction,
 	generateInlineAuthHeader
-} from '../utils/client-constructors';
-import { Logger } from '../utils/logger';
+} from '../../utils/client-constructors';
+import { Logger } from '../../utils/logger';
 
 export function generateApiClientFunction(
 	baseUrl: string,

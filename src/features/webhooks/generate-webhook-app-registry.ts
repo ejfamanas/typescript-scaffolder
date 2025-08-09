@@ -1,6 +1,6 @@
 import * as path from 'path';
 import * as fs from 'fs';
-import { Logger } from '../utils/logger';
+import { Logger } from '../../utils/logger';
 
 export async function generateWebhookAppRegistry(serviceDir: string, registryFileName = 'webhookAppRegistry.ts') {
   const funcName = 'generateWebhookAppRegistry';
