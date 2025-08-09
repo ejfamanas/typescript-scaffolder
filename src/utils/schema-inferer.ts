@@ -28,17 +28,27 @@ export async function inferJsonSchema(json: string, interfaceName: string): Prom
     const funcName = 'inferJsonSchema';
     Logger.debug(funcName, 'Inferring schema...');
 
+    let parsed: any;
     try {
-        // Step 1: Parse the raw JSON
-        const parsed = JSON.parse(json);
+        parsed = JSON.parse(json);
+    } catch (err: any) {
+        const message = err?.message ?? String(err);
+        const preview = json.slice(0, 120) + (json.length > 120 ? '…' : '');
+        const fullMessage = `Invalid JSON input: ${message}. Preview: ${preview}`;
+        Logger.warn(funcName, fullMessage);
+        throw new Error(fullMessage);
+    }
 
+    try {
         // Step 2: Detect globally duplicated keys
         const duplicateKeys = findGloballyDuplicatedKeys(parsed);
         // @ts-ignore - works fine, already set to target ES2020
         Logger.debug(funcName, `Found duplicate keys: ${[...duplicateKeys].join(', ')}`);
 
         // Step 3: Prefix duplicate keys with parent field names
-        const cleanedObject = prefixDuplicateKeys(parsed, duplicateKeys);
+        const prefixedKeys = new Set<string>();
+
+        const cleanedObject = prefixDuplicateKeys(parsed, duplicateKeys, prefixedKeys);
 
         // Step 4: Re-serialize cleaned JSON
         const cleanedJson = JSON.stringify(cleanedObject);
@@ -68,18 +78,27 @@ export async function inferJsonSchema(json: string, interfaceName: string): Prom
 
         // Step 6: Clean up nullable fields
         let cleanedLines = result.lines.map((line: string) =>
-            line.replace(/(\s*)(\w+):\s*null\b/, (_, spacing, key) => `${spacing}${key}?: any`)
+            line.replace(
+                /(\s*)(?:(['"`].+?['"`])|(\w+))\s*:\s*null\b/,
+                (_: string, spacing: string, quoted?: string, bare?: string) =>
+                    `${spacing}${quoted ?? bare}?: any`
+            )
         );
 
-        // Step 7: Strip prefixes from duplicated keys in field names
-        if (duplicateKeys.size > 0) {
-            const prefixPattern = new RegExp(`(\\w+)${prefixDelimiter}([a-zA-Z0-9_]+)`, 'g');
+        // Step 7: Strip prefixes from duplicated keys in field names (only those we actually prefixed)
+        if (prefixedKeys.size > 0) {
+            const escapeRegExp = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+            const prefixedList = Array.from(prefixedKeys);
 
-            cleanedLines = cleanedLines.map(line =>
-                line.replace(prefixPattern, (fullMatch, _prefix, key) =>
-                    duplicateKeys.has(key) ? key : fullMatch
-                )
-            );
+            cleanedLines = cleanedLines.map(line => {
+                let out = line;
+                for (const pk of prefixedList) {
+                    const unprefixed = pk.split(prefixDelimiter).pop()!;
+                    const pattern = new RegExp(escapeRegExp(pk), 'g');
+                    out = out.replace(pattern, unprefixed);
+                }
+                return out;
+            });
         }
 
         // Step 8: Ensure interface name is preserved

@@ -89,6 +89,31 @@ describe('generate-enums module', () => {
             expect(result).toContain('"Card Number" = "Card Number"');
             expect(result).not.toContain('""Card Number""');
         });
+
+        it('should handle keys with internal quotes', () => {
+            const result = generateEnum('Quote', ['He said "Hi"', 'plain']);
+            expect(result).toMatch(/"He said \\\"Hi\\\""\s*=\s*"He said \\\"Hi\\\""/);
+            expect(result).toContain('plain = "plain"');
+        });
+
+        it('should handle unicode/accents in keys', () => {
+            const result = generateEnum('Unicode', ['Café', 'naïve']);
+            // Depending on isValidIdentifier, these may be quoted or unquoted; accept either form
+            expect(result).toMatch(/(?:Café = "Café"|"Café" = "Café")/);
+            expect(result).toMatch(/(?:naïve = "naïve"|"naïve" = "naïve")/);
+        });
+
+        it('should quote keys that start with digits', () => {
+            const result = generateEnum('Num', ['123ABC', '9lives']);
+            expect(result).toContain('"123ABC" = "123ABC"');
+            expect(result).toContain('"9lives" = "9lives"');
+        });
+
+        it('should quote keys with hyphens or periods', () => {
+            const result = generateEnum('Punct', ['x-y', 'x.y']);
+            expect(result).toContain('"x-y" = "x-y"');
+            expect(result).toContain('"x.y" = "x.y"');
+        });
     });
 
     describe('isValidIdentifier', () => {

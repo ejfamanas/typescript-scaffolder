@@ -68,8 +68,9 @@ export function findGloballyDuplicatedKeys(input: any): Set<string> {
  * removed later downstream.
  * @param input
  * @param duplicateKeys
+ * @param prefixedKeys Optional set to collect the actual prefixed keys during processing.
  */
-export function prefixDuplicateKeys(input: any, duplicateKeys: Set<string>): any {
+export function prefixDuplicateKeys(input: any, duplicateKeys: Set<string>, prefixedKeys?: Set<string>): any {
 	const funcName = 'prefixDuplicateKeys';
 	const clone = JSON.parse(JSON.stringify(input)); // deep clone to avoid mutation
 
@@ -92,6 +93,9 @@ export function prefixDuplicateKeys(input: any, duplicateKeys: Set<string>): any
 					if (duplicateKeys.has(key)) {
 						node[`${parentKey}${prefixDelimiter}${key}`] = node[key];
 						delete node[key];
+						if (prefixedKeys) {
+							prefixedKeys.add(`${parentKey}${prefixDelimiter}${key}`);
+						}
 					}
 				}
 			}
@@ -111,4 +115,29 @@ export function toPascalCase(str: string): string {
 	return str
 		.replace(/([-_]\w)/g, g => g[1].toUpperCase())
 		.replace(/^\w/, c => c.toUpperCase());
+}
+
+/**
+ * Safely unprefix keys that were actually prefixed by prefixDuplicateKeys.
+ * Only keys present in `prefixedKeys` are unprefixed; everything else is left untouched.
+ */
+export function unprefixKeysSafe(obj: any, prefixedKeys: Set<string>): any {
+	function walk(node: any) {
+		if (Array.isArray(node)) {
+			node.forEach(walk);
+		} else if (node && typeof node === 'object') {
+			for (const key of Object.keys(node)) {
+				const value = node[key];
+				if (prefixedKeys.has(key)) {
+					const parts = key.split(prefixDelimiter);
+					const unprefixedKey = parts[parts.length - 1];
+					node[unprefixedKey] = value;
+					delete node[key];
+				}
+				walk(value);
+			}
+		}
+	}
+	walk(obj);
+	return obj;
 }
