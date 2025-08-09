@@ -3,7 +3,9 @@ import { Project } from 'ts-morph';
 import { ensureDir, extractInterfaces, readWebhookConfigFile } from '../../utils/file-system';
 import { IncomingWebhook, WebhookConfigFile } from "models/webhook-definitions";
 import { toPascalCase } from "../../utils/object-helpers";
-import { findDirectoryContainingAllSchemas } from "../../utils/client-constructors";
+import {
+    assertDirectoryContainingAllSchemas,
+} from "../../utils/client-constructors";
 import { Logger } from "../../utils/logger";
 import { generateWebhookFixture } from './generate-webhook-fixture';
 
@@ -175,7 +177,7 @@ export async function generateWebhookRoutesFromPath(
 			}
 		}
 
-		const foundDir = findDirectoryContainingAllSchemas(requiredSchemas, interfaceNameToDirs, configPath, funcName);
+		const foundDir = assertDirectoryContainingAllSchemas(requiredSchemas, interfaceNameToDirs, configPath);
 		if (!foundDir) {
 			Logger.warn(funcName, `Could not find a directory containing all schemas for config: ${configPath}`);
 			continue;

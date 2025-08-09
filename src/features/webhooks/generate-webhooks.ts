@@ -1,4 +1,6 @@
-import { findDirectoryContainingAllSchemas } from "../../utils/client-constructors";
+import {
+    assertDirectoryContainingAllSchemas,
+} from "../../utils/client-constructors";
 import { walkDirectory, ensureDir, readWebhookConfigFile, extractInterfaces } from "../../utils/file-system";
 import { Logger } from "../../utils/logger";
 import { BaseWebhook, WebhookConfigFile } from 'models/webhook-definitions';
@@ -165,7 +167,7 @@ export async function generateWebhooksFromPath(
             }
         }
 
-        const foundDir = findDirectoryContainingAllSchemas(requiredSchemas, interfaceNameToDirs, configPath, funcName);
+        const foundDir = assertDirectoryContainingAllSchemas(requiredSchemas, interfaceNameToDirs, configPath);
         if (!foundDir) {
             Logger.warn(funcName, `Could not find a directory containing all schemas for config: ${configPath}`);
             continue;

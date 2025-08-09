@@ -1,3 +1,5 @@
+import path from "path";
+import fs from "fs";
 import {
     generateInlineAuthHeader,
     generateClientAction,
@@ -6,12 +8,11 @@ import {
     addClientRequiredImports,
     collectRequiredSchemas,
     findDirectoryContainingAllSchemas,
-    buildImportMapAndRegistryEntries
+    buildImportMapAndRegistryEntries,
+    assertDirectoryContainingAllSchemas
 } from '../../src/utils/client-constructors';
 import {Endpoint} from "../../src";
 import {SourceFile} from "ts-morph";
-import path from "path";
-import fs from "fs";
 
 describe('generateInlineAuthHeader', () => {
     it('should generate basic auth header', () => {
@@ -210,9 +211,8 @@ describe('findDirectoryContainingAllSchemas', () => {
             ['Post', new Set(['/path/to/dir2', '/path/to/dir3'])]
         ]);
         const configPath = '/some/config.json';
-        const funcName = 'test';
 
-        const result = findDirectoryContainingAllSchemas(requiredSchemas, interfaceNameToDirs, configPath, funcName);
+        const result = findDirectoryContainingAllSchemas(requiredSchemas, interfaceNameToDirs, configPath);
         expect(result).toBe('/path/to/dir2');
 
         fsExistsSpy.mockRestore();
@@ -228,9 +228,8 @@ describe('findDirectoryContainingAllSchemas', () => {
             ['B', new Set(['/dir2'])]
         ]);
         const configPath = '/some/config.json';
-        const funcName = 'test';
 
-        const result = findDirectoryContainingAllSchemas(requiredSchemas, interfaceNameToDirs, configPath, funcName);
+        const result = findDirectoryContainingAllSchemas(requiredSchemas, interfaceNameToDirs, configPath);
         expect(result).toBeNull();
     });
 
@@ -240,15 +239,58 @@ describe('findDirectoryContainingAllSchemas', () => {
             ['User', new Set(['/some/dir'])]
         ]);
         const configPath = '/configs/sample-client.json';
-        const funcName = 'test';
 
         // TODO: This is erroring in the IDE even though the function call is correct based on the signature
         const loggerWarnSpy = jest.spyOn(console, 'warn').mockImplementation(() => {});
         const loggerDebugSpy = jest.spyOn(console, 'debug').mockImplementation(() => {});
 
-        const result = findDirectoryContainingAllSchemas(requiredSchemas, interfaceNameToDirs, configPath, funcName);
+        const result = findDirectoryContainingAllSchemas(requiredSchemas, interfaceNameToDirs, configPath);
 
         expect(result).toBeNull();
+
+        loggerWarnSpy.mockRestore();
+        loggerDebugSpy.mockRestore();
+    });
+});
+
+describe('assertDirectoryContainingAllSchemas', () => {
+    it('returns the directory when all required schemas are present', () => {
+        const requiredSchemas = new Set(['User', 'Post']);
+        const interfaceNameToDirs = new Map([
+            ['User', new Set(['/path/to/dir1', '/path/to/dir2'])],
+            ['Post', new Set(['/path/to/dir2', '/path/to/dir3'])]
+        ]);
+        const configPath = '/some/config.json';
+
+        const result = assertDirectoryContainingAllSchemas(requiredSchemas, interfaceNameToDirs, configPath);
+        expect(result).toBe('/path/to/dir2');
+    });
+
+    it('throws with a clear error when no directory contains all schemas', () => {
+        const requiredSchemas = new Set(['A', 'B']);
+        const interfaceNameToDirs = new Map([
+            ['A', new Set(['/dir1'])],
+            ['B', new Set(['/dir2'])]
+        ]);
+        const configPath = '/some/config.json';
+
+        expect(() => assertDirectoryContainingAllSchemas(requiredSchemas, interfaceNameToDirs, configPath))
+            .toThrow(/Failed to locate an interfaces directory containing all required schemas/);
+    });
+
+    it('throws and includes config filename when a required schema is missing', () => {
+        const requiredSchemas = new Set(['MissingSchema']);
+        const interfaceNameToDirs = new Map([
+            ['User', new Set(['/some/dir'])]
+        ]);
+        const configPath = '/configs/sample-client.json';
+
+        // Suppress logs from the inner finder warn/debug for clean test output
+        const loggerWarnSpy = jest.spyOn(console, 'warn').mockImplementation(() => {});
+        const loggerDebugSpy = jest.spyOn(console, 'debug').mockImplementation(() => {});
+
+        expect(() => assertDirectoryContainingAllSchemas(requiredSchemas, interfaceNameToDirs, configPath))
+            .toThrow(/sample-client\.json/);
 
         loggerWarnSpy.mockRestore();
         loggerDebugSpy.mockRestore();

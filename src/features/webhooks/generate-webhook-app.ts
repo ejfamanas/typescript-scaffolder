@@ -5,7 +5,10 @@ import { Logger } from '../../utils/logger';
 import { toPascalCase } from "../../utils/object-helpers";
 import { generateWebhooksFromFile } from './generate-webhooks';
 import { generateWebhookRoutesFromFile } from './generate-webhook-router';
-import { collectRequiredSchemas, findDirectoryContainingAllSchemas } from "../../utils/client-constructors";
+import {
+	assertDirectoryContainingAllSchemas,
+	collectRequiredSchemas,
+} from "../../utils/client-constructors";
 import { generateWebhookAppRegistry } from "./generate-webhook-app-registry";
 import { WebhookConfigFile } from "models/webhook-definitions";
 
@@ -85,7 +88,7 @@ export async function generateWebhookAppFromPath(
 			continue;
 		}
 		const requiredSchemas = collectRequiredSchemas(config.webhooks);
-		const foundDir = findDirectoryContainingAllSchemas(requiredSchemas, interfaceNameToDirs, configPath, funcName);
+		const foundDir = assertDirectoryContainingAllSchemas(requiredSchemas, interfaceNameToDirs, configPath);
 		if (!foundDir) {
 			Logger.warn(funcName,`Could not find a directory containing all schemas for config: ${configPath}`);
 			continue;
