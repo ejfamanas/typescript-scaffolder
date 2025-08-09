@@ -57,6 +57,29 @@ describe('inferSchemaFromJson', () => {
         ).rejects.toThrow(/Invalid JSON input/);
     });
 
+    it('does not falsely flag near-duplicate property names (validator sanity check)', async () => {
+        const input = JSON.stringify({
+            // three distinct raw keys that could normalize similarly depending on tooling
+            "Card ID": 123,
+            card_id: 456,
+            cardId: 789,
+            // plus a couple of regular fields
+            status: "ok",
+            metadata: { region: "us" }
+        });
+
+        const result = await inferJsonSchema(input, "ValidatorSanity");
+        expect(result).toMatch(/export interface ValidatorSanity/);
+        // Ensure each distinct field appears once in the output
+        // Quoted key should remain quoted
+        expect(result).toMatch(/"Card ID"\s*:\s*number/);
+        // underscore and camelCase forms should also appear
+        expect(result).toMatch(/card_id\s*:\s*number/);
+        expect(result).toMatch(/cardId\s*:\s*number/);
+        // And regular fields pass through
+        expect(result).toMatch(/status\s*:\s*string/);
+    });
+
     it('should handle empty object input', async () => {
         const result = await inferJsonSchema('{}', "User");
         expect(result).toMatch(/export interface User\s*{[^}]*}/);

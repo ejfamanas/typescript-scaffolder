@@ -101,6 +101,49 @@ export async function inferJsonSchema(json: string, interfaceName: string): Prom
             });
         }
 
+        // Step 7.5: Validate no accidental duplicate keys in final TypeScript output
+        {
+            const interfaceStart = /^\s*export interface\s+(\w+)\s*\{/;
+            const propertyLine = /^\s*(?:(["'`])([^"'`]+)\1|([A-Za-z_$][\w$]*))\??\s*:/;
+
+            let currentInterface: string | null = null;
+            let seen = new Set<string>();
+            const dupes: Record<string, Set<string>> = {};
+
+            for (const line of cleanedLines) {
+                const startMatch = line.match(interfaceStart);
+                if (startMatch) {
+                    currentInterface = startMatch[1];
+                    seen = new Set<string>();
+                    continue;
+                }
+                if (currentInterface && line.trim().startsWith('}')) {
+                    currentInterface = null;
+                    continue;
+                }
+                if (!currentInterface) continue;
+
+                const propMatch = line.match(propertyLine);
+                if (propMatch) {
+                    const name = (propMatch[2] ?? propMatch[3] ?? '').trim();
+                    const norm = name; // already unprefixed and normalized by prior steps
+                    if (seen.has(norm)) {
+                        if (!dupes[currentInterface]) dupes[currentInterface] = new Set<string>();
+                        dupes[currentInterface]!.add(norm);
+                    } else {
+                        seen.add(norm);
+                    }
+                }
+            }
+
+            const entries = Object.entries(dupes).filter(([, set]) => set.size > 0);
+            if (entries.length > 0) {
+                const msg = entries
+                    .map(([iface, set]) => `${iface}: ${Array.from(set).join(', ')}`)
+                    .join('; ');
+                throw new Error(`Duplicate properties found in interface(s) ${msg}`);
+            }
+        }
         // Step 8: Ensure interface name is preserved
         return renameFirstInterface(cleanedLines.join('\n'), interfaceName);
     } catch (error: any) {
