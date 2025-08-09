@@ -55,15 +55,20 @@ export async function generateWebhookRoute(
       if (isTypeOnly && !imp.isTypeOnly()) imp.setIsTypeOnly(true);
     };
 
-    const ensureNamedImportWithAlias = (moduleSpecifier: string, name: string, alias?: string) => {
-      const imp = sourceFile.getImportDeclarations().find(d => d.getModuleSpecifierValue() === moduleSpecifier);
-      const toAdd = alias ? { name, alias } : name;
-      if (!imp) { sourceFile.addImportDeclaration({ moduleSpecifier, namedImports: [toAdd] }); return; }
-      const exists = imp.getNamedImports().some(n => n.getName() === name && (alias ? n.getAliasNode()?.getText() === alias : true));
-      if (!exists) imp.addNamedImport(toAdd as any);
-    };
-
     const hasText = (snippet: string) => sourceFile.getFullText().includes(snippet);
+
+    const renderTestHeadersArg = (headers?: Record<string, string>): string => {
+      if (!headers || Object.keys(headers).length === 0) return '';
+      const entries = Object.entries(headers).map(([k, v]) => {
+        const envMatch = /^\$\{ENV:([A-Z0-9_]+)\}$/.exec(v);
+        if (envMatch) {
+          const envName = envMatch[1];
+          return `'${k}': (process.env.${envName} ?? '')`;
+        }
+        return `'${k}': ${JSON.stringify(v)}`;
+      });
+      return `, { ${entries.join(', ')} }`;
+    };
 
     // --- Idempotent imports ---
     ensureDefaultImport('express', 'express');
@@ -95,13 +100,15 @@ export async function generateWebhookRoute(
       ]);
     }
 
+    const testHeadersArg = renderTestHeadersArg((webhook as any).testHeaders);
+
     // --- Test route only once ---
     const testPath = `/test/${serviceName}-${handlerName}-webhook`;
     if (!hasText(`router.post('${testPath}'`)) {
       sourceFile.addStatements([
         `router.post('${testPath}', async (_req, res) => {
 	try {
-		await handle${pascalHandlerName}Webhook(${fixtureExportName});
+		await handle${pascalHandlerName}Webhook(${fixtureExportName}${testHeadersArg});
 		res.status(200).json({ ok: true, message: 'Simulated webhook sent.' });
 	} catch (error) {
 		console.error('Webhook test error:', error);

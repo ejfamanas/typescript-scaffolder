@@ -6,7 +6,7 @@ import { Logger } from "../../utils/logger";
 import { BaseWebhook, WebhookConfigFile } from 'models/webhook-definitions';
 import { IncomingWebhook } from 'models/webhook-definitions';
 import { OutgoingWebhook } from 'models/webhook-definitions';
-import { Project } from 'ts-morph';
+import { Project, OptionalKind, ParameterDeclarationStructure } from 'ts-morph';
 import path from 'path';
 import fs from 'fs';
 import { toPascalCase } from "../../utils/object-helpers";
@@ -18,16 +18,16 @@ export async function generateIncomingWebhook(
     outputDir: string
 ): Promise<void> {
     const funcName = 'generateIncomingWebhook';
-    const {name, requestSchema, handlerName} = webhook;
+    const { name, requestSchema, handlerName, testHeaders } = webhook;
 
     Logger.debug(funcName, `Generating incoming webhook handler for "${name}"...`);
 
     const fileName = `handle_${handlerName}.ts`;
     const outputFilePath = path.join(outputDir, fileName);
-    fs.mkdirSync(path.dirname(outputFilePath), {recursive: true});
+    fs.mkdirSync(path.dirname(outputFilePath), { recursive: true });
 
     const project = new Project();
-    const sourceFile = project.createSourceFile(outputFilePath, '', {overwrite: true});
+    const sourceFile = project.createSourceFile(outputFilePath, '', { overwrite: true });
 
     // Include axios, responseSchema to avoid manual editing later
     addClientRequiredImports(
@@ -40,16 +40,25 @@ export async function generateIncomingWebhook(
         false
     );
 
+    const parameters: OptionalKind<ParameterDeclarationStructure>[] = [
+        {
+            name: 'payload',
+            type: requestSchema,
+        }
+    ];
+    if (testHeaders && Object.keys(testHeaders).length > 0) {
+        parameters.push({
+            name: 'headers',
+            type: 'Record<string, string>',
+            hasQuestionToken: true,
+        });
+    }
+
     sourceFile.addFunction({
         name: `handle${toPascalCase(handlerName)}Webhook`,
         isExported: true,
         isAsync: true,
-        parameters: [
-            {
-                name: 'payload',
-                type: requestSchema,
-            },
-        ],
+        parameters,
         returnType: 'Promise<void>',
         statements: [
             '// TODO: Implement webhook handler logic here',

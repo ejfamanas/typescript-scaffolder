@@ -12,7 +12,11 @@
       "name": "stripe_payment_failed",
       "path": "/webhooks/stripe_payment_failed",
       "handlerName": "StripePaymentFailed",
-      "requestSchema": "StripePaymentFailedPayload"
+      "requestSchema": "StripePaymentFailedPayload",
+      "testHeaders": {
+        "stripe-signature": "${ENV:STRIPE_TEST_SIGNATURE}",
+        "x-api-key": "dev-local"
+      }
     }
   ]
 }
