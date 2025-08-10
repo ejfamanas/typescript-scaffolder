@@ -938,6 +938,8 @@ typescript-scaffolder interfaces \
 
 ### Generate Schemas
 
+Generate typed json schemas from typescript interfaces:
+
 ```bash
 typescript-scaffolder jsonschemas \
   --input ./codegen/interfaces \
