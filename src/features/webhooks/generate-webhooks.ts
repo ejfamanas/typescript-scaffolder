@@ -1,16 +1,11 @@
-import {
-    assertDirectoryContainingAllSchemas,
-} from "../../utils/client-constructors";
-import { walkDirectory, ensureDir, readWebhookConfigFile, extractInterfaces } from "../../utils/file-system";
+import { addClientRequiredImports, assertDirectoryContainingAllSchemas, } from "../../utils/client-constructors";
+import { ensureDir, extractInterfaces, readWebhookConfigFile } from "../../utils/file-system";
 import { Logger } from "../../utils/logger";
-import { BaseWebhook, WebhookConfigFile } from 'models/webhook-definitions';
-import { IncomingWebhook } from 'models/webhook-definitions';
-import { OutgoingWebhook } from 'models/webhook-definitions';
-import { Project, OptionalKind, ParameterDeclarationStructure } from 'ts-morph';
+import { BaseWebhook, IncomingWebhook, OutgoingWebhook, WebhookConfigFile } from 'models/webhook-definitions';
+import { OptionalKind, ParameterDeclarationStructure, Project } from 'ts-morph';
 import path from 'path';
 import fs from 'fs';
 import { toPascalCase } from "../../utils/object-helpers";
-import { addClientRequiredImports } from "../../utils/client-constructors";
 
 export async function generateIncomingWebhook(
     webhook: IncomingWebhook,
@@ -18,16 +13,16 @@ export async function generateIncomingWebhook(
     outputDir: string
 ): Promise<void> {
     const funcName = 'generateIncomingWebhook';
-    const { name, requestSchema, handlerName, testHeaders } = webhook;
+    const {name, requestSchema, handlerName, testHeaders} = webhook;
 
     Logger.debug(funcName, `Generating incoming webhook handler for "${name}"...`);
 
     const fileName = `handle_${handlerName}.ts`;
     const outputFilePath = path.join(outputDir, fileName);
-    fs.mkdirSync(path.dirname(outputFilePath), { recursive: true });
+    fs.mkdirSync(path.dirname(outputFilePath), {recursive: true});
 
     const project = new Project();
-    const sourceFile = project.createSourceFile(outputFilePath, '', { overwrite: true });
+    const sourceFile = project.createSourceFile(outputFilePath, '', {overwrite: true});
 
     // Include axios, responseSchema to avoid manual editing later
     addClientRequiredImports(

@@ -50,9 +50,18 @@ export {
 	generateWebhookAppFromFile,
 	generateWebhookAppFromPath
 } from './features/webhooks/generate-webhook-app'
-export { generateWebhookAppRegistry,
+export {
+	generateWebhookAppRegistry,
 	generateWebhookAppRegistriesFromPath
 } from './features/webhooks/generate-webhook-app-registry'
+export {
+	generateWebhookFixture
+} from './features/webhooks/generate-webhook-fixture'
+export {
+	generateWebhookRoute,
+	generateWebhookRoutesFromFile,
+	generateWebhookRoutesFromPath
+} from './features/webhooks/generate-webhook-router'
 export {
 	ParsedProperty,
 	ParsedInterface

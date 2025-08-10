@@ -20,7 +20,6 @@ export async function generateWebhookRoute(
     webhook: IncomingWebhook,
     interfaceInputDir: string,
     outputDir: string,
-    fixtureName?: string
 ): Promise<void> {
     const {handlerName, path: webhookPath, requestSchema} = webhook;
     const funcName = `generateWebhookRoute`;
@@ -123,7 +122,6 @@ export async function generateWebhookRoute(
         interfaceImportPath,
         outputDir,
         project,
-        fixtureName ?? fixtureExportName
     );
 
     // --- Default export only once ---

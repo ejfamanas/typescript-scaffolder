@@ -1,7 +1,9 @@
-import path from "path";
+import * as path from "path";
 import { extractInterfacesFromFile, parseProperty } from "../../src/utils/interface-parser";
+import * as fs from "fs";
+import * as os from "os";
 import { Project, PropertySignature } from "ts-morph";
-import { ParsedInterface } from "../../src/models/interface-definitions";
+import { ParsedInterface } from "../../src";
 
 describe("extractInterfacesFromFile", () => {
     const exampleFile = path.resolve(__dirname, "test-data", "example.ts");
@@ -214,5 +216,80 @@ describe("parseProperty", () => {
         const result = parseProperty(prop);
         expect(result.type).toBe("array");
         expect(result.elementType).toContain("Record<string, number>");
+    });
+});
+
+// Additional edge-case coverage for interface-parser
+describe("interface-parser edge cases", () => {
+  const mkTmpDir = () => fs.mkdtempSync(path.join(os.tmpdir(), "iface-edges-"));
+  const writeTempFile = (dir: string, filename: string, content: string) => {
+    const p = path.join(dir, filename);
+    fs.mkdirSync(path.dirname(p), { recursive: true });
+    fs.writeFileSync(p, content);
+    return p;
+  };
+
+  it("returns empty array when file has no interfaces", () => {
+    const dir = mkTmpDir();
+    const file = writeTempFile(dir, "no-interfaces.ts", `const x = 1; type T = string;`);
+    const result = extractInterfacesFromFile(file);
+    expect(result).toHaveLength(0);
+  });
+
+  it("handles an empty interface with zero properties", () => {
+    const dir = mkTmpDir();
+    const file = writeTempFile(dir, "empty.ts", `export interface Empty {}`);
+    const result = extractInterfacesFromFile(file);
+    expect(result).toHaveLength(1);
+    expect(result[0].name).toBe("Empty");
+    expect(result[0].properties).toHaveLength(0);
+  });
+
+  // Local helper (separate from the one in the earlier describe) so these tests are self-contained
+  const createProperty2 = (code: string): PropertySignature => {
+    const project = new Project();
+    const sourceFile = project.createSourceFile("tmp-edge.ts", code);
+    const iface = sourceFile.getInterfaceOrThrow("Sample");
+    return iface.getProperties()[0];
+  };
+
+  it("parses array of union: (string | number)[]", () => {
+    const prop = createProperty2(`interface Sample { vals: (string | number)[] }`);
+    const result = parseProperty(prop);
+    expect(result.type).toBe("array");
+    // element type may be rendered as a union string; be tolerant
+    expect(String(result.elementType)).toMatch(/string/);
+    expect(String(result.elementType)).toMatch(/number/);
+  });
+
+  it("parses union of arrays: string[] | number[]", () => {
+    const prop = createProperty2(`interface Sample { v: string[] | number[] }`);
+    const result = parseProperty(prop);
+    // Implementation detail: parser may represent this as a structured union OR as a stringified union type
+    if (result.type === "union") {
+      expect(Array.isArray(result.unionTypes)).toBe(true);
+      expect(result.unionTypes!.length).toBe(2);
+      // Be tolerant about exact values (e.g., "string[]" vs "Array<string>")
+      const joined = result.unionTypes!.join(" | ");
+      expect(joined).toMatch(/string\[\]|Array<\s*string\s*>/);
+      expect(joined).toMatch(/number\[\]|Array<\s*number\s*>/);
+    } else {
+      // Stringified union fallback
+      expect(String(result.type).replace(/\s+/g, " ")).toBe("string[] | number[]");
+    }
+  });
+
+  it("handles complex Record types without crashing", () => {
+    const prop = createProperty2(`interface Sample { map: Record<string, unknown> }`);
+    const result = parseProperty(prop);
+    // We don't enforce a specific string; just ensure it didn't get misclassified as array/union/primitive
+    expect(["array", "union", "string", "number", "boolean"]).not.toContain(result.type);
+    expect(typeof result.type).toBe("string");
+  });
+
+    it("sets jsDoc to undefined or empty string when absent", () => {
+        const prop = createProperty2(`interface Sample { value: string }`);
+        const result = parseProperty(prop);
+        expect(result.jsDoc ?? "").toBe("");
     });
 });
