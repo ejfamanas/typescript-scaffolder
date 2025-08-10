@@ -145,3 +145,4 @@ dist
 /coverage/
 /codegen/
 /src/codegen/
+/output/

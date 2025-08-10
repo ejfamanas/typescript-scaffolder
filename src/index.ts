@@ -29,30 +29,39 @@ export {
 	generateApiClientsFromPath,
 	generateApiClientFromFile,
 	generateApiClientFunction
-} from './features/generate-api-client';
+} from './features/api-client/generate-api-client';
 export {
 	generateApiRegistry,
 	getApiFunction
-} from './features/generate-api-client-registry'
+} from './features/api-client/generate-api-client-registry'
 export {
 	generateSequenceRunner,
 	generateSequenceFromFile,
 	generateSequencesFromPath
-} from './features/generate-sequence-runner'
+} from './features/api-client/generate-sequence-runner'
 export {
 	generateWebhooksFromFile,
 	generateWebhooksFromPath,
 	generateIncomingWebhook,
 	generateOutgoingWebhook
-} from './features/generate-webhooks'
+} from './features/webhooks/generate-webhooks'
 export {
 	generateWebhookApp,
 	generateWebhookAppFromFile,
 	generateWebhookAppFromPath
-} from './features/generate-webhook-app'
-export { generateWebhookAppRegistry,
+} from './features/webhooks/generate-webhook-app'
+export {
+	generateWebhookAppRegistry,
 	generateWebhookAppRegistriesFromPath
-} from './features/generate-webhook-app-registry'
+} from './features/webhooks/generate-webhook-app-registry'
+export {
+	generateWebhookFixture
+} from './features/webhooks/generate-webhook-fixture'
+export {
+	generateWebhookRoute,
+	generateWebhookRoutesFromFile,
+	generateWebhookRoutesFromPath
+} from './features/webhooks/generate-webhook-router'
 export {
 	ParsedProperty,
 	ParsedInterface

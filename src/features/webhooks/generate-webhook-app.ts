@@ -1,11 +1,14 @@
-import { readWebhookConfigFile, extractInterfaces, ensureDir } from '../utils/file-system';
+import { readWebhookConfigFile, extractInterfaces, ensureDir } from '../../utils/file-system';
 import * as path from 'path';
 import { Project } from 'ts-morph';
-import { Logger } from '../utils/logger';
-import { toPascalCase } from "../utils/object-helpers";
+import { Logger } from '../../utils/logger';
+import { toPascalCase } from "../../utils/object-helpers";
 import { generateWebhooksFromFile } from './generate-webhooks';
-import { generateWebhookRoutesFromFile } from './generate-webhook-routes';
-import { collectRequiredSchemas, findDirectoryContainingAllSchemas } from "../utils/client-constructors";
+import { generateWebhookRoutesFromFile } from './generate-webhook-router';
+import {
+	assertDirectoryContainingAllSchemas,
+	collectRequiredSchemas,
+} from "../../utils/client-constructors";
 import { generateWebhookAppRegistry } from "./generate-webhook-app-registry";
 import { WebhookConfigFile } from "models/webhook-definitions";
 
@@ -85,7 +88,7 @@ export async function generateWebhookAppFromPath(
 			continue;
 		}
 		const requiredSchemas = collectRequiredSchemas(config.webhooks);
-		const foundDir = findDirectoryContainingAllSchemas(requiredSchemas, interfaceNameToDirs, configPath, funcName);
+		const foundDir = assertDirectoryContainingAllSchemas(requiredSchemas, interfaceNameToDirs, configPath);
 		if (!foundDir) {
 			Logger.warn(funcName,`Could not find a directory containing all schemas for config: ${configPath}`);
 			continue;

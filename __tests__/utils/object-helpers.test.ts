@@ -1,7 +1,8 @@
 import {
     deriveObjectName, findGloballyDuplicatedKeys,
     inferPrimitiveType,
-    prefixDuplicateKeys
+    prefixDuplicateKeys,
+    unprefixKeysSafe
 } from '../../src/utils/object-helpers';
 
 describe('deriveObjectName', () => {
@@ -158,6 +159,36 @@ describe('prefixDuplicateKeys', () => {
             prefixDuplicateKeys(input, duplicateKeys);
         }).not.toThrow()
     });
+    it('should collect actually prefixed keys when a Set collector is provided', () => {
+        const input = {
+            parent: { id: 1, name: 'P' },
+            child: { id: 2, name: 'C' },
+            list: [
+                { id: 10, status: 'ok' },
+                { id: 11, status: 'ok' }
+            ]
+        };
+        const duplicateKeys = new Set(['id', 'name', 'status']);
+        const collector = new Set<string>();
+
+        const result = prefixDuplicateKeys(input, duplicateKeys, collector);
+
+        // Verify object is prefixed as expected (spot check)
+        expect(result.parent).toHaveProperty('parent__PREFIX__id', 1);
+        expect(result.child).toHaveProperty('child__PREFIX__name', 'C');
+        expect(result.list[0]).toHaveProperty('list__PREFIX__id', 10);
+        expect(result.list[1]).toHaveProperty('list__PREFIX__status', 'ok');
+
+        // Verify collector has exactly the keys we actually changed
+        expect(collector).toEqual(new Set([
+            'parent__PREFIX__id',
+            'parent__PREFIX__name',
+            'child__PREFIX__id',
+            'child__PREFIX__name',
+            'list__PREFIX__id',
+            'list__PREFIX__status'
+        ]));
+    });
     it('should deduplicate and prefix nested keys from a JSON object that was converted from SOAP', () => {
         const input = {
             badges: [
@@ -256,6 +287,60 @@ describe('prefixDuplicateKeys', () => {
             status: "complete",
             timestamp: "2024-01-01T12:00:00Z"
         });
+    });
+});
+
+describe('unprefixKeysSafe', () => {
+    it('should unprefix only keys that were actually prefixed', () => {
+        const obj = {
+            parent__PREFIX__id: 1,
+            name: 'no-change',
+            weird__PREFIX__key: 'should-stay', // not actually prefixed by our pipeline
+            nested: {
+                child__PREFIX__status: 'ok',
+                other: 123
+            }
+        } as any;
+
+        const prefixedKeys = new Set<string>([
+            'parent__PREFIX__id',
+            'child__PREFIX__status'
+        ]);
+
+        const result = unprefixKeysSafe(obj, prefixedKeys);
+
+        // Keys in the set are unprefixed
+        expect(result).toHaveProperty('id', 1);
+        expect(result.nested).toHaveProperty('status', 'ok');
+
+        // Original prefixed keys should be removed
+        expect(result).not.toHaveProperty('parent__PREFIX__id');
+        expect(result.nested).not.toHaveProperty('child__PREFIX__status');
+
+        // Keys not in the set remain untouched
+        expect(result).toHaveProperty('weird__PREFIX__key', 'should-stay');
+        expect(result).toHaveProperty('name', 'no-change');
+    });
+
+    it('should handle arrays of objects without unprefixing unrelated keys', () => {
+        const obj = {
+            items: [
+                { items__PREFIX__uuid: 'a', untouched__PREFIX__thing: 1 },
+                { items__PREFIX__uuid: 'b', untouched__PREFIX__thing: 2 }
+            ]
+        } as any;
+
+        const prefixedKeys = new Set<string>(['items__PREFIX__uuid']);
+
+        const result = unprefixKeysSafe(obj, prefixedKeys);
+
+        // uuids are unprefixed in each element
+        expect(result.items[0]).toHaveProperty('uuid', 'a');
+        expect(result.items[1]).toHaveProperty('uuid', 'b');
+
+        // unrelated keys remain as-is
+        expect(result.items[0]).toHaveProperty('untouched__PREFIX__thing', 1);
+        expect(result.items[1]).toHaveProperty('untouched__PREFIX__thing', 2);
     });
 });
 

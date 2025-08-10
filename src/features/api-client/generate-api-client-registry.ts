@@ -1,8 +1,8 @@
 import * as path from 'path';
 import * as fs from 'fs';
-import { walkDirectory } from '../utils/file-system';
-import { Logger } from '../utils/logger';
-import { buildImportMapAndRegistryEntries } from "../utils/client-constructors";
+import { walkDirectory } from '../../utils/file-system';
+import { Logger } from '../../utils/logger';
+import { buildImportMapAndRegistryEntries } from "../../utils/client-constructors";
 
 /**
  * Creates a registry of functions within a file that can be used at runtime. This function will produce

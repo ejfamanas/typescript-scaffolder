@@ -1,11 +1,11 @@
-import { buildTreeFromSequence } from '../utils/sequence-tree-builder';
+import { buildTreeFromSequence } from '../../utils/sequence-tree-builder';
 import fs from 'fs';
 import path from 'path';
 import { ActionStep, FetchListStep, LoopStep, Sequence } from "models/sequence-definitions";
-import { TreeNode } from "../utils/sequence-tree-builder";
-import { assertSequences } from "../utils/structure-validators";
-import { Logger } from "../utils/logger";
-import { ensureDir } from "../utils/file-system";
+import { TreeNode } from "../../utils/sequence-tree-builder";
+import { assertSequences } from "../../utils/structure-validators";
+import { Logger } from "../../utils/logger";
+import { ensureDir } from "../../utils/file-system";
 
 /**
  * Used to create a normalised method name that reflects the REST API action
@@ -43,6 +43,8 @@ function interpolateTemplateObject(obj: any): string {
 }
 
 export function generateSequenceRunner(sequence: Sequence, tree: TreeNode[], outputPath: string, serviceName: string): void {
+  const funcName = 'generateSequenceRunner'
+  Logger.debug(funcName, 'Generating sequence file...')
   const lines: string[] = [];
 
   lines.push(`// Auto-generated runner for sequence: ${sequence.name}`);
@@ -106,7 +108,7 @@ export function generateSequenceRunner(sequence: Sequence, tree: TreeNode[], out
 
 export function generateSequenceFromFile(filePath: string, outputDir: string): void {
   const funcName = 'generateSequenceFromFile'
-  Logger.info(funcName, `Generating sequence from ${filePath} ...`)
+  Logger.debug(funcName, `Generating sequence from ${filePath} ...`)
 
   const fileContent = fs.readFileSync(filePath, 'utf-8');
   const parsed = JSON.parse(fileContent);
@@ -120,7 +122,7 @@ export function generateSequenceFromFile(filePath: string, outputDir: string): v
 
 export function generateSequencesFromPath(configDir: string, outputDir: string, subDir: string = 'sequences'): void {
   const funcName = 'generateSequencesFromPath';
-  Logger.info(funcName, `Generating sequences from ${configDir} to ${outputDir}`);
+  Logger.debug(funcName, `Generating sequences from ${configDir} to ${outputDir}`);
 
   const files = fs.readdirSync(configDir).filter(f => f.endsWith('.json'));
 

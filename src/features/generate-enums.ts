@@ -17,11 +17,26 @@ export function extractInterfaceKeysFromFile(filePath: string): { name: string; 
 
     sourceFile.getInterfaces().forEach((iface: InterfaceDeclaration) => {
         const name = iface.getName();
-        const keys = iface.getProperties().map(prop => prop.getName());
+        const keys = Array.from(
+            new Set(
+                iface
+                    .getProperties()
+                    .map(prop => stripSurroundingQuotes(prop.getName()))
+            )
+        );
         interfaces.push({ name, keys });
     });
 
     return interfaces;
+}
+
+/**
+ * If ts-morph returns a string-literal property name (e.g. "\"Card Number\""),
+ * remove the surrounding quotes so downstream quotation is applied exactly once.
+ */
+export function stripSurroundingQuotes(str: string): string {
+    const m = str.match(/^(["'`])(.*)\1$/);
+    return m ? m[2] : str;
 }
 
 /**
@@ -30,7 +45,12 @@ export function extractInterfaceKeysFromFile(filePath: string): { name: string; 
 export function generateEnum(name: string, keys: string[]): string {
     const enumName = `${name}Keys`;
     const body = keys
-        .map(k => `  ${isValidIdentifier(k) ? k : `"${k}"`} = "${k}"`)
+        .map(original => {
+            const raw = stripSurroundingQuotes(original);
+            const namePart = isValidIdentifier(raw) ? raw : JSON.stringify(raw);
+            const valuePart = JSON.stringify(raw);
+            return `  ${namePart} = ${valuePart}`;
+        })
         .join(',\n');
     return `export enum ${enumName} {\n${body}\n}\n`;
 }

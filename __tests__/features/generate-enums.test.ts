@@ -37,6 +37,37 @@ describe('generate-enums module', () => {
 
             expect(result).toEqual([{name: 'User', keys: ['id', 'name']}]);
         });
+
+        it('should strip surrounding quotes and return raw keys', () => {
+            const source = `
+                export interface AdditionalInfo {
+                    "Card Number": string;
+                    "User-ID": string;
+                }
+            `;
+            fs.writeFileSync(tempFilePath, source, 'utf-8');
+
+            const result = extractInterfaceKeysFromFile(tempFilePath);
+
+            // Keys should be returned without surrounding quotes, ready for enum generation
+            expect(result).toEqual([{ name: 'AdditionalInfo', keys: ['Card Number', 'User-ID'] }]);
+        });
+
+        it('should dedupe duplicate properties within an interface', () => {
+            const source = `
+                export interface CustomAttribute {
+                    uuid: string;
+                    name: string;
+                    uuid: string; // duplicate
+                    name: string; // duplicate
+                }
+            `;
+            fs.writeFileSync(tempFilePath, source, 'utf-8');
+
+            const result = extractInterfaceKeysFromFile(tempFilePath);
+
+            expect(result).toEqual([{ name: 'CustomAttribute', keys: ['uuid', 'name'] }]);
+        });
     });
 
     describe('generateEnum', () => {
@@ -50,6 +81,38 @@ describe('generate-enums module', () => {
         it('should quote keys if invalid identifier', () => {
             const result = generateEnum('Thing', ['valid', 'not-valid']);
             expect(result).toContain('"not-valid" = "not-valid"');
+        });
+
+        it('should not double-quote keys that already include quotes in input', () => {
+            // Simulate upstream passing a string that already contains quotes (e.g., ts-morph literal name)
+            const result = generateEnum('Info', ['"Card Number"']);
+            expect(result).toContain('"Card Number" = "Card Number"');
+            expect(result).not.toContain('""Card Number""');
+        });
+
+        it('should handle keys with internal quotes', () => {
+            const result = generateEnum('Quote', ['He said "Hi"', 'plain']);
+            expect(result).toMatch(/"He said \\\"Hi\\\""\s*=\s*"He said \\\"Hi\\\""/);
+            expect(result).toContain('plain = "plain"');
+        });
+
+        it('should handle unicode/accents in keys', () => {
+            const result = generateEnum('Unicode', ['Café', 'naïve']);
+            // Depending on isValidIdentifier, these may be quoted or unquoted; accept either form
+            expect(result).toMatch(/(?:Café = "Café"|"Café" = "Café")/);
+            expect(result).toMatch(/(?:naïve = "naïve"|"naïve" = "naïve")/);
+        });
+
+        it('should quote keys that start with digits', () => {
+            const result = generateEnum('Num', ['123ABC', '9lives']);
+            expect(result).toContain('"123ABC" = "123ABC"');
+            expect(result).toContain('"9lives" = "9lives"');
+        });
+
+        it('should quote keys with hyphens or periods', () => {
+            const result = generateEnum('Punct', ['x-y', 'x.y']);
+            expect(result).toContain('"x-y" = "x-y"');
+            expect(result).toContain('"x.y" = "x.y"');
         });
     });
 

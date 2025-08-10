@@ -107,8 +107,13 @@ export function addClientRequiredImports(
 	}
 }
 
-
+/**
+ * Creates a set for the schemas that are required of each consumer
+ * @param consumers
+ */
 export function collectRequiredSchemas<T extends SchemaConsumer>(consumers: T[]): Set<string> {
+	const funcName = 'collectRequiredSchemas'
+	Logger.debug(funcName, `Collecting required schemas for ${consumers.length} consumer(s)`)
 	const requiredSchemas = new Set<string>();
 	for (const consumer of consumers) {
 		if (consumer.requestSchema) {
@@ -118,15 +123,26 @@ export function collectRequiredSchemas<T extends SchemaConsumer>(consumers: T[])
 			requiredSchemas.add(consumer.responseSchema);
 		}
 	}
+	if (requiredSchemas.size === 0) {
+		Logger.warn(funcName, `could not find any schemas for ${consumers[0]} and ${consumers.length - 1} others.`)
+	}
 	return requiredSchemas;
 }
 
+/**
+ * Locates the directory where al the schemas are located and returns them as a string
+ *
+ * @param requiredSchemas
+ * @param interfaceNameToDirs
+ * @param configPath
+ * @param funcName
+ */
 export function findDirectoryContainingAllSchemas(
 	requiredSchemas: Set<string>,
 	interfaceNameToDirs: Map<string, Set<string>>,
 	configPath: string,
-	funcName: string
 ): string | null {
+	const funcName = 'findDirectoryContainingAllSchemas'
 	// To find a directory that contains all required schemas:
 	// We build a map from directory to count of schemas found there
 	const dirSchemaCount: Map<string, number> = new Map();
@@ -152,6 +168,29 @@ export function findDirectoryContainingAllSchemas(
 		}
 	}
 	return null;
+}
+
+/**
+ * Wrapper that enforces a hard failure if the directory cannot be found.
+ * Use this at call sites where generation must stop when schemas are missing.
+ */
+export function assertDirectoryContainingAllSchemas(
+	requiredSchemas: Set<string>,
+	interfaceNameToDirs: Map<string, Set<string>>,
+	configPath: string,
+): string {
+	const funcName = 'assertDirectoryContainingAllSchemas';
+	const dir = findDirectoryContainingAllSchemas(requiredSchemas, interfaceNameToDirs, configPath);
+	if (!dir) {
+		const needed = Array.from(requiredSchemas).join(', ');
+		const configFileName = path.basename(configPath);
+		// A warning has already been logged by findDirectoryContainingAllSchemas
+		throw new Error(
+			`[${funcName}] Failed to locate an interfaces directory containing all required schemas: ${needed}. ` +
+			`Check your config: ${configFileName}`
+		);
+	}
+	return dir;
 }
 
 export function buildImportMapAndRegistryEntries(importMap: Map<string, string[]>): { importStatements: string[], registryEntries: string[] } {

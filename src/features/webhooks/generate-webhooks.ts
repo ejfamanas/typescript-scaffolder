@@ -1,14 +1,11 @@
-import { findDirectoryContainingAllSchemas } from "../utils/client-constructors";
-import { walkDirectory, ensureDir, readWebhookConfigFile, extractInterfaces } from "../utils/file-system";
-import { Logger } from "../utils/logger";
-import { BaseWebhook, WebhookConfigFile } from 'models/webhook-definitions';
-import { IncomingWebhook } from 'models/webhook-definitions';
-import { OutgoingWebhook } from 'models/webhook-definitions';
-import { Project } from 'ts-morph';
+import { addClientRequiredImports, assertDirectoryContainingAllSchemas, } from "../../utils/client-constructors";
+import { ensureDir, extractInterfaces, readWebhookConfigFile } from "../../utils/file-system";
+import { Logger } from "../../utils/logger";
+import { BaseWebhook, IncomingWebhook, OutgoingWebhook, WebhookConfigFile } from 'models/webhook-definitions';
+import { OptionalKind, ParameterDeclarationStructure, Project } from 'ts-morph';
 import path from 'path';
 import fs from 'fs';
-import { toPascalCase } from "../utils/object-helpers";
-import { addClientRequiredImports } from "../utils/client-constructors";
+import { toPascalCase } from "../../utils/object-helpers";
 
 export async function generateIncomingWebhook(
     webhook: IncomingWebhook,
@@ -16,7 +13,7 @@ export async function generateIncomingWebhook(
     outputDir: string
 ): Promise<void> {
     const funcName = 'generateIncomingWebhook';
-    const {name, requestSchema, handlerName} = webhook;
+    const {name, requestSchema, handlerName, testHeaders} = webhook;
 
     Logger.debug(funcName, `Generating incoming webhook handler for "${name}"...`);
 
@@ -38,16 +35,25 @@ export async function generateIncomingWebhook(
         false
     );
 
+    const parameters: OptionalKind<ParameterDeclarationStructure>[] = [
+        {
+            name: 'payload',
+            type: requestSchema,
+        }
+    ];
+    if (testHeaders && Object.keys(testHeaders).length > 0) {
+        parameters.push({
+            name: 'headers',
+            type: 'Record<string, string>',
+            hasQuestionToken: true,
+        });
+    }
+
     sourceFile.addFunction({
         name: `handle${toPascalCase(handlerName)}Webhook`,
         isExported: true,
         isAsync: true,
-        parameters: [
-            {
-                name: 'payload',
-                type: requestSchema,
-            },
-        ],
+        parameters,
         returnType: 'Promise<void>',
         statements: [
             '// TODO: Implement webhook handler logic here',
@@ -165,7 +171,7 @@ export async function generateWebhooksFromPath(
             }
         }
 
-        const foundDir = findDirectoryContainingAllSchemas(requiredSchemas, interfaceNameToDirs, configPath, funcName);
+        const foundDir = assertDirectoryContainingAllSchemas(requiredSchemas, interfaceNameToDirs, configPath);
         if (!foundDir) {
             Logger.warn(funcName, `Could not find a directory containing all schemas for config: ${configPath}`);
             continue;

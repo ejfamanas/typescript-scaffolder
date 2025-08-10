@@ -2,10 +2,21 @@
   "webhooks": [
     {
       "direction": "incoming",
-      "name": "stripe_payment",
-      "path": "/webhooks/stripe",
-      "requestSchema": "StripeWebhookPayload",
-      "handlerName": "stripePaymentWebhook"
+      "name": "stripe_payment_succeeded",
+      "path": "/webhooks/stripe_payment_succeeded",
+      "handlerName": "StripePaymentSucceeded",
+      "requestSchema": "StripePaymentSucceededPayload"
+    },
+    {
+      "direction": "incoming",
+      "name": "stripe_payment_failed",
+      "path": "/webhooks/stripe_payment_failed",
+      "handlerName": "StripePaymentFailed",
+      "requestSchema": "StripePaymentFailedPayload",
+      "testHeaders": {
+        "stripe-signature": "${ENV:STRIPE_TEST_SIGNATURE}",
+        "x-api-key": "dev-local"
+      }
     }
   ]
 }

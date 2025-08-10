@@ -10,6 +10,8 @@ export interface IncomingWebhook extends BaseWebhook {
     path: string; // Required for incoming
     /** Name of the generated function to handle incoming webhook requests. */
     handlerName: string; // required for route + handler generation
+    /** Optional headers used only by the generated /test route for simulation. */
+    testHeaders?: Record<string, string>;
 }
 
 /**

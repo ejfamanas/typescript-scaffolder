@@ -1,8 +1,8 @@
 import {InputData, jsonInputForTargetLanguage, quicktype} from 'quicktype-core';
-import fs from 'fs';
 import {Logger} from './logger';
 import { deriveObjectName, findGloballyDuplicatedKeys, prefixDelimiter, prefixDuplicateKeys } from "./object-helpers";
 import {assertNoDuplicateKeys} from "./structure-validators";
+import fs from "fs";
 import path from "path";
 
 /**
@@ -28,16 +28,27 @@ export async function inferJsonSchema(json: string, interfaceName: string): Prom
     const funcName = 'inferJsonSchema';
     Logger.debug(funcName, 'Inferring schema...');
 
+    let parsed: any;
     try {
-        // Step 1: Parse the raw JSON
-        const parsed = JSON.parse(json);
+        parsed = JSON.parse(json);
+    } catch (err: any) {
+        const message = err?.message ?? String(err);
+        const preview = json.slice(0, 120) + (json.length > 120 ? '…' : '');
+        const fullMessage = `Invalid JSON input: ${message}. Preview: ${preview}`;
+        Logger.warn(funcName, fullMessage);
+        throw new Error(fullMessage);
+    }
 
+    try {
         // Step 2: Detect globally duplicated keys
         const duplicateKeys = findGloballyDuplicatedKeys(parsed);
+        // @ts-ignore - works fine, already set to target ES2020
         Logger.debug(funcName, `Found duplicate keys: ${[...duplicateKeys].join(', ')}`);
 
         // Step 3: Prefix duplicate keys with parent field names
-        const cleanedObject = prefixDuplicateKeys(parsed, duplicateKeys);
+        const prefixedKeys = new Set<string>();
+
+        const cleanedObject = prefixDuplicateKeys(parsed, duplicateKeys, prefixedKeys);
 
         // Step 4: Re-serialize cleaned JSON
         const cleanedJson = JSON.stringify(cleanedObject);
@@ -67,20 +78,85 @@ export async function inferJsonSchema(json: string, interfaceName: string): Prom
 
         // Step 6: Clean up nullable fields
         let cleanedLines = result.lines.map((line: string) =>
-            line.replace(/(\s*)(\w+):\s*null\b/, (_, spacing, key) => `${spacing}${key}?: any`)
+            line.replace(
+                /(\s*)(?:(['"`].+?['"`])|(\w+))\s*:\s*null\b/,
+                (_: string, spacing: string, quoted?: string, bare?: string) =>
+                    `${spacing}${quoted ?? bare}?: any`
+            )
         );
 
-        // Step 7: Strip prefixes from duplicated keys in field names
-        if (duplicateKeys.size > 0) {
-            const prefixPattern = new RegExp(`(\\w+)${prefixDelimiter}([a-zA-Z0-9_]+)`, 'g');
+        // Step 7: Strip prefixes from duplicated keys in field names (only those we actually prefixed)
+        if (prefixedKeys.size > 0) {
+            const escapeRegExp = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+            const prefixedList = Array.from(prefixedKeys);
 
-            cleanedLines = cleanedLines.map(line =>
-                line.replace(prefixPattern, (fullMatch, _prefix, key) =>
-                    duplicateKeys.has(key) ? key : fullMatch
-                )
+            cleanedLines = cleanedLines.map(line => {
+                let out = line;
+                for (const pk of prefixedList) {
+                    const unprefixed = pk.split(prefixDelimiter).pop()!;
+                    const pattern = new RegExp(escapeRegExp(pk), 'g');
+                    out = out.replace(pattern, unprefixed);
+                }
+                return out;
+            });
+        }
+
+        // Step 7.a: Remove delimiter core left inside identifier names by Quicktype (e.g., DataPREFIXObject)
+        {
+            const core = prefixDelimiter.replace(/_/g, ''); // e.g., "PREFIX"
+            const coreCapitalized = core.charAt(0) + core.slice(1).toLowerCase(); // e.g., "Prefix"
+
+            const idToken = new RegExp(`([A-Za-z0-9_])${core}(?=[A-Za-z0-9_])`, 'g');
+            const idTokenCap = new RegExp(`([A-Za-z0-9_])${coreCapitalized}(?=[A-Za-z0-9_])`, 'g');
+
+            cleanedLines = cleanedLines.map((line: string) =>
+                line.replace(idToken, '$1').replace(idTokenCap, '$1')
             );
         }
 
+        // Step 7.5: Validate no accidental duplicate keys in final TypeScript output
+        {
+            const interfaceStart = /^\s*export interface\s+(\w+)\s*\{/;
+            const propertyLine = /^\s*(?:(["'`])([^"'`]+)\1|([A-Za-z_$][\w$]*))\??\s*:/;
+
+            let currentInterface: string | null = null;
+            let seen = new Set<string>();
+            const dupes: Record<string, Set<string>> = {};
+
+            for (const line of cleanedLines) {
+                const startMatch = line.match(interfaceStart);
+                if (startMatch) {
+                    currentInterface = startMatch[1];
+                    seen = new Set<string>();
+                    continue;
+                }
+                if (currentInterface && line.trim().startsWith('}')) {
+                    currentInterface = null;
+                    continue;
+                }
+                if (!currentInterface) continue;
+
+                const propMatch = line.match(propertyLine);
+                if (propMatch) {
+                    const name = (propMatch[2] ?? propMatch[3] ?? '').trim();
+                    const norm = name; // already unprefixed and normalized by prior steps
+                    if (seen.has(norm)) {
+                        if (!dupes[currentInterface]) dupes[currentInterface] = new Set<string>();
+                        dupes[currentInterface]!.add(norm);
+                    } else {
+                        seen.add(norm);
+                    }
+                }
+            }
+
+            const entries = Object.entries(dupes).filter(([, set]) => set.size > 0);
+            if (entries.length > 0) {
+                const msg = entries
+                    .map(([iface, set]) => `${iface}: ${Array.from(set).join(', ')}`)
+                    .join('; ');
+                throw new Error(`Duplicate properties found in interface(s) ${msg}`);
+            }
+        }
         // Step 8: Ensure interface name is preserved
         return renameFirstInterface(cleanedLines.join('\n'), interfaceName);
     } catch (error: any) {

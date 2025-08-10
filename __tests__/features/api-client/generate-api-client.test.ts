@@ -1,13 +1,13 @@
-import path from 'path';
-import os from 'os';
+import * as path from 'path';
+import * as os from 'os';
 import {
-    generateApiClientFunction,
+    Endpoint,
+    EndpointClientConfigFile,
     generateApiClientFromFile,
+    generateApiClientFunction,
     generateApiClientsFromPath,
-} from '../../src';
-import {Endpoint, EndpointClientConfigFile} from '../../src';
+} from '../../../src';
 import fs from "fs";
-import { SourceFile } from 'ts-morph';
 
 describe('generate-api-client', () => {
     afterEach(() => {
@@ -91,9 +91,9 @@ describe('generate-api-client', () => {
             const interfaceDir = path.join(tmpDir, 'interfaces/source');
             const outputDir = path.join(tmpDir, 'output');
 
-            fs.mkdirSync(configDir, { recursive: true });
-            fs.mkdirSync(interfaceDir, { recursive: true });
-            fs.mkdirSync(outputDir, { recursive: true });
+            fs.mkdirSync(configDir, {recursive: true});
+            fs.mkdirSync(interfaceDir, {recursive: true});
+            fs.mkdirSync(outputDir, {recursive: true});
 
             // Create a dummy interface file
             fs.writeFileSync(path.join(interfaceDir, 'GET_RES_user.ts'), 'export interface GET_RES_user {}');
@@ -123,7 +123,7 @@ describe('generate-api-client', () => {
 
             expect(hasGeneratedOutput).toBe(true);
 
-            fs.rmSync(tmpDir, { recursive: true, force: true });
+            fs.rmSync(tmpDir, {recursive: true, force: true});
         });
     });
 });
