@@ -949,7 +949,10 @@ typescript-scaffolder jsonschemas \
 Generate TypeScript enums from interface files:
 
 ```bash
-typescript-scaffolder enums -i ./codegen/interfaces -o ./codegen/enums --ext .ts
+typescript-scaffolder enums \
+  --input ./codegen/interfaces \
+  --output ./codegen/enums \
+  --ext .ts
 ```
 
 ### Generate Environment Loader
