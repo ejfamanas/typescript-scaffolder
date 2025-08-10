@@ -1,6 +1,4 @@
 # TypeScript Scaffolder
-- Includes beta features for REST API client generation
-- Includes alpha features for Webhook Server and Client Generation
 
 ![npm version](https://img.shields.io/npm/v/typescript-scaffolder)
 ### Unit Test Coverage: 97.53%
@@ -15,7 +13,7 @@ Ideal for API integrations that expose schema via JSON — just drop the file in
 - Typed `.env` accessor generator
 - Typed axios client api generation
 - Command sequence generator
-- Typed express server and client webhook generation (beta)
+- Typed express server and client webhook generation
 - Preserves directory structure
 
 ## Table of Contents
