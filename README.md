@@ -812,6 +812,21 @@ You can access the individual handlers by referencing the registry, e.g.
 ```
 webhookAppRegistry['source-echo'].handlers.handle_stripePaymentWebhook
 ```
+#### Webhook Test Routes and Fixtures (Beta)
+
+When generating webhook server code, the generator now also produces a **test route** and a **fixture** for each webhook defined in your config.
+
+- **Test Routes**: For every incoming webhook, a matching test route is generated alongside your router. This route can be used during development to send a mock payload to your handler without relying on the real external webhook source.
+- **Fixtures**: For each request schema referenced in your webhook config, a `<InterfaceName>.fixture.ts` file is generated. This fixture contains a typed example payload matching the interface and can be used to drive unit tests or manual route testing.
+
+The fixture generator will:
+- Parse the referenced TypeScript interface to generate representative values for all fields.
+- Use name-based faker heuristics for realistic values where possible, otherwise fall back to generic fakers.
+- Handle nested objects, arrays, enums, unions, optional fields, and basic type inference.
+
+The generated test routes import and send these fixtures to your handlers, providing an end-to-end loop for quickly verifying that your webhook handling logic and type expectations are correct.
+
+> **Note:** This feature is currently in beta. Fixture generation is best-effort and may require manual adjustment for complex or domain-specific payloads.
 
 ## Installation
 To install the package, run the following command
@@ -1026,8 +1041,10 @@ typescript-scaffolder --help
 - [x] Generate TypeScript axios REST api client from interfaces
 - [x] Generate Typescript command sequences for REST api calls
 - [x] Generate Typescript axios client webhook apps
+- [x] Generate Typescript webhook test routes and fixtures
 - [x] Generate Typescript express server webhook apps
 - [x] Command line interface access
+- [ ] Factory classes based on interfaces
 - [ ] Scaffolding for service mocking (GET, POST, PUT, DELETE)
 - [ ] Generate enums from definitions
 - [ ] Generate classes from schema definitions
