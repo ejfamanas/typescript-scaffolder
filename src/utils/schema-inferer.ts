@@ -19,8 +19,8 @@ function renameFirstInterface(schema: string, newName: string): string {
 
 /**
  * Infers a schema based on JSON string
- * NOTE: Use JSON.stringify(obj) on the JSON value before passing to this function
- * NOTE:
+ * NOTE: Use JSON.stringify(obj) on the JSON value
+ * before passing to this function
  * @param json
  * @param interfaceName
  */
@@ -166,8 +166,8 @@ export async function inferJsonSchema(json: string, interfaceName: string): Prom
 }
 
 /**
- * Infers a schema from a JSON file
- * @param filePath
+ * Infers a schema from a JSON file based on the full file path
+ * * @param filePath
  */
 export async function inferJsonSchemaFromPath(filePath: string): Promise<string | null> {
     const funcName = 'inferJsonSchemaFromPath';

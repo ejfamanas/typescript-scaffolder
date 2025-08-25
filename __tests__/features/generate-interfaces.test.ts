@@ -1,7 +1,7 @@
 import fs from 'fs';
 import {ensureDir, walkDirectory} from "../../src/utils/file-system";
 import {Logger} from "../../src/utils/logger";
-import {generateInterfaces, generateInterfacesFromPath, inferJsonSchemaFromPath} from "../../src";
+import {generateInterfacesFromFile, generateInterfacesFromPath, inferJsonSchemaFromPath} from "../../src";
 
 jest.mock('fs');
 jest.mock('path');
@@ -28,7 +28,7 @@ describe('generateTypedInterfaces', () => {
     });
 
     it('should write a file when interface is successfully generated', async () => {
-        await generateInterfaces(fakeFilePath, fakeRelativePath, fakeOutputDir);
+        await generateInterfacesFromFile(fakeFilePath, fakeRelativePath, fakeOutputDir);
 
         expect(mockedEnsureDir).toHaveBeenCalledWith(fakeOutputDir);
         expect(mockedFs.writeFileSync).toHaveBeenCalledWith(
@@ -41,7 +41,7 @@ describe('generateTypedInterfaces', () => {
 
     it('should log a warning if interface generation fails', async () => {
         mockedInferSchema.mockResolvedValue(null);
-        await generateInterfaces(fakeFilePath, fakeRelativePath, fakeOutputDir);
+        await generateInterfacesFromFile(fakeFilePath, fakeRelativePath, fakeOutputDir);
 
         expect(mockLogger.warn).toHaveBeenCalledWith(
             'generateTypedInterfaces',
@@ -54,7 +54,7 @@ describe('generateTypedInterfaces', () => {
         mockedInferSchema.mockRejectedValue(error);
 
         await expect(
-            generateInterfaces(fakeFilePath, fakeRelativePath, fakeOutputDir)
+            generateInterfacesFromFile(fakeFilePath, fakeRelativePath, fakeOutputDir)
         ).rejects.toThrow();
     });
 });
@@ -77,7 +77,7 @@ describe('generateFoldersAndTypedInterfaces', () => {
         mockedInferSchemaFromPath.mockRejectedValue(fakeError);
 
         await expect(
-            generateInterfaces('/fake/input.json', 'input.json', '/fake/output')
+            generateInterfacesFromFile('/fake/input.json', 'input.json', '/fake/output')
         ).rejects.toThrow();
     });
 });

@@ -10,7 +10,7 @@ export {
 	assertNoDuplicateKeys
 } from './utils/structure-validators';
 export {
-	generateInterfaces,
+	generateInterfacesFromFile,
 	generateInterfacesFromPath
 } from './features/generate-interfaces';
 export {
