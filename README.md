@@ -1,7 +1,7 @@
 # TypeScript Scaffolder
 
 ![npm version](https://img.shields.io/npm/v/typescript-scaffolder)
-### Unit Test Coverage: 97.53%
+### Unit Test Coverage: 96.75%
 
 `typescript-scaffolder` is a utility that creates TypeScript interfaces, enums, and config accessors from structured inputs like JSON, .env files, or interface definitions.
 Ideal for API integrations that expose schema via JSON — just drop the file in and generate clean, typed code for full-stack use. You can also integrate this into CI pipelines or dev scripts to keep generated types in sync with your schemas.
@@ -15,6 +15,9 @@ Ideal for API integrations that expose schema via JSON — just drop the file in
 - Command sequence generator
 - Typed express server and client webhook generation
 - Preserves directory structure
+
+To view the full documentation, please visit <br>
+https://eric-famanas.super.site/the-typescript-scaffolder
 
 ## Table of Contents
 - [Installation](#installation)
@@ -122,18 +125,6 @@ export interface Event {
 }
 ```
 
-### IMPORTANT: Considerations for ingested JSON
-**⚠️ JSON validators may emit warnings for structural issues. Check logs for details.**
-
-- If your json has an array of objects, the program will warn and only pick the first element. <br>
-This is to avoid unpredictable behaviour from Quicktype like unions or circular references. <br>
-
-- If a field value in the JSON is listed as "null", it will be coerced to "any" to allow for
-flexibility. The field will be type as optional
-
-- The scaffolder expects correct values in all fields to infer typings. If a field is optional,
-use the correct value type or see point two when considering "null"
-
 ### Environment Variable Interface
 - Reduces need for calling dotenv.config() from multiple areas
 - Creates an environment variable handler
@@ -163,47 +154,6 @@ export enum EnvKeys {
 }
 ```
 
-### Enum Generation from Interface
-Generate TypeScript enums automatically from existing interfaces to create type-safe keys.
-
-- Handles multiple interfaces per file
-- Preserves directory structure from i.e. `schemas/<folder_name>` into `codegen/enums/<folder_name>`
-- Automatically creates output folders if they don't exist
-
-This file:
-```
-export interface User {
-    id:          string;
-    email:       string;
-    age:         number;
-    isActive:    boolean;
-    roles:       string[];
-    preferences: Preferences;
-    lastLogin:   Date;
-}
-
-export interface Preferences {
-    newsletter: boolean;
-    theme:      string;
-}
-```
-Will give you:
-```
-export enum UserKeys {
-  id = "id",
-  email = "email",
-  age = "age",
-  isActive = "isActive",
-  roles = "roles",
-  preferences = "preferences",
-  lastLogin = "lastLogin"
-}
-
-export enum PreferencesKeys {
-  newsletter = "newsletter",
-  theme = "theme"
-}
-```
 ### JSON Schema generation from interface
 Generate JSON schemas automatically from existing interfaces.
 
