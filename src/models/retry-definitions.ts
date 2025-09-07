@@ -19,3 +19,15 @@ export interface RetryOptions {
     /** Methods considered safe to retry (default ["GET","HEAD","PUT","DELETE","OPTIONS"]). */
     idempotentMethods?: string[];
 }
+
+/**
+ * used by the retry helper
+ */
+export interface EndpointMeta {
+    /** The generated endpoint function name, e.g. "GET_person". */
+    functionName: string;
+    /** The concrete response type name, e.g. "Person" or "PersonList". */
+    responseType: string;
+    /** The module specifier to import the response type from, e.g. "../interfaces/Person". */
+    responseModule: string;
+};
