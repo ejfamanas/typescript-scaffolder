@@ -4,7 +4,7 @@ import * as path from 'path';
 import { generateRetryHelperForApiFile } from "../../../src/features/api-client/generate-retry-helper";
 import { Logger } from "../../../src/utils/logger";
 import * as FsUtils from "../../../src/utils/file-system"
-import { EndpointMeta } from "../../../src/models/retry-definitions";
+import { RetryEndpointMeta } from "../../../src/models/retry-definitions";
 
 describe('generateRetryHelperForApiFile', () => {
     let tmpDir: string;
@@ -46,7 +46,7 @@ describe('generateRetryHelperForApiFile', () => {
 
     it('ensures the directory exists and writes the helper file', () => {
         const base = 'person_api';
-        const endpoints: EndpointMeta[] = [
+        const endpoints: RetryEndpointMeta[] = [
             {functionName: 'GET_person', responseType: 'Person', responseModule: '../interfaces/Person'},
         ];
 
@@ -58,7 +58,7 @@ describe('generateRetryHelperForApiFile', () => {
 
     it('embeds the generic retry implementation and adds type-only imports', () => {
         const base = 'person_api';
-        const endpoints: EndpointMeta[] = [
+        const endpoints: RetryEndpointMeta[] = [
             {functionName: 'GET_person', responseType: 'Person', responseModule: '../interfaces/Person'},
             {functionName: 'GET_ALL_person', responseType: 'PersonList', responseModule: '../interfaces/PersonList'},
             {functionName: 'HEAD_person_meta', responseType: 'Person', responseModule: '../interfaces/Person'}, // duplicate type to dedupe
@@ -84,7 +84,7 @@ describe('generateRetryHelperForApiFile', () => {
 
     it('exports one typed wrapper per endpoint and sorts wrappers by function name', () => {
         const base = 'person_api';
-        const endpoints: EndpointMeta[] = [
+        const endpoints: RetryEndpointMeta[] = [
             {functionName: 'GET_person', responseType: 'Person', responseModule: '../interfaces/Person'},
             {functionName: 'GET_ALL_person', responseType: 'PersonList', responseModule: '../interfaces/PersonList'},
             {functionName: 'HEAD_person_meta', responseType: 'PersonMeta', responseModule: '../interfaces/PersonMeta'},
@@ -121,7 +121,7 @@ describe('generateRetryHelperForApiFile', () => {
 
     it('honors overwrite flag', () => {
         const base = 'person_api';
-        const endpoints: EndpointMeta[] = [
+        const endpoints: RetryEndpointMeta[] = [
             {functionName: 'GET_person', responseType: 'Person', responseModule: '../interfaces/Person'},
         ];
 
@@ -145,7 +145,7 @@ describe('generateRetryHelperForApiFile', () => {
 
     it('is idempotent when run twice with same inputs (no duplicate imports or wrappers)', () => {
         const base = 'person_api';
-        const endpoints: EndpointMeta[] = [
+        const endpoints: RetryEndpointMeta[] = [
             {functionName: 'GET_person', responseType: 'Person', responseModule: '../interfaces/Person'},
             {functionName: 'GET_ALL_person', responseType: 'PersonList', responseModule: '../interfaces/PersonList'},
         ];

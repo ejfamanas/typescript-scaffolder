@@ -13,6 +13,9 @@ import {
     generateInlineAuthHeader
 } from '../../utils/client-constructors';
 import { Logger } from '../../utils/logger';
+import { buildRetryWrapperName } from "../../utils/retry-constructors";
+import { RetryEndpointMeta } from "models/retry-definitions";
+import { generateRetryHelperForApiFile } from "./generate-retry-helper";
 
 export function generateApiClientFunction(
     baseUrl: string,
@@ -27,6 +30,8 @@ export function generateApiClientFunction(
     const funcName = 'generateApiClientFunction';
     Logger.debug(funcName, 'Generating api client function...');
     const project = new Project();
+
+    const useRetry = !!(config as any)?.retry?.enabled;
 
     ensureDir(clientOutputDir);
 
@@ -53,6 +58,21 @@ export function generateApiClientFunction(
     // Imports
     addClientRequiredImports(sourceFile, outputFilePath, interfaceInputDir, requestSchema, responseSchema!, hasBody);
 
+    if (useRetry) {
+        const helperModule = `./${fileName}.requestWithRetry`;
+        const wrapperSymbol = buildRetryWrapperName(functionName);
+        // add import if missing
+        const existing = sourceFile.getImportDeclarations().find(d => d.getModuleSpecifierValue() === helperModule);
+        if (!existing) {
+            sourceFile.addImportDeclaration({
+                namedImports: [{ name: wrapperSymbol }],
+                moduleSpecifier: helperModule,
+            });
+        } else if (!existing.getNamedImports().some(n => n.getName() === wrapperSymbol)) {
+            existing.addNamedImports([{ name: wrapperSymbol }]);
+        }
+    }
+
     // Function parameters
     const parameters = [
         ...pathParams.map((param) => ({name: param, type: 'string'})),
@@ -75,7 +95,29 @@ export function generateApiClientFunction(
         parameters,
         returnType: `Promise<${responseSchema}>`,
         isAsync: true,
-        statements: `
+        statements: useRetry ? `
+      const authHeaders = ${generateInlineAuthHeader(config.authType, config.credentials)};
+      const response = await ${buildRetryWrapperName(functionName)}(
+        () => axios.${method}(
+          \`${baseUrl}${urlPath}\`,
+          ${hasBody ? 'body,' : ''}
+          {
+            headers: {
+              ...authHeaders,
+              ...(headers ?? {}),
+            },
+          } as AxiosRequestConfig
+        ),
+        {
+          enabled: true,
+          maxAttempts: ${(config as any)?.retry?.maxAttempts ?? 3},
+          initialDelayMs: ${(config as any)?.retry?.initialDelayMs ?? 250},
+          multiplier: ${(config as any)?.retry?.multiplier ?? 2.0},
+          method: "${endpoint.method.toUpperCase()}"
+        }
+      );
+      return response.data;
+    ` : `
       const authHeaders = ${generateInlineAuthHeader(config.authType, config.credentials)};
       const response = await axios.${method}(
         \`${baseUrl}${urlPath}\`,
@@ -83,7 +125,7 @@ export function generateApiClientFunction(
         {
           headers: {
             ...authHeaders,
-            ...headers,
+            ...(headers ?? {}),
           },
         } as AxiosRequestConfig
       );
@@ -112,6 +154,8 @@ export async function generateApiClientFromFile(configPath: string, interfacesDi
         return;
     }
 
+    const metasByFile = new Map<string, RetryEndpointMeta[]>();
+
     for (const endpoint of config.endpoints) {
         const {objectName} = endpoint;
         if (!objectName) {
@@ -119,6 +163,20 @@ export async function generateApiClientFromFile(configPath: string, interfacesDi
             continue;
         }
         const {functionName, fileName} = generateClientAction(endpoint);
+
+        // Build EndpointMeta for potential retry helper generation
+        const responseType = endpoint.responseSchema!;
+        // Compute module specifier RELATIVE TO the API output directory,
+        // pointing to the actual interface file path, then strip ".ts".
+        const responseFile = path.join(interfacesDir, `${responseType}.ts`);
+        let responseModule = path.relative(outputDir, responseFile).replace(/\\/g, '/');
+        if (!responseModule.startsWith('.')) {
+            responseModule = './' + responseModule;
+        }
+        responseModule = responseModule.replace(/\.ts$/, '');
+        const list = metasByFile.get(fileName) ?? [];
+        list.push({ functionName, responseType, responseModule });
+        metasByFile.set(fileName, list);
 
         generateApiClientFunction(
             config.baseUrl,
@@ -128,11 +186,18 @@ export async function generateApiClientFromFile(configPath: string, interfacesDi
             {
                 authType: config.authType,
                 credentials: config.credentials,
-            },
+                retry: config.retry, // surfaced for useRetry
+            } as any,
             interfacesDir,
             outputDir,
             'append'
         );
+    }
+
+    if (config.retry?.enabled) {
+        for (const [fileBaseName, endpoints] of metasByFile.entries()) {
+            generateRetryHelperForApiFile(outputDir, fileBaseName, endpoints, /* overwrite */ true);
+        }
     }
 }
 

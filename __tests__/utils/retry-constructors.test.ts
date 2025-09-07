@@ -167,6 +167,53 @@ describe('retry-constructors', () => {
             })).rejects.toBe(err);
             expect(attempt).toHaveBeenCalledTimes(1);
         });
+
+        it('retries when attempt throws an HTTP error with a retryable status (e.response.status=503)', async () => {
+            const httpErr503 = { response: { status: 503 } };
+            const attempt = jest.fn()
+                .mockRejectedValueOnce(httpErr503) // first try fails with HTTP 503
+                .mockResolvedValueOnce({ status: 200 }); // then succeeds
+
+            const res = await requestWithRetryImpl(attempt, {
+                enabled: true,
+                maxAttempts: 2,
+                initialDelayMs: 0,
+                multiplier: 1.0,
+                method: 'GET',
+            });
+
+            expect(res).toEqual({ status: 200 });
+            expect(attempt).toHaveBeenCalledTimes(2);
+        });
+
+        it('throws after exhausting attempts when HTTP errors with retryable status persist', async () => {
+            const httpErr503 = { response: { status: 503 } };
+            const attempt = jest.fn().mockRejectedValue(httpErr503); // always fails with 503
+
+            await expect(requestWithRetryImpl(attempt, {
+                enabled: true,
+                maxAttempts: 2,
+                initialDelayMs: 0,
+                multiplier: 1.0,
+                method: 'GET',
+            })).rejects.toBe(httpErr503);
+
+            expect(attempt).toHaveBeenCalledTimes(2);
+        });
+
+        it('treats lowercase non-idempotent methods as no-retry (case-insensitive check)', async () => {
+            const attempt = jest.fn()
+                .mockResolvedValueOnce({ status: 503 });
+            const res = await requestWithRetryImpl(attempt, {
+                enabled: true,
+                maxAttempts: 3,
+                initialDelayMs: 0,
+                multiplier: 1.0,
+                method: 'post', // lowercase to exercise toUpperCase() path
+            });
+            expect(res).toEqual({ status: 503 });
+            expect(attempt).toHaveBeenCalledTimes(1);
+        });
     });
 
     describe('buildEndpointRetryWrapperExport', () => {
@@ -304,6 +351,57 @@ describe('retry-constructors', () => {
             const nonTypeOnlyImport = imports.find(d => !d.isTypeOnly());
             expect(nonTypeOnlyImport).toBeDefined();
             expect(nonTypeOnlyImport?.getNamedImports().map(n => n.getName())).toEqual(['SomethingElse']);
+        });
+
+        it('adds a separate type-only import when an existing type-only import has no named imports', () => {
+            const project = new Project();
+            const sf = project.createSourceFile('tmp4.requestWithRetry.ts', '', { overwrite: true });
+
+            // Existing type-only import with NO named imports (use a namespace type-only import, which is valid TS)
+            sf.addImportDeclaration({
+                isTypeOnly: true,
+                namespaceImport: 'PersonNS',
+                moduleSpecifier: '../interfaces/Person',
+            });
+
+            addRetryHelperImportsToSourceFile(
+                sf,
+                [{ typeName: 'Person', moduleSpecifier: '../interfaces/Person' }],
+                'typescript-scaffolder'
+            );
+
+            const imports = sf.getImportDeclarations().filter(d => d.getModuleSpecifierValue() === '../interfaces/Person');
+            // We should now have two imports for the same module:
+            // - the original type-only namespace import
+            // - a new type-only named import with 'Person'
+            expect(imports.length).toBeGreaterThanOrEqual(2);
+
+            const nsTypeOnly = imports.find(d => d.isTypeOnly() && !!d.getNamespaceImport());
+            const typeOnlyWithName = imports.find(d => d.isTypeOnly() && d.getNamedImports().some(n => n.getName() === 'Person'));
+
+            expect(nsTypeOnly).toBeDefined();
+            expect(typeOnlyWithName).toBeDefined();
+        });
+
+        it('skips invalid typeImports entries (missing name/module) and still processes valid ones', () => {
+            const project = new Project();
+            const sf = project.createSourceFile('tmp5.requestWithRetry.ts', '', { overwrite: true });
+
+            const typeImports: any[] = [
+                { typeName: '', moduleSpecifier: '../interfaces/Person' },  // invalid: empty typeName
+                { typeName: 'PersonList', moduleSpecifier: '' },            // invalid: empty module
+                { typeName: 'Person', moduleSpecifier: '../interfaces/Person' }, // valid
+            ];
+
+            addRetryHelperImportsToSourceFile(
+                sf,
+                typeImports,
+                'typescript-scaffolder'
+            );
+
+            const personImport = sf.getImportDeclarations().find(d => d.getModuleSpecifierValue() === '../interfaces/Person');
+            expect(personImport?.isTypeOnly()).toBe(true);
+            expect(personImport?.getNamedImports().map(n => n.getName())).toEqual(['Person']);
         });
     });
 });

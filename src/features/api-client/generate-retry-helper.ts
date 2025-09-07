@@ -2,13 +2,14 @@ import path from 'path';
 import fs from 'fs';
 import { Project } from 'ts-morph';
 import { Logger } from "../../utils/logger";
+
 import { ensureDir } from "../../utils/file-system";
 import {
     addRetryHelperImportsToSourceFile,
     buildEndpointRetryWrapperExport,
     buildRetryHelperImplSource
 } from "../../utils/retry-constructors";
-import { EndpointMeta } from "models/retry-definitions";
+import { RetryEndpointMeta } from "models/retry-definitions";
 
 /**
  * Generates a per-API retry helper file (e.g., "<fileBase>.requestWithRetry.ts"),
@@ -27,7 +28,7 @@ import { EndpointMeta } from "models/retry-definitions";
 export function generateRetryHelperForApiFile(
     outputDir: string,
     fileBaseName: string,
-    endpoints: EndpointMeta[],
+    endpoints: RetryEndpointMeta[],
     overwrite: boolean = true
 ): void {
     const funcName = 'generateRetryHelperForApiFile';
@@ -57,7 +58,7 @@ export function generateRetryHelperForApiFile(
     addRetryHelperImportsToSourceFile(sourceFile, uniqueTypeImports);
 
     // 2) Embed the generic implementation (no external runtime dependency)
-    sourceFile.addStatements(buildRetryHelperImplSource());
+    sourceFile.addStatements('\n' + buildRetryHelperImplSource());
 
     // 3) Export one typed wrapper per endpoint (sorted by functionName for deterministic output)
     const sortedEndpoints = [...endpoints].sort((a, b) => a.functionName.localeCompare(b.functionName));

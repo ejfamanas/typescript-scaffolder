@@ -1,6 +1,9 @@
+
 /**
  * Models for describing API endpoint configurations used by typescript-scaffolder.
  */
+
+import { RetryConfig } from "models/retry-definitions";
 
 /** Allowed HTTP methods for an endpoint. */
 export type Method = 'GET' | 'POST' | 'PUT' | 'DELETE'
@@ -80,4 +83,6 @@ export interface EndpointAuthCredentials {
  * Combined API client configuration file, including endpoints and auth settings.
  */
 export interface EndpointClientConfigFile extends EndpointConfigType, EndpointAuthConfig {
+	/** Optional retry configuration applied to all endpoints in this client. */
+	retry?: RetryConfig;
 }

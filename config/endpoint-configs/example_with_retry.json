@@ -44,5 +44,11 @@
   "credentials": {
     "apiKeyName": "x-api-key",
     "apiKeyValue": "test-1234"
+  },
+  "retry": {
+    "enabled": true,
+    "maxAttempts": 3,
+    "initialDelayMs": 250,
+    "multiplier": 2.0
   }
 }

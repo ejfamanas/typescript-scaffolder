@@ -82,20 +82,25 @@ export async function requestWithRetryImpl<T>(
             const delay = Math.floor(initialDelayMs * Math.pow(multiplier, attemptNum - 1));
             await sleep(delay);
         } catch (e: any) {
-            // Treat "no response" errors as network failures (Axios-style), retryable only when idempotent.
-            const isNetworkError = !e?.response;
-            if (!isIdempotent || !isNetworkError) {
+            // Axios-style errors: if e.response is present, it's an HTTP error; otherwise it's a network error.
+            const hasResponse = !!e?.response;
+            const status: number | undefined = hasResponse ? e.response.status : undefined;
+            const isRetryableHttp = hasResponse && status !== undefined && retryStatuses.includes(status);
+            const isNetworkError = !hasResponse;
+
+            // Only retry when idempotent AND (network error OR retryable HTTP status).
+            if (!isIdempotent || (!isNetworkError && !isRetryableHttp)) {
                 throw e;
             }
 
             attemptNum++;
             if (attemptNum >= maxAttempts) {
+                // Preserve axios semantics on failure path: rethrow the last error when never successful.
                 throw e;
             }
 
             const delay = Math.floor(initialDelayMs * Math.pow(multiplier, attemptNum - 1));
             await sleep(delay);
-
         }
     }
 }
@@ -182,13 +187,20 @@ export async function requestWithRetryImpl<T>(
       const delay = Math.floor(initialDelayMs * Math.pow(multiplier, attemptNum - 1));
       await sleep(delay);
     } catch (e: any) {
-      const isNetworkError = !e?.response;
-      if (!isIdempotent || !isNetworkError) {
+      // Axios-style errors: if e.response is present, it's an HTTP error; otherwise it's a network error.
+      const hasResponse = !!e?.response;
+      const status: number | undefined = hasResponse ? e.response.status : undefined;
+      const isRetryableHttp = hasResponse && status !== undefined && retryStatuses.includes(status);
+      const isNetworkError = !hasResponse;
+
+      // Only retry when idempotent AND (network error OR retryable HTTP status).
+      if (!isIdempotent || (!isNetworkError && !isRetryableHttp)) {
         throw e;
       }
 
       attemptNum++;
       if (attemptNum >= maxAttempts) {
+        // Preserve axios semantics on failure path: rethrow the last error when never successful.
         throw e;
       }
 
