@@ -1,9 +1,8 @@
+import { RetryConfig } from "models/retry-definitions";
 
 /**
  * Models for describing API endpoint configurations used by typescript-scaffolder.
  */
-
-import { RetryConfig } from "models/retry-definitions";
 
 /** Allowed HTTP methods for an endpoint. */
 export type Method = 'GET' | 'POST' | 'PUT' | 'DELETE'

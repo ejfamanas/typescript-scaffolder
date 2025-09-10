@@ -358,44 +358,6 @@ export async function DELETE_person(id: string, headers?: Record<string, string>
           return response.data;
         
 }
-
-```
-### Api Client Registry File
-If you want to create a single registration file from the collection of APIs that you have in your service, you can use
-the `generateApiRegistry` function to create a single file from which to programmatically access all your APIs. 
-
-For example:
-```
-src/
-  codegen/
-    apis/
-      source-charlie/
-        person_api.ts
-      source-delta/
-        user_api.ts
-
-```
-Will generate:
-```
-import * as person_api from './source-charlie/person_api';
-import * as user_api from './source-delta/user_api';
-
-export const apiRegistry = {
-  'source-charlie': {
-    ...person_api
-  },
-  'source-delta': {
-    ...user_api
-  }
-};
-```
-You can then use an example const:
-```
-const fn = apiRegistry?.[service]?.[functionName]
-```
-To store the function and call it as required, or user the helper function which has runtime validation built in:
-```
-const fn = getApiFunction(apiRegistry, 'source-delta', 'GET_user');
 ```
 
 ### Sequence Runner Generation (beta)
@@ -871,6 +833,7 @@ typescript-scaffolder --help
 - [x] Generate TypeScript axios REST api client from interfaces
 - [x] Generate Typescript command sequences for REST api calls
 - [x] Generate Typescript axios client webhook apps
+- [x] Generate Typescript helper functions for REST api calls
 - [x] Generate Typescript webhook test routes and fixtures
 - [x] Generate Typescript express server webhook apps
 - [x] Command line interface access
