@@ -19,7 +19,6 @@ module.exports = {
   coveragePathIgnorePatterns: [
     '/node_modules/',
     '/src/index.ts',
-    '/src/features/api-client/generate-sequence-runner*', // TODO: remove when done with apha
   ],  coverageThreshold: {
     global: {
       branches: 80,
