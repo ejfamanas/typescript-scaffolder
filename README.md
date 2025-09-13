@@ -1,7 +1,7 @@
 # TypeScript Scaffolder
 
 ![npm version](https://img.shields.io/npm/v/typescript-scaffolder)
-### Unit Test Coverage: 96.75%
+### Unit Test Coverage: 96.77%
 
 `typescript-scaffolder` is a utility that creates TypeScript interfaces, enums, and config accessors from structured inputs like JSON, .env files, or interface definitions.
 Ideal for API integrations that expose schema via JSON — just drop the file in and generate clean, typed code for full-stack use. You can also integrate this into CI pipelines or dev scripts to keep generated types in sync with your schemas.
@@ -12,6 +12,7 @@ Ideal for API integrations that expose schema via JSON — just drop the file in
 - Typed `.env` accessor generator
 - Auto-create enums from interface keys
 - Typed axios client api generation
+- Typed client api helpers
 - Command sequence generator
 - Typed express server and client webhook generation
 - Preserves directory structure
@@ -25,10 +26,7 @@ https://eric-famanas.super.site/the-typescript-scaffolder
 - [CLI Usage Examples](#cli-usage-examples)
 - [Interface Generation](#interface-generation)
 - [Environment Variable Interface](#environment-variable-interface)
-- [Enum Generation](#enum-generation-from-interface)
-- [Schema Generation](#json-schema-generation-from-interface)
 - [Client Api Generation](#api-client-generation-from-interface)
-- [Sequence_Runner_Generation](#sequence-runner-generation--beta-)
 - [Webhook Server Generation](#webhook-Server-generation-from-interface)
 - [Roadmap](#roadmap)
 - [Reporting Bugs](#reporting-bugs)
@@ -357,92 +355,6 @@ export async function DELETE_person(id: string, headers?: Record<string, string>
           );
           return response.data;
         
-}
-```
-
-### Sequence Runner Generation (beta)
-
-Generate TypeScript workflows that combine multiple API operations in order, using a declarative JSON config format.
-
-- Supports `fetchList`, `loop`, and `action` steps
-- Allows use of `extract` to assign response fields to variables
-- Supports `{{variable}}` interpolation in action bodies
-- Multi-service support via per-step `service` routing
-- Emitted runners import and use `apiRegistry` functions
-- Output to `src/codegen/sequences/<SequenceName>.runner.ts`
-
-#### Example Config
-
-```json
-{
-  "serviceName": "source-alpha",
-  "sequences": [
-    {
-      "name": "PopulatePeople",
-      "steps": [
-        {
-          "id": "fetchPeople",
-          "type": "fetchList",
-          "endpoint": "/people",
-          "extract": {
-            "as": "people",
-            "field": "data"
-          }
-        },
-        {
-          "id": "loopPeople",
-          "type": "loop",
-          "over": "people",
-          "itemName": "person",
-          "steps": [
-            {
-              "id": "updatePerson",
-              "type": "action",
-              "method": "put",
-              "endpoint": "/people/:person.id",
-              "body": {
-                "email": "{{person.email}}"
-              },
-              "extract": {
-                "as": "updatedId",
-                "field": "id"
-              }
-            }
-          ]
-        }
-      ]
-    }
-  ]
-}
-```
-Will generate:
-```
-PopulatePeople.runner.ts
-// Auto-generated runner for sequence: PopulatePeople
-// Service: populate-users
-import { apiRegistry } from "../registry";
-
-export async function runPopulatePeople() {
-  const response = await apiRegistry["populate-users"].getAll_people();
-  const people = response.data;
-  for (const person of people) {
-    const response = await apiRegistry["populate-users"].put_people(person.id, { active: true, source: "smoke-test" });
-    const updatedId = response.id;
-  }
-}
-
-PopulatePeopleWithEmail.runner.ts
-// Auto-generated runner for sequence: PopulatePeopleWithEmails
-// Service: populate-users
-import { apiRegistry } from "../registry";
-
-export async function runPopulatePeopleWithEmails() {
-  const response = await apiRegistry["populate-users"].getAll_people();
-  const people = response.data;
-  for (const person of people) {
-    const response = await apiRegistry["populate-users"].put_people(person.id, { email: person.email, updatedBy: "interpolator" });
-    const updatedEmailId = response.id;
-  }
 }
 ```
 
@@ -789,14 +701,14 @@ typescript-scaffolder apiclient-registry \
   --registry-file registry.ts
 ```
 
-### Generate Sequence Runner (Beta)
+### Generate Sequence Runner
 
 Generate command functions to call certain API points in sequence
 
 ```bash
 typescript-scaffolder sequences \
   --config-dir ./config/sequences \
-  --output ./src/codegen/sequences
+  --output ./src/codegen/apis/sequences
 ```
 
 ### Generate Webhook App

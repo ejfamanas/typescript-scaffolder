@@ -1,10 +1,10 @@
 import * as fs from 'fs';
 import * as os from 'os';
 import * as path from 'path';
-import { generateRetryHelperForApiFile } from "../../../src/features/api-client/generate-retry-helper";
+import { generateRetryHelperForApiFile } from "../../../src";
 import { Logger } from "../../../src/utils/logger";
 import * as FsUtils from "../../../src/utils/file-system"
-import { RetryEndpointMeta } from "../../../src/models/retry-definitions";
+import { RetryEndpointMeta } from "../../../src";
 
 describe('generateRetryHelperForApiFile', () => {
     let tmpDir: string;
