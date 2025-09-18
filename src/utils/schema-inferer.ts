@@ -42,7 +42,6 @@ export async function inferJsonSchema(json: string, interfaceName: string): Prom
     try {
         // Step 2: Detect globally duplicated keys
         const duplicateKeys = findGloballyDuplicatedKeys(parsed);
-        // @ts-ignore - works fine, already set to target ES2020
         Logger.debug(funcName, `Found duplicate keys: ${[...duplicateKeys].join(', ')}`);
 
         // Step 3: Prefix duplicate keys with parent field names

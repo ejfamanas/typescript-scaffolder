@@ -1,4 +1,4 @@
-import { Sequence } from "../../src/models/sequence-definitions";
+import { Sequence } from "../../src";
 import { buildTreeFromSequence } from "../../src/utils/sequence-tree-builder";
 
 describe('buildGraphFromSequence', () => {

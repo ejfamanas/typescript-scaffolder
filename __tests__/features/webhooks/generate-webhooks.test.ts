@@ -1,8 +1,6 @@
 import * as fs from 'fs';
 import * as os from 'os';
 import * as path from 'path';
-
-// Adjust this import if your barrel path differs
 import {
   generateIncomingWebhook,
   generateOutgoingWebhook,
@@ -179,5 +177,67 @@ describe('generate-webhooks.ts', () => {
     const outSvc = path.join(outputRootDir, 'source-omega');
     expect(findFileRecursive(outSvc, (n) => n === 'handle_handleIn.ts')).toBeTruthy();
     expect(findFileRecursive(outSvc, (n) => n === 'send_out_webhook.ts')).toBeTruthy();
+  });
+
+  it('skips invalid config file in generateWebhooksFromPath', async () => {
+    const configDir = path.join(tmpDir, 'bad-configs');
+    const interfacesRootDir = path.join(tmpDir, 'interfaces');
+    const outputRootDir = path.join(tmpDir, 'out');
+    mkdirp(configDir); mkdirp(interfacesRootDir); mkdirp(outputRootDir);
+
+    writeFile(path.join(configDir, 'invalid.json'), ''); // empty/invalid JSON
+
+    await expect(generateWebhooksFromPath(configDir, interfacesRootDir, outputRootDir)).rejects.toThrow(/Failed to parse webhook config JSON/);
+  });
+
+  it('warns and skips config with unmatched schema', async () => {
+    const configDir = path.join(tmpDir, 'bad-schema-configs');
+    const interfacesRootDir = path.join(tmpDir, 'interfaces');
+    const outputRootDir = path.join(tmpDir, 'out');
+    mkdirp(configDir); mkdirp(interfacesRootDir); mkdirp(outputRootDir);
+
+    writeFile(path.join(configDir, 'ghost.json'), JSON.stringify({
+      webhooks: [
+        { direction: 'incoming', name: 'ghost', path: '/ghost', handlerName: 'handleGhost', requestSchema: 'NotARealSchema' }
+      ]
+    }, null, 2));
+
+    await expect(generateWebhooksFromPath(configDir, interfacesRootDir, outputRootDir)).rejects.toThrow(/Failed to locate an interfaces directory containing all required schemas/);
+  });
+
+  it('logs completion after successful generation', async () => {
+    const configDir = path.join(tmpDir, 'log-check');
+    const interfacesRootDir = path.join(tmpDir, 'interfaces');
+    const outputRootDir = path.join(tmpDir, 'out');
+    mkdirp(configDir); mkdirp(interfacesRootDir); mkdirp(outputRootDir);
+
+    const svcDir = path.join(interfacesRootDir, 'source-alpha');
+    mkdirp(svcDir);
+    writeFile(path.join(svcDir, 'TestReq.ts'), 'export interface TestReq { id: string }');
+
+    writeFile(path.join(configDir, 'alpha.json'), JSON.stringify({
+      webhooks: [
+        { direction: 'incoming', name: 'logtest', path: '/logtest', handlerName: 'handleLogtest', requestSchema: 'TestReq' }
+      ]
+    }));
+
+    const logger = require('../../../src/utils/logger');
+    const spy = jest.spyOn(logger.Logger, 'info');
+
+    await generateWebhooksFromPath(configDir, interfacesRootDir, outputRootDir);
+    expect(spy).toHaveBeenCalledWith('generateWebhooksFromPath', 'Webhook generation completed.');
+
+    spy.mockRestore();
+  });
+
+  it('gracefully exits on invalid file in generateWebhooksFromFile', async () => {
+    const configPath = path.join(tmpDir, 'invalid-file.json');
+    const interfacesDir = path.join(tmpDir, 'interfaces');
+    const outputDir = path.join(tmpDir, 'out');
+    mkdirp(interfacesDir); mkdirp(outputDir);
+
+    writeFile(configPath, ''); // invalid JSON
+
+    await expect(generateWebhooksFromFile(configPath, interfacesDir, outputDir)).rejects.toThrow(/Failed to parse webhook config JSON/);
   });
 });

@@ -1,4 +1,4 @@
-import fs from 'fs';
+import * as fs from 'fs';
 import * as path from 'path';
 import {generateApiRegistry, getApiFunction} from '../../../src';
 import { Logger } from '../../../src/utils/logger';

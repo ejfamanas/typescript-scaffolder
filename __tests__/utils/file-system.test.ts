@@ -1,7 +1,7 @@
 import { extractInterfaces } from "../../src/utils/file-system";
 import { readWebhookConfigFile } from "../../src/utils/file-system";
-import fs from 'fs';
-import path from 'path';
+import * as fs from 'fs';
+import * as path from 'path';
 import { ensureDir, readEndpointClientConfigFile, walkDirectory } from "../../src/utils/file-system";
 
 const TEST_ROOT = path.join(__dirname, '__testdata__');
