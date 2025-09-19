@@ -1,4 +1,4 @@
-import fs from 'fs';
+import * as fs from 'fs';
 import {ensureDir, walkDirectory} from "../../src/utils/file-system";
 import {Logger} from "../../src/utils/logger";
 import {generateInterfacesFromFile, generateInterfacesFromPath, inferJsonSchemaFromPath} from "../../src";

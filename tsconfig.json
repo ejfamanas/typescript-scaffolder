@@ -125,5 +125,8 @@
     "__tests__/**/*",
     "output",
     "index.dev.ts"
+  ],
+  "include": [
+    "src"
   ]
 }

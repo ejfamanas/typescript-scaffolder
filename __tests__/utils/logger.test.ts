@@ -1,5 +1,5 @@
-import fs from 'fs';
-import { Logger, LogTag } from "../../src/utils/logger";
+import * as fs from 'fs';
+import { Logger } from "../../src/utils/logger";
 
 jest.mock('fs');
 const mockedFs = fs as jest.Mocked<typeof fs>;

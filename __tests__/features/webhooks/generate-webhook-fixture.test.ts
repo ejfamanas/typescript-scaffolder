@@ -93,6 +93,7 @@ export interface User {
 
         // 8) Array of strings: tags
         // Could be one-liner or multi-line; allow either but must be an array literal
+        // @ts-ignore
         expect(txt).toMatch(/tags:\s*\[.*\]/s);
 
         // 9) Array of objects: items should render as multi-line with properly indented inner object

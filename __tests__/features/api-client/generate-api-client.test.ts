@@ -28,10 +28,7 @@ describe('generate-api-client', () => {
 
     describe('generateApiClientFunction', () => {
         it('generates function code and appends to source file', async () => {
-            // TODO: This is erroring in the IDE even though the function call is correct based on the signature
-            // @ts-ignore
             const spy = jest.spyOn(fs, 'writeFileSync');
-
             await generateApiClientFunction(
                 'https://api.example.com',
                 'user_api',
@@ -88,7 +85,6 @@ describe('generate-api-client', () => {
         });
 
         it('generates a retry-wrapped function and imports the typed wrapper when retry is enabled', async () => {
-            // @ts-ignore
             const spy = jest.spyOn(fs, 'writeFileSync');
 
             const endpointWithRetry: Endpoint = {
@@ -126,7 +122,6 @@ describe('generate-api-client', () => {
         });
 
         it('appends the wrapper symbol to an existing helper import when adding a second function in the same file', async () => {
-            // @ts-ignore
             const spy = jest.spyOn(fs, 'writeFileSync');
 
             // First function to seed the file with the import
@@ -198,8 +193,6 @@ describe('generate-api-client', () => {
                 },
                 endpoints: [sampleEndpoint],
             };
-            // TODO: This is erroring in the IDE even though the function call is correct based on the signature
-            // @ts-ignore
             const spy = jest.spyOn(fs, 'writeFileSync');
 
             fs.writeFileSync(tempFilePath, JSON.stringify(endpointConfig), 'utf8');

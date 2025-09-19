@@ -1,5 +1,5 @@
 import fs from 'fs';
-import path from 'path';
+import * as path from 'path';
 import * as fileSystemUtils from '../../src/utils/file-system';
 import { ensureDir } from '../../src/utils/file-system';
 import {

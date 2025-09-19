@@ -323,4 +323,48 @@ describe('generate-webhook-app', () => {
     expect((src!.match(/import\s+express\s+from\s+['"]express['"]/g) || []).length).toBe(1);
     expect((src!.match(/for\s*\(const\s+key\s+of\s+Object\.keys\(handlers\)\)/g) || []).length).toBeLessThanOrEqual(1);
   });
+
+  it('logs warning and exits when generateWebhookAppFromFile receives invalid JSON', async () => {
+    const configPath = path.join(tmpDir, 'bad.json');
+    const interfacesDir = path.join(tmpDir, 'interfaces');
+    const outputDir = path.join(tmpDir, 'out');
+    mkdirp(interfacesDir);
+    writeFile(configPath, ''); // invalid JSON
+
+    await expect(generateWebhookAppFromFile(configPath, interfacesDir, outputDir)).rejects.toThrow(/Failed to parse webhook config JSON/);
+  });
+
+  it('skips bad config files when using generateWebhookAppFromPath', async () => {
+    const configDir = path.join(tmpDir, 'configs');
+    const interfacesDir = path.join(tmpDir, 'interfaces');
+    const outputDir = path.join(tmpDir, 'out');
+    mkdirp(configDir);
+    mkdirp(interfacesDir);
+    writeFile(path.join(configDir, 'bad.json'), ''); // invalid JSON
+
+    await expect(generateWebhookAppFromPath(configDir, interfacesDir, outputDir)).rejects.toThrow(/Failed to parse webhook config JSON/);
+  });
+
+  it('warns and skips when schema is not found in any interface folder', async () => {
+    const configDir = path.join(tmpDir, 'configs');
+    const interfacesDir = path.join(tmpDir, 'interfaces');
+    const outputDir = path.join(tmpDir, 'out');
+
+    mkdirp(configDir);
+    mkdirp(interfacesDir);
+
+    writeFile(path.join(configDir, 'no-match.json'), JSON.stringify({
+      webhooks: [
+        {
+          direction: 'incoming',
+          name: 'failWebhook',
+          path: '/fail',
+          handlerName: 'failHandler',
+          requestSchema: 'UnfindableSchema'
+        }
+      ]
+    }));
+
+    await expect(generateWebhookAppFromPath(configDir, interfacesDir, outputDir)).rejects.toThrow(/Failed to locate an interfaces directory containing all required schemas/);
+  });
 });

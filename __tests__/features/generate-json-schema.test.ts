@@ -6,8 +6,8 @@ import {
 import * as parser from "../../src/utils/interface-parser";
 import * as mapper from "../../src/utils/ts-to-json-schema-mapper";
 import * as fsUtils from "../../src/utils/file-system";
-import fs from "fs";
-import path from "path";
+import * as fs from "fs";
+import * as path from "path";
 import { ParsedInterface } from "../../src";
 
 
