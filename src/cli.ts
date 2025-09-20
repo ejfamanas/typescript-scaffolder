@@ -9,7 +9,6 @@ import { generateApiClientFromFile, generateApiClientsFromPath } from "./feature
 import { generateApiRegistry } from "./features/api-client/generate-api-client-registry";
 import { generateWebhookAppFromPath } from "./features/webhooks/generate-webhook-app";
 import { generateWebhookAppRegistry } from "./features/webhooks/generate-webhook-app-registry";
-import { generateJsonSchemasFromPath } from "./features/generate-json-schemas";
 import { generateSequencesFromPath } from "./features/api-client/generate-sequence-runner";
 
 const program = new Command();
@@ -22,19 +21,6 @@ program
     .action(async (options) => {
         Logger.info("cli", `Generating interfaces from "${options.input}" to "${options.output}"`);
         await generateInterfacesFromPath(
-            path.resolve(options.input),
-            path.resolve(options.output)
-        );
-    });
-
-program
-    .command("jsonschemas")
-    .description("Generate JSON schemas from TypeScript interfaces")
-    .requiredOption("-i, --input <dir>", "Input directory")
-    .requiredOption("-o, --output <dir>", "Output directory")
-    .action(async (options) => {
-        Logger.info("cli", `Generating JSON schemas from "${options.input}" to "${options.output}" with ext "${options.ext}"`);
-        await generateJsonSchemasFromPath(
             path.resolve(options.input),
             path.resolve(options.output)
         );

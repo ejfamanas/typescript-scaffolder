@@ -14,11 +14,6 @@ export {
 	generateInterfacesFromPath
 } from './features/generate-interfaces';
 export {
-	generateJsonSchemaFromInterface,
-	generateJsonSchemaFromFile,
-	generateJsonSchemasFromPath
-} from './features/generate-json-schemas'
-export {
 	generateEnvLoader
 } from './features/generate-env-loader';
 export {
