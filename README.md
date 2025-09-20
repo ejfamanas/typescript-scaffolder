@@ -1,7 +1,7 @@
 # TypeScript Scaffolder
 
 ![npm version](https://img.shields.io/npm/v/typescript-scaffolder)
-### Unit Test Coverage: 96.77%
+### Unit Test Coverage: 97.12%
 
 `typescript-scaffolder` is a utility that creates TypeScript interfaces, enums, and config accessors from structured inputs like JSON, .env files, or interface definitions.
 Ideal for API integrations that expose schema via JSON — just drop the file in and generate clean, typed code for full-stack use. You can also integrate this into CI pipelines or dev scripts to keep generated types in sync with your schemas.
@@ -548,7 +548,6 @@ src/
     config/
     enums/
     interfaces/
-    schemas/
     webhooks/
 ```
 
@@ -575,9 +574,6 @@ const INTERFACE_OUTPUT_DIR = path.resolve(CODEGEN_DIR, 'interfaces');
 // Generate enums, this will use the previously generated interface output
 const ENUM_OUTPUT_DIR = path.resolve(CODEGEN_DIR, 'enums');
 
-// Generate typed json schemas, this will use the previously generated interface output
-const SCHEMA_OUTPUT_DIR = path.resolve(CODEGEN_DIR, 'schemas');
-
 // Client endpoint generation config
 const ENDPOINT_CONFIG_PATH = path.resolve(LOCAL_DIR, 'config/endpoint-configs');
 const CLIENT_OUTPUT_DIR = path.resolve(CODEGEN_DIR, 'apis')
@@ -601,9 +597,6 @@ async function build() {
 
 	// use the enum generator from the output of the interface generator
 	await generateEnumsFromPath(INTERFACE_OUTPUT_DIR, ENUM_OUTPUT_DIR);
-
-	// use the json schema generator from the output of the interface generator
-	await generateJsonSchemasFromPath(INTERFACE_OUTPUT_DIR, SCHEMA_OUTPUT_DIR)
 
 	// Generates an object-centric axios api client based on a config file
 	await generateApiClientsFromPath(ENDPOINT_CONFIG_PATH, INTERFACE_OUTPUT_DIR, CLIENT_OUTPUT_DIR);
@@ -633,16 +626,6 @@ Generate TypeScript interfaces from JSON schema files:
 typescript-scaffolder interfaces \
   --input ./schemas \
   --output ./codegen/interfaces
-```
-
-### Generate Schemas
-
-Generate typed json schemas from typescript interfaces:
-
-```bash
-typescript-scaffolder jsonschemas \
-  --input ./codegen/interfaces \
-  --output ./codegen/schemas
 ```
 
 ### Generate Enums
@@ -741,7 +724,6 @@ typescript-scaffolder --help
 - [x] Generate TypeScript interfaces from schema definitions
 - [x] Generate TypeScript enums to assert key names
 - [x] Generate TypeScript accessor for environment variables
-- [x] Generate typed json schemas
 - [x] Generate TypeScript axios REST api client from interfaces
 - [x] Generate Typescript command sequences for REST api calls
 - [x] Generate Typescript axios client webhook apps
