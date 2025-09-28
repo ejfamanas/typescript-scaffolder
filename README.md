@@ -15,9 +15,8 @@ Ideal for API integrations that expose schema via JSON — just drop the file in
 - Typed client api helpers
 - Command sequence generator
 - Typed express server and client webhook generation
-- Preserves directory structure
 
-To view the full documentation, please visit <br>
+This README only briefly covers the features available. To view the full documentation, please visit <br>
 https://eric-famanas.super.site/the-typescript-scaffolder
 
 ## Table of Contents
@@ -493,39 +492,6 @@ router.post('/webhooks/stripe', async (req, res) => {
 });
 export default router;
 ```
-Alternatively, if you express an outgoing webhook, it will look like this
-```
-import { NotifyPayload } from "../../../interfaces/source-foxtrot/NotifyPayload";
-import { NotifyResponse } from "../../../interfaces/source-foxtrot/NotifyResponse";
-import axios from "axios";
-import { AxiosRequestConfig } from "axios";
-
-export async function sendNotifyPartnerWebhook(body: NotifyPayload, headers?: Record<string, string>): Promise<NotifyResponse> {
-    const response = await axios.post(`https://partner.example.com/webhook`, body, { headers });
-    return response.data;
-}
-
-```
-
-You can access the individual handlers by referencing the registry, e.g.
-```
-webhookAppRegistry['source-echo'].handlers.handle_stripePaymentWebhook
-```
-#### Webhook Test Routes and Fixtures (Beta)
-
-When generating webhook server code, the generator now also produces a **test route** and a **fixture** for each webhook defined in your config.
-
-- **Test Routes**: For every incoming webhook, a matching test route is generated alongside your router. This route can be used during development to send a mock payload to your handler without relying on the real external webhook source.
-- **Fixtures**: For each request schema referenced in your webhook config, a `<InterfaceName>.fixture.ts` file is generated. This fixture contains a typed example payload matching the interface and can be used to drive unit tests or manual route testing.
-
-The fixture generator will:
-- Parse the referenced TypeScript interface to generate representative values for all fields.
-- Use name-based faker heuristics for realistic values where possible, otherwise fall back to generic fakers.
-- Handle nested objects, arrays, enums, unions, optional fields, and basic type inference.
-
-The generated test routes import and send these fixtures to your handlers, providing an end-to-end loop for quickly verifying that your webhook handling logic and type expectations are correct.
-
-> **Note:** This feature is currently in beta. Fixture generation is best-effort and may require manual adjustment for complex or domain-specific payloads.
 
 ## Installation
 To install the package, run the following command

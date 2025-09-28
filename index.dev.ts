@@ -6,7 +6,6 @@ import {
 	generateEnumsFromPath,
 	generateEnvLoader,
 	generateInterfacesFromPath,
-	generateJsonSchemasFromPath,
 	generateWebhookAppFromPath,
 } from "./src";
 
@@ -50,9 +49,6 @@ async function build() {
 
 	// use the enum generator from the output of the interface generator
 	await generateEnumsFromPath(INTERFACE_OUTPUT_DIR, ENUM_OUTPUT_DIR);
-
-	// use the json schema generator from the output of the interface generator
-	await generateJsonSchemasFromPath(INTERFACE_OUTPUT_DIR, SCHEMA_OUTPUT_DIR);
 
 	// Generates an object-centric axios api client based on a config file
 	await generateApiClientsFromPath(ENDPOINT_CONFIG_PATH, INTERFACE_OUTPUT_DIR, CLIENT_OUTPUT_DIR);
