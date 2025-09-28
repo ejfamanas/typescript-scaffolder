@@ -3,9 +3,7 @@ import { Project } from 'ts-morph';
 import { ensureDir, extractInterfaces, readWebhookConfigFile } from '../../utils/file-system';
 import { IncomingWebhook, WebhookConfigFile } from "models/webhook-definitions";
 import { toPascalCase } from "../../utils/object-helpers";
-import {
-    assertDirectoryContainingAllSchemas,
-} from "../../utils/client-constructors";
+import { assertDirectoryContainingAllSchemas, } from "../../utils/client-constructors";
 import { Logger } from "../../utils/logger";
 import { generateWebhookFixture } from './generate-webhook-fixture';
 
@@ -23,7 +21,7 @@ export async function generateWebhookRoute(
 ): Promise<void> {
     const {handlerName, path: webhookPath, requestSchema} = webhook;
     const funcName = `generateWebhookRoute`;
-	Logger.debug(funcName, 'Starting webhook route generation...');
+    Logger.debug(funcName, 'Starting webhook route generation...');
 
     const pascalHandlerName = toPascalCase(handlerName);
     const routeFile = path.join(outputDir, 'router.ts');
@@ -37,36 +35,46 @@ export async function generateWebhookRoute(
 
     const project = new Project();
     const existing = project.addSourceFileAtPathIfExists(routeFile);
-    const sourceFile = existing ?? project.createSourceFile(routeFile, '', { overwrite: true });
+    const sourceFile = existing ?? project.createSourceFile(routeFile, '', {overwrite: true});
 
     // --- Helper functions for idempotency ---
     const ensureDefaultImport = (moduleSpecifier: string, defaultName: string) => {
-      const imp = sourceFile.getImportDeclarations().find(d => d.getModuleSpecifierValue() === moduleSpecifier);
-      if (!imp) { sourceFile.addImportDeclaration({ moduleSpecifier, defaultImport: defaultName }); return; }
-      if (!imp.getDefaultImport()) { imp.setDefaultImport(defaultName); }
+        const imp = sourceFile.getImportDeclarations().find(d => d.getModuleSpecifierValue() === moduleSpecifier);
+        if (!imp) {
+            sourceFile.addImportDeclaration({moduleSpecifier, defaultImport: defaultName});
+            return;
+        }
+        if (!imp.getDefaultImport()) {
+            imp.setDefaultImport(defaultName);
+        }
     };
 
     const ensureNamedImport = (moduleSpecifier: string, name: string, isTypeOnly = false) => {
-      const imp = sourceFile.getImportDeclarations().find(d => d.getModuleSpecifierValue() === moduleSpecifier);
-      if (!imp) { sourceFile.addImportDeclaration({ moduleSpecifier, namedImports: [name], isTypeOnly }); return; }
-      const has = imp.getNamedImports().some(n => n.getName() === name);
-      if (!has) { imp.addNamedImport(name); }
-      if (isTypeOnly && !imp.isTypeOnly()) imp.setIsTypeOnly(true);
+        const imp = sourceFile.getImportDeclarations().find(d => d.getModuleSpecifierValue() === moduleSpecifier);
+        if (!imp) {
+            sourceFile.addImportDeclaration({moduleSpecifier, namedImports: [name], isTypeOnly});
+            return;
+        }
+        const has = imp.getNamedImports().some(n => n.getName() === name);
+        if (!has) {
+            imp.addNamedImport(name);
+        }
+        if (isTypeOnly && !imp.isTypeOnly()) imp.setIsTypeOnly(true);
     };
 
     const hasText = (snippet: string) => sourceFile.getFullText().includes(snippet);
 
     const renderTestHeadersArg = (headers?: Record<string, string>): string => {
-      if (!headers || Object.keys(headers).length === 0) return '';
-      const entries = Object.entries(headers).map(([k, v]) => {
-        const envMatch = /^\$\{ENV:([A-Z0-9_]+)\}$/.exec(v);
-        if (envMatch) {
-          const envName = envMatch[1];
-          return `'${k}': (process.env.${envName} ?? '')`;
-        }
-        return `'${k}': ${JSON.stringify(v)}`;
-      });
-      return `, { ${entries.join(', ')} }`;
+        if (!headers || Object.keys(headers).length === 0) return '';
+        const entries = Object.entries(headers).map(([k, v]) => {
+            const envMatch = /^\$\{ENV:([A-Z0-9_]+)\}$/.exec(v);
+            if (envMatch) {
+                const envName = envMatch[1];
+                return `'${k}': (process.env.${envName} ?? '')`;
+            }
+            return `'${k}': ${JSON.stringify(v)}`;
+        });
+        return `, { ${entries.join(', ')} }`;
     };
 
     // --- Idempotent imports ---
@@ -77,16 +85,16 @@ export async function generateWebhookRoute(
 
     // --- Router bootstrap only once ---
     if (!hasText('const router = express.Router()')) {
-      sourceFile.addStatements([
-        'const router = express.Router();',
-        'router.use(express.json());'
-      ]);
+        sourceFile.addStatements([
+            'const router = express.Router();',
+            'router.use(express.json());'
+        ]);
     }
 
     // --- Main webhook route only once ---
     if (!hasText(`router.post('${webhookPath}'`)) {
-      sourceFile.addStatements([
-        `router.post('${webhookPath}', async (req, res) => {
+        sourceFile.addStatements([
+            `router.post('${webhookPath}', async (req, res) => {
 	try {
 		const payload = req.body as ${requestSchema};
 		await handle${pascalHandlerName}Webhook(payload);
@@ -96,7 +104,7 @@ export async function generateWebhookRoute(
 		res.status(500).json({ ok: false });
 	}
 });`
-      ]);
+        ]);
     }
 
     const testHeadersArg = renderTestHeadersArg((webhook as any).testHeaders);
@@ -104,8 +112,8 @@ export async function generateWebhookRoute(
     // --- Test route only once ---
     const testPath = `/test/${serviceName}-${handlerName}-webhook`;
     if (!hasText(`router.post('${testPath}'`)) {
-      sourceFile.addStatements([
-        `router.post('${testPath}', async (_req, res) => {
+        sourceFile.addStatements([
+            `router.post('${testPath}', async (_req, res) => {
 	try {
 		await handle${pascalHandlerName}Webhook(${fixtureExportName}${testHeadersArg});
 		res.status(200).json({ ok: true, message: 'Simulated webhook sent.' });
@@ -114,7 +122,7 @@ export async function generateWebhookRoute(
 		res.status(500).json({ ok: false });
 	}
 });`
-      ]);
+        ]);
     }
 
     generateWebhookFixture(
@@ -122,15 +130,17 @@ export async function generateWebhookRoute(
         interfaceImportPath,
         outputDir,
         project,
+        fixtureExportName
     );
 
     // --- Default export only once ---
     if (!hasText('export default router')) {
-      sourceFile.addStatements(['export default router;']);
+        sourceFile.addStatements(['export default router;']);
     }
     Logger.debug(funcName, 'Webhook route generation complete')
     await project.save();
 }
+
 /**
  * Reads a WebhookConfigFile and generates Express routes for each incoming webhook.
  *
@@ -160,40 +170,40 @@ export async function generateWebhookRoutesFromFile(
  * @param outputRootDir - Output directory for generated routes.
  */
 export async function generateWebhookRoutesFromPath(
-	configDir: string,
-	interfacesRootDir: string,
-	outputRootDir: string
+    configDir: string,
+    interfacesRootDir: string,
+    outputRootDir: string
 ): Promise<void> {
-	const funcName = 'generateWebhookRoutesFromPath';
-	Logger.debug(funcName, 'Starting webhook route generation from config and interface directories...');
+    const funcName = 'generateWebhookRoutesFromPath';
+    Logger.debug(funcName, 'Starting webhook route generation from config and interface directories...');
 
-	const { configFiles, interfaceNameToDirs } = extractInterfaces(configDir, interfacesRootDir);
+    const {configFiles, interfaceNameToDirs} = extractInterfaces(configDir, interfacesRootDir);
 
-	for (const configPath of configFiles) {
-		const config: WebhookConfigFile | null = readWebhookConfigFile(configPath);
-		if (!config) {
-			continue;
-		}
+    for (const configPath of configFiles) {
+        const config: WebhookConfigFile | null = readWebhookConfigFile(configPath);
+        if (!config) {
+            continue;
+        }
 
-		const requiredSchemas = new Set<string>();
-		for (const webhook of config.webhooks) {
-			if (webhook.direction === 'incoming') {
-				requiredSchemas.add(webhook.requestSchema);
-			}
-		}
+        const requiredSchemas = new Set<string>();
+        for (const webhook of config.webhooks) {
+            if (webhook.direction === 'incoming') {
+                requiredSchemas.add(webhook.requestSchema);
+            }
+        }
 
-		const foundDir = assertDirectoryContainingAllSchemas(requiredSchemas, interfaceNameToDirs, configPath);
-		if (!foundDir) {
-			Logger.warn(funcName, `Could not find a directory containing all schemas for config: ${configPath}`);
-			continue;
-		}
+        const foundDir = assertDirectoryContainingAllSchemas(requiredSchemas, interfaceNameToDirs, configPath);
+        if (!foundDir) {
+            Logger.warn(funcName, `Could not find a directory containing all schemas for config: ${configPath}`);
+            continue;
+        }
 
-		const relativeInterfaceDir = path.relative(interfacesRootDir, foundDir);
-		const outputDir = path.join(outputRootDir, relativeInterfaceDir);
-		ensureDir(outputDir);
+        const relativeInterfaceDir = path.relative(interfacesRootDir, foundDir);
+        const outputDir = path.join(outputRootDir, relativeInterfaceDir);
+        ensureDir(outputDir);
 
-		await generateWebhookRoutesFromFile(configPath, foundDir, outputDir);
-	}
+        await generateWebhookRoutesFromFile(configPath, foundDir, outputDir);
+    }
 
-	Logger.info(funcName, 'Webhook route generation completed.');
+    Logger.info(funcName, 'Webhook route generation completed.');
 }

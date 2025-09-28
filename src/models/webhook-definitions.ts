@@ -1,4 +1,4 @@
-import {SchemaConsumer} from "models/api-definitions";
+import { SchemaConsumer } from "models/api-definitions";
 
 /**
  * Configuration for an incoming webhook route, specifying the URL path and handler.
