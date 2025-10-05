@@ -1,52 +1,6 @@
-import {faker} from '@faker-js/faker';
-import {Logger} from './logger';
-
-/**
- * Generates a mock data sample from a type-hinted json schema
- * @param count
- * @param schemaJson
- * @param arrayLength
- */
-export function generateMockData(
-    count: number,
-    schemaJson: string,
-    arrayLength = 1
-): any[] {
-    const funcName = 'generateMockData';
-    Logger.debug(funcName, 'Starting mock data generation...');
-    const results: any[] = [];
-
-    const schema = JSON.parse(schemaJson);
-    for (let i = 0; i < count; i++) {
-        const autoFaked: Record<string, any> = {};
-
-        Logger.debug(funcName, `Identified the following keys: ${Object.keys(schema).join(', ')}`);
-
-        for (const key of Object.keys(schema)) {
-            const value = schema[key];
-
-            // Handle array type hints like "string[]"
-            if (typeof value === 'string' && value.endsWith('[]')) {
-                const baseType = value.replace('[]', '');
-                Logger.debug(funcName, `Array type identified at key: ${String(key)} with base type ${baseType}`);
-                autoFaked[key] = Array.from({length: arrayLength}).map(() =>
-                    generatePrimitiveMock(baseType)
-                );
-                continue;
-            }
-
-            if (typeof value === 'string') {
-                Logger.debug(funcName, `Primitive type string detected at key: ${String(key)} with type hint: ${value}`);
-                autoFaked[key] = getFakerValueForKey(String(key)) ?? generatePrimitiveMock(value);
-            } else {
-                autoFaked[key] = handleDefaultCase(value, String(key), arrayLength);
-            }
-        }
-
-        results.push(autoFaked);
-    }
-    return results;
-}
+import { faker } from "@faker-js/faker";
+import { Logger } from "../logger";
+import { generateMockData } from "./mock-data-generator";
 
 export function generatePrimitiveMock(type: string): string | number | boolean {
     switch (type.toLowerCase()) {
@@ -106,4 +60,25 @@ export function handleDefaultCase(value: any, key: string, arrayLength: number):
 
     Logger.warn(funcName, `Unknown type or unsupported structure at key: ${key}`);
     return `UnhandledType<${JSON.stringify(value)}>`;
+}
+
+/**
+ * Determines whether a given type represents an array type.
+ */
+export function isArrayType(type: string): boolean {
+    return type.endsWith("[]") || type.startsWith("Array<");
+}
+
+/**
+ * Determines whether a given type represents a Date.
+ */
+export function isDateType(type: string): boolean {
+    return type === "Date" || type.includes("Date");
+}
+
+/**
+ * Extracts the base type from an array type.
+ */
+export function extractBaseType(type: string): string {
+    return type.replace("[]", "").replace(/^Array<|>$/g, "");
 }
