@@ -1,7 +1,8 @@
 import {
+    extractBaseType,
     generatePrimitiveMock,
     getFakerValueForKey,
-    handleDefaultCase
+    handleDefaultCase, isArrayType, isDateType
 } from "../../../src/utils/mocking/mock-value-core";
 
 describe('mock-value-core helper functions', () => {
@@ -69,6 +70,44 @@ describe('mock-value-core helper functions', () => {
         it('should return an "UnhandledType" string for unknown structure', () => {
             const result = handleDefaultCase(null, 'unknown', 1);
             expect(result).toBe('UnhandledType<null>');
+        });
+    });
+});
+
+describe('type detection helpers', () => {
+    describe('isArrayType', () => {
+        it('should detect types ending with []', () => {
+            expect(isArrayType('string[]')).toBe(true);
+        });
+        it('should detect Array<T> types', () => {
+            expect(isArrayType('Array<number>')).toBe(true);
+        });
+        it('should return false for non-array types', () => {
+            expect(isArrayType('string')).toBe(false);
+        });
+    });
+
+    describe('isDateType', () => {
+        it('should detect exact Date type', () => {
+            expect(isDateType('Date')).toBe(true);
+        });
+        it('should detect when Date appears in complex type', () => {
+            expect(isDateType('Array<Date>')).toBe(true);
+        });
+        it('should return false for non-Date types', () => {
+            expect(isDateType('string')).toBe(false);
+        });
+    });
+
+    describe('extractBaseType', () => {
+        it('should return base type from [] notation', () => {
+            expect(extractBaseType('User[]')).toBe('User');
+        });
+        it('should return base type from Array<> notation', () => {
+            expect(extractBaseType('Array<number>')).toBe('number');
+        });
+        it('should return unmodified type for non-array', () => {
+            expect(extractBaseType('boolean')).toBe('boolean');
         });
     });
 });
