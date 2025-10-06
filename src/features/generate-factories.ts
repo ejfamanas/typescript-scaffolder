@@ -2,9 +2,8 @@ import fs from "fs-extra";
 import path from "path";
 import { Logger } from "../utils/logger";
 import { ensureDir, walkDirectory } from "../utils/file-system";
-import { generateFakerMockValue, generateStaticMockValue } from "../utils/mocking/mock-value-resolver";
 import { extractInterfacesFromFile } from "../utils/interface-parser";
-import { extractBaseType, isArrayType } from "../utils/mocking/mock-value-core";
+import { getMockValueForProperty } from "../utils/mocking/mock-value-resolver";
 
 /**
  * Generate a factory class file from a single interface file.
@@ -39,36 +38,12 @@ export async function generateFactoriesFromFile(
         const localInterfaces = new Set(interfaces.map((i) => i.name));
 
         const factoryBlocks = interfaces.map((iface) => {
-            const defaults = iface.properties.map((prop) => {
-                const {name, type} = prop;
-                let mockValue: string;
-
-                if (isArrayType(type)) {
-                    const base = extractBaseType(type);
-                    if (localInterfaces.has(base)) {
-                        mockValue = `[${base}Factory.create()]`;
-                    } else {
-                        mockValue = useFakerDefaults
-                            ? generateFakerMockValue(type, name)
-                            : generateStaticMockValue(type, name);
-                    }
-                } else if (localInterfaces.has(type)) {
-                    mockValue = `${type}Factory.create()`;
-                } else {
-                    mockValue = useFakerDefaults
-                        ? generateFakerMockValue(type, name)
-                        : generateStaticMockValue(type, name);
-
-                    if (
-                        mockValue === "{}" &&
-                        !["string", "number", "boolean", "Date"].some((t) => type.includes(t))
-                    ) {
-                        mockValue = `{} as unknown as ${type}`;
-                    }
-                }
-
-                return `      ${name}: ${mockValue},`;
-            }).join("\n");
+            const defaults = iface.properties
+                .map(({
+                          name,
+                          type
+                      }) => `      ${name}: ${getMockValueForProperty(name, type, localInterfaces, useFakerDefaults)},`)
+                .join("\n");
 
             return `// Auto-generated factory for ${iface.name}
 export class ${iface.name}Factory {

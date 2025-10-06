@@ -46,3 +46,46 @@ export function generateStaticMockValue(type: string, key?: string): string {
     if (type.includes("boolean")) return "true";
     return "{}";
 }
+
+/**
+ * High-level resolver — decides how to mock a property based on type,
+ * whether it's a local interface, and if faker is enabled.
+ * Used by the factory generator and future scaffolds. * @param name
+ * @param name
+ * @param type
+ * @param localInterfaces
+ * @param useFakerDefaults
+ */
+export function getMockValueForProperty(
+    name: string,
+    type: string,
+    localInterfaces: Set<string>,
+    useFakerDefaults: boolean
+): string {
+    if (isArrayType(type)) {
+        const base = extractBaseType(type);
+        if (localInterfaces.has(base)) {
+            return `[${base}Factory.create()]`;
+        }
+        return useFakerDefaults
+            ? generateFakerMockValue(type, name)
+            : generateStaticMockValue(type, name);
+    }
+
+    if (localInterfaces.has(type)) {
+        return `${type}Factory.create()`;
+    }
+
+    let mockValue = useFakerDefaults
+        ? generateFakerMockValue(type, name)
+        : generateStaticMockValue(type, name);
+
+    const isPrimitive = ["string", "number", "boolean", "Date"].some((t) =>
+        type.includes(t)
+    );
+    if (mockValue === "{}" && !isPrimitive) {
+        mockValue = `{} as unknown as ${type}`;
+    }
+
+    return mockValue;
+}
