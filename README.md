@@ -1,7 +1,7 @@
 # TypeScript Scaffolder
 
 ![npm version](https://img.shields.io/npm/v/typescript-scaffolder)
-### Unit Test Coverage: 97.12%
+### Unit Test Coverage: 97.35%
 
 `typescript-scaffolder` is a utility that creates TypeScript interfaces, enums, and config accessors from structured inputs like JSON, .env files, or interface definitions.
 Ideal for API integrations that expose schema via JSON — just drop the file in and generate clean, typed code for full-stack use. You can also integrate this into CI pipelines or dev scripts to keep generated types in sync with your schemas.
@@ -10,6 +10,7 @@ Ideal for API integrations that expose schema via JSON — just drop the file in
 - Generate TypeScript interfaces from JSON or schemas
 - Generate JSON schemas from TypeScript interfaces
 - Typed `.env` accessor generator
+- Class factories generated from interfaces
 - Auto-create enums from interface keys
 - Typed axios client api generation
 - Typed client api helpers
@@ -21,12 +22,12 @@ https://eric-famanas.super.site/the-typescript-scaffolder
 
 ## Table of Contents
 - [Installation](#installation)
-- [Usage](#usage)
-- [CLI Usage Examples](#cli-usage-examples)
 - [Interface Generation](#interface-generation)
 - [Environment Variable Interface](#environment-variable-interface)
 - [Client Api Generation](#api-client-generation-from-interface)
 - [Webhook Server Generation](#webhook-Server-generation-from-interface)
+- [Usage](#usage)
+- [CLI Usage Examples](#cli-usage-examples)
 - [Roadmap](#roadmap)
 - [Reporting Bugs](#reporting-bugs)
 - [Contributing](#contributing)
@@ -618,6 +619,22 @@ typescript-scaffolder envloader \
   --enum-name EnvKeys
 ```
 
+### Generate Factories
+
+Generate TypeScript factory classes from interface files:
+
+```bash
+typescript-scaffolder factories \
+  --input ./codegen/interfaces \
+  --output ./codegen/factories \
+  --faker
+```
+
+**Options:**
+- `--faker` (optional): Use faker-based mock values instead of static deterministic defaults
+
+This command will walk through your input directory, create corresponding factory files for each interface, and preserve directory structure. Factories can be used to generate mock instances for testing or prototyping.
+
 ### Generate API Client From Single Config File
 
 Generate an API client from a single JSON config file:
@@ -697,7 +714,7 @@ typescript-scaffolder --help
 - [x] Generate Typescript webhook test routes and fixtures
 - [x] Generate Typescript express server webhook apps
 - [x] Command line interface access
-- [ ] Factory classes based on interfaces
+- [x] Factory classes based on interfaces
 - [ ] Scaffolding for service mocking (GET, POST, PUT, DELETE)
 - [ ] Generate enums from definitions
 - [ ] Generate classes from schema definitions

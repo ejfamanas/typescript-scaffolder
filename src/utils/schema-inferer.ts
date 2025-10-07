@@ -1,7 +1,12 @@
-import {InputData, jsonInputForTargetLanguage, quicktype} from 'quicktype-core';
-import {Logger} from './logger';
-import { deriveObjectName, findGloballyDuplicatedKeys, prefixDelimiter, prefixDuplicateKeys } from "./object-helpers";
-import {assertNoDuplicateKeys} from "./structure-validators";
+import { InputData, jsonInputForTargetLanguage, quicktype } from 'quicktype-core';
+import { Logger } from './logger';
+import {
+    deriveObjectName,
+    findGloballyDuplicatedKeys,
+    prefixDelimiter,
+    prefixDuplicateKeys
+} from "./object-helpers";
+import { assertNoDuplicateKeys } from "./structure-validators";
 import fs from "fs";
 import path from "path";
 
