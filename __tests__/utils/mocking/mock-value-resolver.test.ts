@@ -1,8 +1,15 @@
 import {
     generateFakerMockValue,
     generateStaticMockValue,
+    getCodeGenFakerValueForKey,
+    getRuntimeFakerValueForKey,
     getMockValueForProperty
 } from "../../../src/utils/mocking/mock-value-resolver";
+import { Logger } from "../../../src/utils/logger";
+
+jest.mock("../../../src/utils/logger", () => ({
+    Logger: {debug: jest.fn()}
+}));
 
 describe("mock-value-resolver", () => {
     describe("generateFakerMockValue", () => {
@@ -137,6 +144,119 @@ describe("mock-value-resolver", () => {
         it("should not coerce Date or primitives", () => {
             const result = getMockValueForProperty("date", "Date", localInterfaces, false);
             expect(result).toBe("new Date()");
+        });
+    });
+
+    describe("getCodeGenFakerValueForKey", () => {
+        it("should return faker.internet.email() for email-related keys", () => {
+            expect(getCodeGenFakerValueForKey("emailAddress")).toBe("faker.internet.email()");
+        });
+
+        it("should return faker.person.fullName() for name-related keys", () => {
+            expect(getCodeGenFakerValueForKey("fullName")).toBe("faker.person.fullName()");
+        });
+
+        it("should return faker.internet.url() for url-related keys", () => {
+            expect(getCodeGenFakerValueForKey("profileUrl")).toBe("faker.internet.url()");
+        });
+
+        it("should return faker.string.uuid() for id-related keys", () => {
+            expect(getCodeGenFakerValueForKey("userId")).toBe("faker.string.uuid()");
+        });
+
+        it("should return faker.phone.number() for phone-related keys", () => {
+            expect(getCodeGenFakerValueForKey("phoneNumber")).toBe("faker.phone.number()");
+        });
+
+        it("should return faker.location.streetAddress() for address-related keys", () => {
+            expect(getCodeGenFakerValueForKey("billingAddress")).toBe("faker.location.streetAddress()");
+        });
+
+        it("should return faker.location.city() for city-related keys", () => {
+            expect(getCodeGenFakerValueForKey("city")).toBe("faker.location.city()");
+        });
+
+        it("should return faker.location.country() for country-related keys", () => {
+            expect(getCodeGenFakerValueForKey("countryCode")).toBe("faker.location.country()");
+        });
+
+        it("should return faker.commerce.price() for amount/price-related keys", () => {
+            expect(getCodeGenFakerValueForKey("amountDue")).toBe("faker.commerce.price()");
+            expect(getCodeGenFakerValueForKey("totalPrice")).toBe("faker.commerce.price()");
+        });
+
+        it("should return null for unknown keys", () => {
+            expect(getCodeGenFakerValueForKey("randomField")).toBeNull();
+        });
+
+        it("should call Logger.debug each time", () => {
+            getCodeGenFakerValueForKey("emailAddress");
+            expect(Logger.debug).toHaveBeenCalledWith(
+                "getCodeGenFakerValueForKey",
+                expect.stringContaining("Getting faker value")
+            );
+        });
+    });
+
+    describe('getRuntimeFakerValueForKey', () => {
+        it('should generate a fake email', () => {
+            expect(getRuntimeFakerValueForKey('userEmail')).toMatch(/@/);
+        });
+
+        it('should generate a fake name', () => {
+            expect(typeof getRuntimeFakerValueForKey('customerName')).toBe('string');
+        });
+
+        it('should generate a fake url', () => {
+            expect(getRuntimeFakerValueForKey('profileUrl')).toMatch(/^http/);
+        });
+
+        it('should return null if no match found', () => {
+            expect(getRuntimeFakerValueForKey('somethingElse')).toBeNull();
+        });
+
+        it('should generate a fake uuid for id-related keys', () => {
+            const result = getRuntimeFakerValueForKey('userId');
+            expect(typeof result).toBe('string');
+            expect(result!.length).toBeGreaterThan(10);
+        });
+
+        it('should generate a fake phone number', () => {
+            const result = getRuntimeFakerValueForKey('contactPhone');
+            expect(typeof result).toBe('string');
+            expect(result).toMatch(/\d/);
+        });
+
+        it('should generate a fake street address', () => {
+            const result = getRuntimeFakerValueForKey('billingAddress');
+            expect(typeof result).toBe('string');
+            expect(result!.length).toBeGreaterThan(5);
+        });
+
+        it('should generate a fake city', () => {
+            const result = getRuntimeFakerValueForKey('cityName');
+            expect(typeof result).toBe('string');
+            expect(result!.length).toBeGreaterThan(2);
+        });
+
+        it('should generate a fake country', () => {
+            const result = getRuntimeFakerValueForKey('countryCode');
+            expect(typeof result).toBe('string');
+            expect(result!.length).toBeGreaterThan(2);
+        });
+
+        it('should generate a fake price for amount/price-related keys', () => {
+            const result = getRuntimeFakerValueForKey('totalAmount');
+            expect(typeof result).toBe('string');
+            expect(parseFloat(result!)).not.toBeNaN();
+        });
+
+        it('should call Logger.debug when invoked', () => {
+            getRuntimeFakerValueForKey('email');
+            expect(Logger.debug).toHaveBeenCalledWith(
+                'getRuntimeFakerValueForKey',
+                expect.stringContaining('String identified at key')
+            );
         });
     });
 });

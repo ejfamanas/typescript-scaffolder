@@ -1,5 +1,6 @@
 import { Logger } from '../logger';
-import { generatePrimitiveMock, getFakerValueForKey, handleDefaultCase } from "./mock-value-core";
+import { generatePrimitiveMock, handleDefaultCase } from "./mock-value-core";
+import { getRuntimeFakerValueForKey } from "./mock-value-resolver";
 
 /**
  * Generates a mock data sample from a type-hinted json schema
@@ -37,7 +38,7 @@ export function generateMockData(
 
             if (typeof value === 'string') {
                 Logger.debug(funcName, `Primitive type string detected at key: ${String(key)} with type hint: ${value}`);
-                autoFaked[key] = getFakerValueForKey(String(key)) ?? generatePrimitiveMock(value);
+                autoFaked[key] = getRuntimeFakerValueForKey(String(key)) ?? generatePrimitiveMock(value);
             } else {
                 autoFaked[key] = handleDefaultCase(value, String(key), arrayLength);
             }

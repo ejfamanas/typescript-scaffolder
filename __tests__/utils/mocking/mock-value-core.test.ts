@@ -1,7 +1,6 @@
 import {
     extractBaseType,
     generatePrimitiveMock,
-    getFakerValueForKey,
     handleDefaultCase, isArrayType, isDateType
 } from "../../../src/utils/mocking/mock-value-core";
 
@@ -24,24 +23,6 @@ describe('mock-value-core helper functions', () => {
 
         it('should return an "UnhandledType" string for unknown types', () => {
             expect(generatePrimitiveMock('unknown')).toBe('UnhandledType<unknown>');
-        });
-    });
-
-    describe('getFakerValueForKey', () => {
-        it('should generate a fake email', () => {
-            expect(getFakerValueForKey('userEmail')).toMatch(/@/);
-        });
-
-        it('should generate a fake name', () => {
-            expect(typeof getFakerValueForKey('customerName')).toBe('string');
-        });
-
-        it('should generate a fake url', () => {
-            expect(getFakerValueForKey('profileUrl')).toMatch(/^http/);
-        });
-
-        it('should return null if no match found', () => {
-            expect(getFakerValueForKey('somethingElse')).toBeNull();
         });
     });
 

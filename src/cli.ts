@@ -4,6 +4,7 @@ import path from "path";
 import { Logger } from "./utils/logger";
 import { generateInterfacesFromPath } from "./features/generate-interfaces";
 import { generateEnumsFromPath } from "./features/generate-enums";
+import { generateFactoriesFromPath } from "./features/generate-factories";
 import { generateEnvLoader } from "./features/generate-env-loader";
 import { generateApiClientFromFile, generateApiClientsFromPath } from "./features/api-client/generate-api-client";
 import { generateApiRegistry } from "./features/api-client/generate-api-client-registry";
@@ -38,6 +39,21 @@ program
             path.resolve(options.input),
             path.resolve(options.output),
             options.ext
+        );
+    });
+
+program
+    .command("factories")
+    .description("Generate factory classes from TypeScript interface files")
+    .requiredOption("-i, --input <dir>", "Input directory containing interface files")
+    .requiredOption("-o, --output <dir>", "Output directory for generated factories")
+    .option("--faker", "Use faker-based mock defaults", false)
+    .action(async (options) => {
+        Logger.info("cli", `Generating factories from "${options.input}" to "${options.output}" (faker=${options.faker})`);
+        await generateFactoriesFromPath(
+            path.resolve(options.input),
+            path.resolve(options.output),
+            options.faker
         );
     });
 
