@@ -1,12 +1,11 @@
 {
   "name": "typescript-scaffolder",
-  "version": "2.3.0",
+  "version": "2.3.1",
   "keywords": [
     "typescript",
     "codegen",
     "axios",
     "json",
-    "json-schema",
     "env",
     "scaffold",
     "api-client",
@@ -14,7 +13,10 @@
     "typescript-generator",
     "cli",
     "webhooks",
-    "express"
+    "express",
+    "json parser",
+    "interface generator",
+    "factory generator"
   ],
   "main": "dist/index.js",
   "types": "dist/index.d.ts",

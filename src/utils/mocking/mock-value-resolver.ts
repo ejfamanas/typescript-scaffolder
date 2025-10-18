@@ -82,6 +82,13 @@ export function generateStaticMockValue(type: string, key?: string): string {
     return "{}";
 }
 
+function normalizeUnknownType(type: string): string {
+    const lower = type.toLowerCase();
+    if (lower === "array") return "Array<any>";
+    if (lower === "object") return "Record<string, any>";
+    return type;
+}
+
 /**
  * High-level resolver — decides how to mock a property based on type,
  * whether it's a local interface, and if faker is enabled.
@@ -121,7 +128,8 @@ export function getMockValueForProperty(
         type.includes(t)
     );
     if (mockValue === "{}" && !isPrimitive) {
-        mockValue = `{} as unknown as ${type}`;
+        const normalizedType = normalizeUnknownType(type);
+        mockValue = `{} as unknown as ${normalizedType}`;
     }
 
     return mockValue;

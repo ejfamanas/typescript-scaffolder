@@ -18,6 +18,8 @@ export async function generateFactoriesFromFile(
     outputBaseDir: string,
     useFakerDefaults = false
 ): Promise<void> {
+    const funcName = "generateFactoriesFromFile"
+    Logger.debug(funcName, `Generating files for ${filePath}`)
     try {
         const interfaceName = path.basename(filePath, path.extname(filePath));
         const outputDir = path.join(outputBaseDir, path.dirname(relativePath));
@@ -47,13 +49,30 @@ export async function generateFactoriesFromFile(
 
             return `// Auto-generated factory for ${iface.name}
 export class ${iface.name}Factory {
-  static create(overrides: Partial<${iface.name}> = {}): ${iface.name} {
+  /**
+   * Builds a new ${iface.name} object with default values and optional overrides.
+   * This method only constructs the object — it does not persist or extend behavior.
+   */
+  static build(overrides: Partial<${iface.name}> = {}): ${iface.name} {
     return {
 ${defaults}
       ...overrides
     };
   }
 
+  /**
+   * Creates a new ${iface.name} instance by delegating to build().
+   * Can be extended in subclasses to introduce side effects or persistence.
+   */
+  static create(overrides: Partial<${iface.name}> = {}): ${iface.name} {
+    return this.build(overrides);
+  }
+
+  /**
+   * Generates an array of mock ${iface.name} instances.
+   * @param count - number of items to generate
+   * @param overrides - optional overrides applied to each item
+   */
   static mockList(count = 3, overrides: Partial<${iface.name}> = {}): ${iface.name}[] {
     return Array.from({ length: count }, () => this.create(overrides));
   }

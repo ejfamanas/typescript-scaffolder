@@ -19,89 +19,128 @@ const mockedWalkDirectory = walkDirectory as jest.MockedFunction<typeof walkDire
 const mockLogger = Logger as jest.Mocked<typeof Logger>;
 
 describe("generate-factories", () => {
-  const fakeFilePath = "/input/interfaces/User.ts";
-  const fakeRelativePath = "User.ts";
-  const fakeOutputDir = "/output/factories";
-  const fakeOutputFile = "/output/factories/UserFactory.ts";
+    const fakeFilePath = "/input/interfaces/User.ts";
+    const fakeRelativePath = "User.ts";
+    const fakeOutputDir = "/output/factories";
+    const fakeOutputFile = "/output/factories/UserFactory.ts";
 
-  beforeEach(() => {
-    jest.clearAllMocks();
-  });
-
-  describe("generateFactoriesFromFile", () => {
-    it("should generate a factory class and write to file", async () => {
-      mockedExtractInterfaces.mockReturnValue([
-        { name: "User", properties: [{ name: "id", type: "string", optional: true }] },
-      ]);
-      mockedGetMockValue.mockReturnValue('"example_value"');
-
-      await generateFactoriesFromFile(fakeFilePath, fakeRelativePath, fakeOutputDir);
-
-      expect(mockedFs.ensureDir).toHaveBeenCalledWith(expect.stringContaining(fakeOutputDir));
-      expect(mockedFs.writeFile).toHaveBeenCalledTimes(1);
-
-      const content = mockedFs.writeFile.mock.calls[0][1];
-      expect(content).toContain("export class UserFactory");
-      expect(content).toContain('id: "example_value"');
-      expect(content).toContain('import { User }');
+    beforeEach(() => {
+        jest.clearAllMocks();
     });
 
-    it("should propagate useFakerDefaults flag correctly", async () => {
-      mockedExtractInterfaces.mockReturnValue([
-        { name: "User", properties: [{ name: "email", type: "string", optional: true }] },
-      ]);
+    describe("generateFactoriesFromFile", () => {
+        it("should generate a factory class and write to file", async () => {
+            mockedExtractInterfaces.mockReturnValue([
+                {name: "User", properties: [{name: "id", type: "string", optional: true}]},
+            ]);
+            mockedGetMockValue.mockReturnValue('"example_value"');
 
-      await generateFactoriesFromFile(fakeFilePath, fakeRelativePath, fakeOutputDir, true);
-      expect(mockedGetMockValue).toHaveBeenCalledWith("email", "string", expect.any(Set), true);
+            await generateFactoriesFromFile(fakeFilePath, fakeRelativePath, fakeOutputDir);
+
+            expect(mockedFs.ensureDir).toHaveBeenCalledWith(expect.stringContaining(fakeOutputDir));
+            expect(mockedFs.writeFile).toHaveBeenCalledTimes(1);
+
+            const content = mockedFs.writeFile.mock.calls[0][1];
+            expect(content).toContain("export class UserFactory");
+            expect(content).toContain('id: "example_value"');
+            expect(content).toContain('import { User }');
+        });
+
+        it("should propagate useFakerDefaults flag correctly", async () => {
+            mockedExtractInterfaces.mockReturnValue([
+                {name: "User", properties: [{name: "email", type: "string", optional: true}]},
+            ]);
+
+            await generateFactoriesFromFile(fakeFilePath, fakeRelativePath, fakeOutputDir, true);
+            expect(mockedGetMockValue).toHaveBeenCalledWith("email", "string", expect.any(Set), true);
+        });
+
+        it("should handle multiple interfaces in one file", async () => {
+            mockedExtractInterfaces.mockReturnValue([
+                {name: "User", properties: [{name: "id", type: "string", optional: false}]},
+                {name: "Address", properties: [{name: "city", type: "string", optional: false}]},
+            ]);
+            mockedGetMockValue.mockReturnValue('"mock_value"');
+
+            await generateFactoriesFromFile(fakeFilePath, fakeRelativePath, fakeOutputDir);
+            const content = mockedFs.writeFile.mock.calls[0][1];
+            expect(content).toContain("UserFactory");
+            expect(content).toContain("AddressFactory");
+        });
+
+        it("should log error and throw on write failure", async () => {
+            mockedExtractInterfaces.mockReturnValue([{name: "User", properties: []}]);
+            mockedFs.writeFile.mockRejectedValueOnce(new Error("write failure") as never);
+
+            await expect(generateFactoriesFromFile(fakeFilePath, fakeRelativePath, fakeOutputDir)).rejects.toThrow("write failure");
+            expect(mockLogger.error).toHaveBeenCalled();
+        });
+
+        it("should include build() and create() dual pattern in factory output", async () => {
+            mockedExtractInterfaces.mockReturnValue([
+                { name: "User", properties: [{ name: "id", type: "string" }] },
+            ]);
+            mockedGetMockValue.mockReturnValue('"mock_id"');
+
+            await generateFactoriesFromFile(fakeFilePath, fakeRelativePath, fakeOutputDir);
+
+            const content = mockedFs.writeFile.mock.calls[0][1];
+            expect(content).toContain("static build");
+            expect(content).toContain("static create");
+            expect(content).toContain("return this.build(overrides)");
+        });
+
+        it("should correctly coerce referenced interface types", async () => {
+            mockedExtractInterfaces.mockReturnValue([
+                { name: "Order", properties: [{ name: "user", type: "User" }] },
+            ]);
+            mockedGetMockValue.mockReturnValue("{} as unknown as User");
+
+            await generateFactoriesFromFile(fakeFilePath, fakeRelativePath, fakeOutputDir);
+            const content = mockedFs.writeFile.mock.calls[0][1];
+
+            expect(content).toContain("{} as unknown as User");
+        });
+
+        it("should normalize lowercase array types to Array<any>", async () => {
+            mockedExtractInterfaces.mockReturnValue([
+                { name: "User", properties: [{ name: "roles", type: "array" }] },
+            ]);
+            mockedGetMockValue.mockReturnValue("{} as unknown as Array<any>");
+
+            await generateFactoriesFromFile(fakeFilePath, fakeRelativePath, fakeOutputDir);
+            const content = mockedFs.writeFile.mock.calls[0][1];
+
+            expect(content).toContain("Array<any>");
+            expect(content).not.toContain("as unknown as array");
+        });
     });
 
-    it("should handle multiple interfaces in one file", async () => {
-      mockedExtractInterfaces.mockReturnValue([
-        { name: "User", properties: [{ name: "id", type: "string", optional: false }] },
-        { name: "Address", properties: [{ name: "city", type: "string", optional: false }] },
-      ]);
-      mockedGetMockValue.mockReturnValue('"mock_value"');
+    describe("generateFactoriesFromPath", () => {
+        it("should call generateFactoriesFromFile for each file found", async () => {
+            mockedEnsureDir.mockResolvedValue("" as never);
+            mockedWalkDirectory.mockImplementation((inputDir, callback) => {
+                callback("fake/input/interfaces/User.ts", "User.ts");
+                callback("fake/input/interfaces/Address.ts", "Address.ts");
+            });
 
-      await generateFactoriesFromFile(fakeFilePath, fakeRelativePath, fakeOutputDir);
-      const content = mockedFs.writeFile.mock.calls[0][1];
-      expect(content).toContain("UserFactory");
-      expect(content).toContain("AddressFactory");
+            const featuresModule = require("../../src/features/generate-factories");
+            const spy = jest.spyOn(featuresModule, "generateFactoriesFromFile").mockResolvedValue(undefined);
+
+            // TODO: this call keeps breaking for some reason
+            // await generateFactoriesFromPath("fake/input/interfaces", "fake/output/factories");
+
+            expect(spy).toHaveBeenCalledTimes(0); // should be 2
+            // TODO: fix when we figure out whats wrong here
+            // expect(spy).toHaveBeenCalledWith(expect.stringContaining("User.ts"), expect.any(String), expect.any(String), false);
+        });
+
+        it("should ensure output directory and log start/end", async () => {
+            mockedEnsureDir.mockResolvedValue("" as never);
+            await generateFactoriesFromPath("fake/input/interfaces", "fake/output/factories");
+            expect(mockedEnsureDir).toHaveBeenCalledWith("fake/output/factories");
+            expect(mockLogger.debug).toHaveBeenCalledWith("generateFactoriesFromPath", expect.stringContaining("Walking directory for factories"));
+            expect(mockLogger.debug).toHaveBeenCalledWith("generateFactoriesFromPath", expect.stringContaining("Factory generation complete"));
+        });
     });
-
-    it("should log error and throw on write failure", async () => {
-      mockedExtractInterfaces.mockReturnValue([{ name: "User", properties: [] }]);
-      mockedFs.writeFile.mockRejectedValueOnce(new Error("write failure") as never);
-
-      await expect(generateFactoriesFromFile(fakeFilePath, fakeRelativePath, fakeOutputDir)).rejects.toThrow("write failure");
-      expect(mockLogger.error).toHaveBeenCalled();
-    });
-  });
-
-  describe("generateFactoriesFromPath", () => {
-    it("should call generateFactoriesFromFile for each file found", async () => {
-      mockedEnsureDir.mockResolvedValue("" as never);
-      mockedWalkDirectory.mockImplementation((inputDir, callback) => {
-        callback("fake/input/interfaces/User.ts", "User.ts");
-        callback("fake/input/interfaces/Address.ts", "Address.ts");
-      });
-
-      const featuresModule = require("../../src/features/generate-factories");
-      const spy = jest.spyOn(featuresModule, "generateFactoriesFromFile").mockResolvedValue(undefined);
-
-      // TODO: this call keeps breaking for some reason
-      // await generateFactoriesFromPath("fake/input/interfaces", "fake/output/factories");
-
-      expect(spy).toHaveBeenCalledTimes(0); // should be 2
-      // TODO: fix when we figure out whats wrong here
-      // expect(spy).toHaveBeenCalledWith(expect.stringContaining("User.ts"), expect.any(String), expect.any(String), false);
-    });
-
-    it("should ensure output directory and log start/end", async () => {
-      mockedEnsureDir.mockResolvedValue("" as never);
-      await generateFactoriesFromPath("fake/input/interfaces", "fake/output/factories");
-      expect(mockedEnsureDir).toHaveBeenCalledWith("fake/output/factories");
-      expect(mockLogger.debug).toHaveBeenCalledWith("generateFactoriesFromPath", expect.stringContaining("Walking directory for factories"));
-      expect(mockLogger.debug).toHaveBeenCalledWith("generateFactoriesFromPath", expect.stringContaining("Factory generation complete"));
-    });
-  });
 });
