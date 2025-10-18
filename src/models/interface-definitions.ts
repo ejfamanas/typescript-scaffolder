@@ -12,7 +12,7 @@ export interface ParsedProperty {
     /** The TypeScript type of the property (e.g., 'string', 'number'). */
     type: string;
     /** Whether the property is marked optional ('?') in the interface. */
-    optional: boolean;
+    optional?: boolean;
     /** Any JSDoc comment associated with the property. */
     jsDoc?: string;
     /** Literal values if the property is a union of literals. */
