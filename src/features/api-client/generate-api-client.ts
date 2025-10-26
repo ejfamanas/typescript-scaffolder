@@ -10,12 +10,12 @@ import {
     constructUrlPath,
     determineHasBody,
     generateClientAction,
-    generateInlineAuthHeader
 } from '../../utils/client-constructors';
 import { Logger } from '../../utils/logger';
 import { buildRetryWrapperName } from "../../utils/retry-constructors";
 import { RetryEndpointMeta } from "models/retry-definitions";
 import { generateRetryHelperForApiFile } from "./generate-retry-helper";
+import { generateAuthHelperForApiFile } from "./generate-auth-helper";
 
 export function generateApiClientFunction(
     baseUrl: string,
@@ -58,6 +58,17 @@ export function generateApiClientFunction(
     // Imports
     addClientRequiredImports(sourceFile, outputFilePath, interfaceInputDir, requestSchema, responseSchema!, hasBody);
 
+    if (config.authType && config.authType !== "none") {
+        const authHelperModule = `./${fileName}.authHelper`;
+        const existingAuthImport = sourceFile.getImportDeclarations().find(d => d.getModuleSpecifierValue() === authHelperModule);
+        if (!existingAuthImport) {
+            sourceFile.addImportDeclaration({
+                namedImports: [{ name: "getAuthHeaders" }],
+                moduleSpecifier: authHelperModule,
+            });
+        }
+    }
+
     if (useRetry) {
         const helperModule = `./${fileName}.requestWithRetry`;
         const wrapperSymbol = buildRetryWrapperName(functionName);
@@ -65,11 +76,11 @@ export function generateApiClientFunction(
         const existing = sourceFile.getImportDeclarations().find(d => d.getModuleSpecifierValue() === helperModule);
         if (!existing) {
             sourceFile.addImportDeclaration({
-                namedImports: [{ name: wrapperSymbol }],
+                namedImports: [{name: wrapperSymbol}],
                 moduleSpecifier: helperModule,
             });
         } else if (!existing.getNamedImports().some(n => n.getName() === wrapperSymbol)) {
-            existing.addNamedImports([{ name: wrapperSymbol }]);
+            existing.addNamedImports([{name: wrapperSymbol}]);
         }
     }
 
@@ -96,7 +107,7 @@ export function generateApiClientFunction(
         returnType: `Promise<${responseSchema}>`,
         isAsync: true,
         statements: useRetry ? `
-      const authHeaders = ${generateInlineAuthHeader(config.authType, config.credentials)};
+      const authHeaders = getAuthHeaders();
       const response = await ${buildRetryWrapperName(functionName)}(
         () => axios.${method}(
           \`${baseUrl}${urlPath}\`,
@@ -118,7 +129,7 @@ export function generateApiClientFunction(
       );
       return response.data;
     ` : `
-      const authHeaders = ${generateInlineAuthHeader(config.authType, config.credentials)};
+      const authHeaders = getAuthHeaders();
       const response = await axios.${method}(
         \`${baseUrl}${urlPath}\`,
         ${hasBody ? 'body,' : ''}
@@ -175,8 +186,17 @@ export async function generateApiClientFromFile(configPath: string, interfacesDi
         }
         responseModule = responseModule.replace(/\.ts$/, '');
         const list = metasByFile.get(fileName) ?? [];
-        list.push({ functionName, responseType, responseModule });
+        list.push({functionName, responseType, responseModule});
         metasByFile.set(fileName, list);
+
+        if (config.authType && config.authType !== "none") {
+            await generateAuthHelperForApiFile(
+                outputDir,
+                fileName,
+                config.authType,
+                config.credentials
+            );
+        }
 
         generateApiClientFunction(
             config.baseUrl,

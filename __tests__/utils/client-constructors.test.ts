@@ -1,7 +1,6 @@
 import * as path from "path";
 import fs from "fs";
 import {
-    generateInlineAuthHeader,
     generateClientAction,
     determineHasBody,
     constructUrlPath,
@@ -13,35 +12,6 @@ import {
 } from '../../src/utils/client-constructors';
 import {Endpoint} from "../../src";
 import {SourceFile} from "ts-morph";
-
-describe('generateInlineAuthHeader', () => {
-    it('should generate basic auth header', () => {
-        const result = generateInlineAuthHeader('basic', {
-            username: 'testUser',
-            password: 'testPass',
-        });
-        expect(result).toContain('Authorization');
-        expect(result).toContain('Basic');
-    });
-
-    it('should generate API key header', () => {
-        const result = generateInlineAuthHeader('apikey', {
-            apiKeyName: 'x-api-key',
-            apiKeyValue: 'secret',
-        });
-        expect(result).toBe('{ "x-api-key": "secret" }');
-    });
-
-    it('should return empty object for authType none', () => {
-        const result = generateInlineAuthHeader('none');
-        expect(result).toBe('{}');
-    });
-
-    it('should return empty object if credentials are missing', () => {
-        const result = generateInlineAuthHeader('apikey');
-        expect(result).toBe('{}');
-    });
-});
 
 describe('generateClientAction', () => {
     it('should generate filename and functionName from GET endpoint', () => {

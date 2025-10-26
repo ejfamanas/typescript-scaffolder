@@ -37,6 +37,9 @@ export {
     generateRetryHelperForApiFile
 } from "./features/api-client/generate-retry-helper";
 export {
+    generateAuthHelperForApiFile
+} from "./features/api-client/generate-auth-helper";
+export {
     generateSequenceRunner,
     generateSequenceFromFile,
     generateSequencesFromPath

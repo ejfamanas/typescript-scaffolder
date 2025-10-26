@@ -1,7 +1,7 @@
 # TypeScript Scaffolder
 
 ![npm version](https://img.shields.io/npm/v/typescript-scaffolder)
-### Unit Test Coverage: 97.35%
+### Unit Test Coverage: 97.38%
 
 `typescript-scaffolder` is a utility that creates TypeScript interfaces, enums, and config accessors from structured inputs like JSON, .env files, or interface definitions.
 Ideal for API integrations that expose schema via JSON — just drop the file in and generate clean, typed code for full-stack use. You can also integrate this into CI pipelines or dev scripts to keep generated types in sync with your schemas.
@@ -208,6 +208,9 @@ export interface EndpointAuthConfig {
 export interface EndpointClientConfigFile extends EndpointConfigType, EndpointAuthConfig {
 }
 ```
+NOTE: The credentials block is used to populate fallback values. <br>
+The system will always try to prioritise environment variables by creating the object reference in the auth helper. <br>
+
 As an example, if you have interfaces generated from the following JSON files:
 ```
 GET_RES_people.json // defines an array
@@ -274,7 +277,7 @@ import { POST_REQ_create_person } from "../../interfaces/source-charlie/POST_REQ
 
 export async function GET_ALL_person(headers?: Record<string, string>): Promise<GET_RES_people> {
 
-          const authHeaders = { "x-api-key": "test-1234" };
+          const authHeaders = getAuthHeaders();
           const response = await axios.get(
             `https://api.example.com/people`,
             
@@ -291,7 +294,7 @@ export async function GET_ALL_person(headers?: Record<string, string>): Promise<
 
 export async function GET_person(id: string, headers?: Record<string, string>): Promise<GET_RES_person> {
 
-          const authHeaders = { "x-api-key": "test-1234" };
+          const authHeaders = getAuthHeaders();
           const response = await axios.get(
             `https://api.example.com/people/${id}`,
             
@@ -308,7 +311,7 @@ export async function GET_person(id: string, headers?: Record<string, string>): 
 
 export async function POST_person(body: POST_REQ_create_person, headers?: Record<string, string>): Promise<GET_RES_person> {
 
-          const authHeaders = { "x-api-key": "test-1234" };
+          const authHeaders = getAuthHeaders();
           const response = await axios.post(
             `https://api.example.com/people`,
             body,
@@ -325,7 +328,7 @@ export async function POST_person(body: POST_REQ_create_person, headers?: Record
 
 export async function PUT_person(id: string, body: POST_REQ_create_person, headers?: Record<string, string>): Promise<GET_RES_person> {
 
-          const authHeaders = { "x-api-key": "test-1234" };
+          const authHeaders = getAuthHeaders();
           const response = await axios.put(
             `https://api.example.com/people/${id}`,
             body,
@@ -342,7 +345,7 @@ export async function PUT_person(id: string, body: POST_REQ_create_person, heade
 
 export async function DELETE_person(id: string, headers?: Record<string, string>): Promise<GET_RES_person> {
 
-          const authHeaders = { "x-api-key": "test-1234" };
+          const authHeaders = getAuthHeaders();
           const response = await axios.delete(
             `https://api.example.com/people/${id}`,
             
@@ -355,6 +358,14 @@ export async function DELETE_person(id: string, headers?: Record<string, string>
           );
           return response.data;
         
+}
+
+// person_api.authHelper.ts
+export function getAuthHeaders() {
+  const apiKey = process.env["PERSON_API_APIKEY"] ?? "test-1234";
+  return {
+    "x-api-key": apiKey
+  };
 }
 ```
 
