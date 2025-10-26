@@ -2,6 +2,7 @@ import * as path from 'path';
 import * as os from 'os';
 import fs from "fs";
 import {
+    AuthType,
     Endpoint,
     EndpointClientConfigFile,
     generateApiClientFromFile,
@@ -27,6 +28,65 @@ describe('generate-api-client', () => {
     };
 
     describe('generateApiClientFunction', () => {
+        describe('auth header generation', () => {
+            const baseArgs: [
+                string, // baseUrl
+                string, // fileBaseName
+                string, // functionName
+                Endpoint, // endpoint
+                string, // interfaceDir
+                string, // outputDir
+                string  // overwriteFlag
+            ] = [
+                'https://api.example.com',
+                'user_api',
+                'GET_user',
+                sampleEndpoint,
+                '../interfaces',
+                './output',
+                'overwrite'
+            ];
+
+            it('includes getAuthHeaders import and call when authType is "apikey"', async () => {
+                const spy = jest.spyOn(fs, 'writeFileSync');
+                await generateApiClientFunction(
+                    baseArgs[0],
+                    baseArgs[1],
+                    baseArgs[2],
+                    baseArgs[3],
+                    {
+                        authType: 'apikey',
+                        credentials: {
+                            apiKeyName: 'x-api-key',
+                            apiKeyValue: 'test-key',
+                        }
+                    },
+                    baseArgs[5],
+                    baseArgs[6],
+                );
+                const writtenContent = spy.mock.calls[0][1] as string;
+                expect(writtenContent).toContain('const authHeaders = getAuthHeaders();');
+                expect(writtenContent).toMatch(/import\s*\{\s*getAuthHeaders\s*\}/);
+            });
+
+            it('uses empty authHeaders object and does not import getAuthHeaders when authType is "none"', async () => {
+                const spy = jest.spyOn(fs, 'writeFileSync');
+                await generateApiClientFunction(
+                    baseArgs[0],
+                    baseArgs[1],
+                    baseArgs[2],
+                    baseArgs[3],
+                    {
+                        authType: 'none'
+                    },
+                    baseArgs[5],
+                    baseArgs[6],
+                );
+                const writtenContent = spy.mock.calls[0][1] as string;
+                expect(writtenContent).toContain('const authHeaders = {};');
+                expect(writtenContent).not.toMatch(/getAuthHeaders/);
+            });
+        });
         it('generates function code and appends to source file', async () => {
             const spy = jest.spyOn(fs, 'writeFileSync');
             await generateApiClientFunction(
