@@ -64,6 +64,7 @@ export interface EndpointAuthConfig {
 
 /**
  * Credential details for authentication, varying by authType.
+ * Use this block to provide FALLBACK values in the absence of environment variables
  */
 export interface EndpointAuthCredentials {
 	/** Header name to use for authentication. */

@@ -40,11 +40,7 @@
     }
 
   ],
-  "authType": "apikey",
-  "credentials": {
-    "apiKeyName": "x-api-key",
-    "apiKeyValue": "test-1234"
-  },
+  "authType": "basic",
   "retry": {
     "enabled": true,
     "maxAttempts": 3,
