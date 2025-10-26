@@ -107,7 +107,7 @@ export function generateApiClientFunction(
         returnType: `Promise<${responseSchema}>`,
         isAsync: true,
         statements: useRetry ? `
-      const authHeaders = getAuthHeaders();
+      const authHeaders = ${config.authType && config.authType !== "none" ? "getAuthHeaders()" : "{}"};
       const response = await ${buildRetryWrapperName(functionName)}(
         () => axios.${method}(
           \`${baseUrl}${urlPath}\`,
@@ -129,7 +129,7 @@ export function generateApiClientFunction(
       );
       return response.data;
     ` : `
-      const authHeaders = getAuthHeaders();
+      const authHeaders = ${config.authType && config.authType !== "none" ? "getAuthHeaders()" : "{}"};
       const response = await axios.${method}(
         \`${baseUrl}${urlPath}\`,
         ${hasBody ? 'body,' : ''}
