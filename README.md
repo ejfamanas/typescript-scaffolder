@@ -8,7 +8,6 @@ Ideal for API integrations that expose schema via JSON — just drop the file in
 
 ## Features
 - Generate TypeScript interfaces from JSON or schemas
-- Generate JSON schemas from TypeScript interfaces
 - Typed `.env` accessor generator
 - Class factories generated from interfaces
 - Auto-create enums from interface keys
