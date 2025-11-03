@@ -149,6 +149,41 @@ program
     });
 
 program
+  .command("full")
+  .description("Run full scaffold pipeline from raw JSON and env file")
+  .requiredOption("--json <dir>", "Directory of input JSON files for interface generation")
+  .requiredOption("--env <file>", "Path to .env file")
+  .requiredOption("--output <dir>", "Root output directory (e.g. src/codegen)")
+  .action(async (options) => {
+    const jsonDir = path.resolve(options.json);
+    const envFile = path.resolve(options.env);
+    const outputRoot = path.resolve(options.output);
+
+    const interfaceOutput = path.resolve(outputRoot, "interfaces");
+    const enumOutput = path.resolve(outputRoot, "enums");
+    const factoryOutput = path.resolve(outputRoot, "factories");
+    const clientOutput = path.resolve(outputRoot, "apis");
+    const webhookOutput = path.resolve(outputRoot, "webhooks");
+    const envOutputDir = path.resolve(outputRoot, "config");
+    const envOutputFile = "env-config.ts";
+    const endpointConfig = path.resolve("config/endpoint-configs");
+    const sequenceConfig = path.resolve("config/sequence-configs");
+    const webhookConfig = path.resolve("config/webhook-configs");
+
+    Logger.info("cli", `🔁 Starting full scaffold pipeline from "${jsonDir}" → "${outputRoot}"`);
+
+    generateEnvLoader(envFile, envOutputDir, envOutputFile);
+    await generateInterfacesFromPath(jsonDir, interfaceOutput);
+    await generateEnumsFromPath(interfaceOutput, enumOutput);
+    await generateFactoriesFromPath(interfaceOutput, factoryOutput);
+    await generateApiClientsFromPath(endpointConfig, interfaceOutput, clientOutput);
+    await generateApiRegistry(clientOutput);
+    await generateSequencesFromPath(sequenceConfig, clientOutput);
+    await generateWebhookAppRegistry(webhookOutput);
+    await generateWebhookAppFromPath(webhookConfig, interfaceOutput, webhookOutput);
+  });
+
+program
     .command("help")
     .description("Display help information")
     .action(() => {

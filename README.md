@@ -1,568 +1,94 @@
 # TypeScript Scaffolder
 
 ![npm version](https://img.shields.io/npm/v/typescript-scaffolder)
-### Unit Test Coverage: 97.38%
+![coverage](https://img.shields.io/badge/coverage-97.38%25-green)
 
-`typescript-scaffolder` is a utility that creates TypeScript interfaces, enums, and config accessors from structured inputs like JSON, .env files, or interface definitions.
-Ideal for API integrations that expose schema via JSON — just drop the file in and generate clean, typed code for full-stack use. You can also integrate this into CI pipelines or dev scripts to keep generated types in sync with your schemas.
+A CLI and programmatic toolchain for generating fully-typed TypeScript code from raw JSON, schemas, and declarative configs.
 
-## Features
-- Generate TypeScript interfaces from JSON or schemas
-- Typed `.env` accessor generator
-- Class factories generated from interfaces
-- Auto-create enums from interface keys
-- Typed axios client api generation
-- Typed client api helpers
-- Command sequence generator
-- Typed express server and client webhook generation
+---
+### 🧭 About the Project
 
-This README only briefly covers the features available. To view the full documentation, please visit <br>
-https://eric-famanas.super.site/the-typescript-scaffolder
+**TypeScript Scaffolder** helps engineers, integrators, and platform teams turn raw JSON or schema definitions into **fully‑typed, production‑ready TypeScript scaffolds** — without boilerplate, code generators, or SaaS lock‑in.
 
-## Table of Contents
-- [Installation](#installation)
-- [Interface Generation](#interface-generation)
-- [Environment Variable Interface](#environment-variable-interface)
-- [Client Api Generation](#api-client-generation-from-interface)
-- [Webhook Server Generation](#webhook-Server-generation-from-interface)
-- [Usage](#usage)
-- [CLI Usage Examples](#cli-usage-examples)
-- [Roadmap](#roadmap)
-- [Reporting Bugs](#reporting-bugs)
-- [Contributing](#contributing)
+It’s designed for:
 
-### Interface Generation
-Generate TypeScript interfaces automatically from JSON schemas or raw JSON data.
+- **Integration engineers** who build and maintain internal or customer‑facing API connectors
+- **Full‑stack developers** who want type‑safe clients and schemas derived directly from real data
+- **Automation and DevOps teams** embedding codegen pipelines into CI/CD workflows
 
-- Infers full TypeScript interfaces using [quicktype](https://github.com/quicktype/quicktype)
-- Supports nested objects and arrays
-- Preserves directory structure from i.e. `schemas/<folder_name>` into `codegen/interfaces/<folder_name>`
-- Automatically creates output folders if they don't exist
+#### 🧩 What makes it different
 
-This file:
-```
-{
-  "id": "u_123",
-  "email": "alice@example.com",
-  "age": 29,
-  "isActive": true,
-  "roles": ["admin", "editor"],
-  "preferences": {
-    "newsletter": true,
-    "theme": "dark"
-  },
-  "lastLogin": "2024-12-01T10:15:30Z"
-}
-```
-Will give you:
-```
-export interface User {
-    id:          string;
-    email:       string;
-    age:         number;
-    isActive:    boolean;
-    roles:       string[];
-    preferences: Preferences;
-    lastLogin:   Date;
-}
+- **Versionable by design** – every scaffolded artifact is plain TypeScript, not a black‑box runtime
+- **Deterministic output** – predictable folder and file structure across runs and environments
+- **Zero vendor lock‑in** – generated code lives in your repo, not behind an API
+- **Composable architecture** – each generator (interfaces, clients, webhooks, etc.) can run standalone or as part of a single `full` pipeline
 
-export interface Preferences {
-    newsletter: boolean;
-    theme:      string;
-}
-```
-It will also format out nested objects, where this file
-```
-{
-  "records": [
-    {
-      "userID": 101,
-      "sessionKey": "abc123",
-      "events": [
-        {
-          "eventID": 1,
-          "status": "ok",
-          "code": 200,
-          "message": "Success"
-        }
-      ],
-      "status": "ok",
-      "code": 200,
-      "message": "Success"
-    }
-  ],
-  "status": "ok",
-  "code": 200,
-  "message": "Success"
-}
-```
-Will give you:
-```
-export interface ApiResponse {
-  records:    Record[];
-  status:     string;
-  code:       number;
-  message:    string;
-}
-
-export interface Record {
-  userID:      number;
-  sessionKey:  string;
-  events:      Event[];
-  status:      string;
-  code:        number;
-  message:     string;
-}
-
-export interface Event {
-  eventID:     number;
-  status:      string;
-  code:        number;
-  message:     string;
-}
-```
-
-### Environment Variable Interface
-- Reduces need for calling dotenv.config() from multiple areas
-- Creates an environment variable handler
-- Automatically generated based on keys declared in .env file
-- Automatically creates default values based on declared in .env file
-- Supports filenames such as .env.local or .env.prod as well
-
-This file:
-```
-SCHEMAS_DIR="schemas"
-OUTPUT_DIR_ROOT="codegen"
-INTERFACES_ROOT="interfaces"
-```
-
-Will give you:
-```
-export class EnvConfig {
-    static readonly SCHEMAS_DIR: string = process.env.SCHEMAS_DIR ?? '"schemas"';
-    static readonly OUTPUT_DIR_ROOT: string = process.env.OUTPUT_DIR_ROOT ?? '"codegen"';
-    static readonly INTERFACES_ROOT: string = process.env.INTERFACES_ROOT ?? '"interfaces"';
-}
-
-export enum EnvKeys {
-    SCHEMAS_DIR = "SCHEMAS_DIR",
-    OUTPUT_DIR_ROOT = "OUTPUT_DIR_ROOT",
-    INTERFACES_ROOT = "INTERFACES_ROOT"
-}
-```
-
-### API Client generation from interface
-Generate TypeScript `GET_ALL, GET, POST, PUT, DELETE` REST Api client based on a configuration file 
-that uses referenced interfaces for typing. 
-
-### Directory Structure Notes
-
-When using `generateApiClientsFromPath`, follow this pattern for best results:
-
-- Config files should be stored in a **flat** folder structure (e.g., `config/endpoint-configs`)
-- Generated interfaces can be stored in a **parent folder with subdirectories** to reflect source groupings (e.g., `codegen/interfaces/source-a`, `codegen/interfaces/source-b`)
-- The output directory (e.g., `codegen/apis`) will **mirror** the structure of the interfaces directory
-- The names specified in the api config file must match the interface file name.
-
-For example, given:
-- Interface input input: `codegen/interfaces/source-charlie/GET_RES_users.ts`
-- Config file: `config/endpoint-configs/users.json`
-- Config responseSchema value: `GET_RES_users`
-- Output file: `codegen/apis/source-charlie/USESR_api.ts`
-
-The following interface is used to define the api config
-
-```
-export type Method = 'GET' | 'POST' | 'PUT' | 'DELETE'
-export type AuthType = 'basic' | 'apikey' | 'none'
-
-export interface Endpoint {
-	method: Method;
-	path: string;
-	objectName: string;
-	operationName?: string;
-	pathParams?: string[];
-	queryParams?: string[];
-	headers?: Record<string, string>;
-
-	requestSchema?: string;
-	responseSchema: string;
-}
-
-export type EndpointConfigType = {
-	baseUrl: string
-	endpoints: Endpoint[]
-};
-
-export interface EndpointAuthConfig {
-	authType: AuthType;
-	credentials?: {
-		username?: string;
-		password?: string;
-		apiKeyName?: string;
-		apiKeyValue?: string;
-	};
-}
-
-export interface EndpointClientConfigFile extends EndpointConfigType, EndpointAuthConfig {
-}
-```
-NOTE: The credentials block is used to populate fallback values. <br>
-The system will always try to prioritise environment variables by creating the object reference in the auth helper. <br>
-
-As an example, if you have interfaces generated from the following JSON files:
-```
-GET_RES_people.json // defines an array
-GET_RES_person.json // defines a single object
-POST_REQ_create_person.json // defines a single object for creation
-```
-And you define your JSON config as below:
-```
-{
-  "baseUrl": "https://api.example.com",
-  "endpoints": [
-    {
-      "method": "GET",
-      "path": "/people",
-      "responseSchema": "GET_RES_people",
-      "pathParams": [],
-      "objectName": "person"
-    },
-    {
-      "method": "GET",
-      "path": "/people/:id",
-      "responseSchema": "GET_RES_person",
-      "pathParams": ["id"],
-      "objectName": "person"
-    },
-    {
-      "method": "POST",
-      "path": "/people",
-      "requestSchema": "POST_REQ_create_person",
-      "responseSchema": "GET_RES_person",
-      "pathParams": [],
-      "objectName": "person"
-    },
-    {
-      "method": "PUT",
-      "path": "/people/:id",
-      "requestSchema": "POST_REQ_create_person",
-      "responseSchema": "GET_RES_person",
-      "pathParams": ["id"],
-      "objectName": "person"
-    },
-    {
-      "method": "DELETE",
-      "path": "/people/:id",
-      "responseSchema": "GET_RES_person",
-      "pathParams": ["id"],
-      "objectName": "person"
-    }
-
-  ],
-  "authType": "apikey",
-  "credentials": {
-    "apiKeyName": "x-api-key",
-    "apiKeyValue": "test-1234"
-  }
-}
-```
-The system will produce a file called person_api.ts
-```
-import { GET_RES_people } from "../../interfaces/source-charlie/GET_RES_people";
-import axios from "axios";
-import { GET_RES_person } from "../../interfaces/source-charlie/GET_RES_person";
-import { POST_REQ_create_person } from "../../interfaces/source-charlie/POST_REQ_create_person";
-
-export async function GET_ALL_person(headers?: Record<string, string>): Promise<GET_RES_people> {
-
-          const authHeaders = getAuthHeaders();
-          const response = await axios.get(
-            `https://api.example.com/people`,
-            
-            {
-              headers: {
-                ...authHeaders,
-                ...headers,
-              },
-            }
-          );
-          return response.data;
-        
-}
-
-export async function GET_person(id: string, headers?: Record<string, string>): Promise<GET_RES_person> {
-
-          const authHeaders = getAuthHeaders();
-          const response = await axios.get(
-            `https://api.example.com/people/${id}`,
-            
-            {
-              headers: {
-                ...authHeaders,
-                ...headers,
-              },
-            }
-          );
-          return response.data;
-        
-}
-
-export async function POST_person(body: POST_REQ_create_person, headers?: Record<string, string>): Promise<GET_RES_person> {
-
-          const authHeaders = getAuthHeaders();
-          const response = await axios.post(
-            `https://api.example.com/people`,
-            body,
-            {
-              headers: {
-                ...authHeaders,
-                ...headers,
-              },
-            }
-          );
-          return response.data;
-        
-}
-
-export async function PUT_person(id: string, body: POST_REQ_create_person, headers?: Record<string, string>): Promise<GET_RES_person> {
-
-          const authHeaders = getAuthHeaders();
-          const response = await axios.put(
-            `https://api.example.com/people/${id}`,
-            body,
-            {
-              headers: {
-                ...authHeaders,
-                ...headers,
-              },
-            }
-          );
-          return response.data;
-        
-}
-
-export async function DELETE_person(id: string, headers?: Record<string, string>): Promise<GET_RES_person> {
-
-          const authHeaders = getAuthHeaders();
-          const response = await axios.delete(
-            `https://api.example.com/people/${id}`,
-            
-            {
-              headers: {
-                ...authHeaders,
-                ...headers,
-              },
-            }
-          );
-          return response.data;
-        
-}
-
-// person_api.authHelper.ts
-export function getAuthHeaders() {
-  const apiKey = process.env["PERSON_API_APIKEY"] ?? "test-1234";
-  return {
-    "x-api-key": apiKey
-  };
-}
-```
-
-### Webhook Server Generation from interface
-When using `generateWebhookAppFromPath`, follow this pattern for best results:
-
-- Config files should be stored in a **flat** folder structure (e.g., `config/webhook-configs`)
-- Generated interfaces can be stored in a **parent folder with subdirectories** to reflect source groupings (e.g., `codegen/interfaces/source-a`, `codegen/interfaces/source-b`)
-- The output directory (e.g., `codegen/webhooks`) will **mirror** the structure of the interfaces directory
-- The names specified in the webhook config file must match the interface file name.
-
-For example, given:
-- Interface input input: `codegen/interfaces/source-echo/StripeWebhookPayload.ts`
-- Config file: `config/webhook-configs/payment.json`
-- Config responseSchema value: `StripeWebhookPayload`
-- Output files: 
-  - `codegen/webhooks/source-echo/webhookAppRegistry.ts`
-  - `codegen/webhooks/source-echo/createSourceEchoWebhookApp.ts`
-  - `codegen/webhooks/source-echo/routes/router.ts`
-  - `codegen/webhooks/source-echo/routes/handle_stripePaymentWebhook.ts`
-
-The following interface is used to define the webhook config
-```
-export interface IncomingWebhook extends BaseWebhook {
-    direction: 'incoming'
-    path: string; // Required for incoming
-    handlerName: string; // required for route + handler generation
-}
-
-export interface OutgoingWebhook extends BaseWebhook {
-    direction: 'outgoing'
-    targetUrl: string; // Required for outgoing
-}
-
-export interface BaseWebhook extends SchemaConsumer {
-    direction: 'incoming' | 'outgoing';
-    name: string;
-    requestSchema: string;
-    responseSchema?: string;
-    headers?: Record<string, string>;
-    secretVerificationKey?: string; // Optional: used for signature validation
-}
-
-export type Webhook = IncomingWebhook | OutgoingWebhook;
-
-export interface WebhookConfigFile {
-    webhooks: Webhook[];
-}
-```
-As an example, if you have interfaces generated from the following JSON files:
-```
-// StripeWebhookPayload.json (incoming)
-{
-  "id": "evt_12345",
-  "object": "event",
-  "type": "payment_intent.succeeded",
-  "data": {
-    "object": {
-      "amount": 2000,
-      "currency": "usd",
-      "status": "succeeded"
-    }
-  }
-}
-```
-And you define your JSON config as below:
-```
-{
-  "webhooks": [
-    {
-      "direction": "incoming",
-      "name": "stripe_payment",
-      "path": "/webhooks/stripe",
-      "requestSchema": "StripeWebhookPayload",
-      "handlerName": "stripePaymentWebhook"
-    }
-  ]
-}
-```
-The system will produce the following files:
-```
-// webhookAppRegistry.ts
-import * as Router from './routes/router';
-import * as handle_stripePaymentWebhook from './routes/handle_stripePaymentWebhook';
-
-export const webhookAppRegistry = {
-  'source-echo': {
-    router: Router,
-    handlers: {
-      ...handle_stripePaymentWebhook
-    }
-  }
-};
-
-// createSourceEchoWebhookApp.ts
-import express from "express";
-import { webhookAppRegistry } from "./webhookAppRegistry";
-
-export function createSourceEchoWebhookApp() {
-
-    const app = express();
-    app.use(express.json());
-
-    const handlers = webhookAppRegistry['source-echo']?.handlers || {};
-
-    for (const key of Object.keys(handlers)) {
-      app.post('/' + key, handlers[key]);
-    }
-
-    return app;
-}
-
-// routes/handle_stripePaymentWebhook.ts
-import { StripeWebhookPayload } from "../../../interfaces/source-echo/StripeWebhookPayload";
-
-export async function handleStripePaymentWebhookWebhook(payload: StripeWebhookPayload): Promise<void> {
-    // TODO: Implement webhook handler logic here
-    console.log("Received webhook payload:", payload);
-}
-
-// routes/router.ts
-import express from "express";
-import type { StripeWebhookPayload } from "../../../interfaces/source-echo/StripeWebhookPayload";
-import { handleStripePaymentWebhookWebhook } from "./handle_stripePaymentWebhook";
-const router = express.Router();
-router.use(express.json());
-router.post('/webhooks/stripe', async (req, res) => {
-	try {
-		const payload = req.body as StripeWebhookPayload;
-		await handleStripePaymentWebhookWebhook(payload);
-		res.status(200).json({ ok: true });
-	} catch (error) {
-		console.error('Webhook error:', error);
-		res.status(500).json({ ok: false });
-	}
-});
-export default router;
-```
-
-## Installation
-To install the package, run the following command
-```
-npm install typescript-scaffolder
-```
 ---
 
-## Usage
-### IMPORTANT: Considerations for where to place generated code
-If you intend to import the generated output into your main application code (e.g., use interfaces or API clients),
-we recommend placing the `codegen/` directory inside your `src/` folder.
+## ✨ Features
 
-For example:
+- ✅ Interface & enum generation from raw JSON
+- ✅ Factory class generation
+- ✅ Typed `.env` loader and accessors
+- ✅ JSON Schema generation
+- ✅ Axios-based API clients (with typed request/response)
+- ✅ Command sequence runner generator
+- ✅ Webhook server + client scaffolds
+- ✅ CLI or API use
+- ✅ GitHub-ready code output — versionable, zero runtime lock-in
+---
+
+## Installation
+
+```bash
+npm install typescript-scaffolder
 ```
-src/
-  codegen/
-    apis/
-    apis/sequences
-    config/
-    enums/
-    interfaces/
-    webhooks/
-```
 
-This ensures:
-- TypeScript includes the generated files in your compilation scope
-- IDE tools (like IntelliSense or import resolution) behave correctly
-- You avoid pathing issues or brittle import warnings
+---
 
-If you keep `codegen/` outside of `src/`, you may need to update your `tsconfig.json` to include it,
-or manually relocate usable outputs into `src/` after generation.
+## Programmatic Usage
+You can follow the example below on a best approach on how to use the API:
+```typescript
+import * as path from "path";
+import {
+	generateApiClientsFromPath,
+	generateApiRegistry,
+	generateSequencesFromPath,
+	generateEnumsFromPath,
+	generateEnvLoader,
+	generateInterfacesFromPath,
+	generateWebhookAppFromPath, generateFactoriesFromPath,
+} from "typescript-scaffolder";
 
-### Example usages
-
-Please refer to the following code block for example usages:
-```
 const ROOT_DIR = process.cwd();                // Base dir where the script is run
 const LOCAL_DIR = __dirname;                   // Base dir where this file lives
-const CODEGEN_DIR = path.resolve(LOCAL_DIR, 'src/codegen')
+const CODEGEN_DIR = path.resolve(LOCAL_DIR, "src/codegen")
 
 // Interface generation config
-const SCHEMA_INPUT_DIR = path.resolve(LOCAL_DIR, 'config/schemas');
-const INTERFACE_OUTPUT_DIR = path.resolve(CODEGEN_DIR, 'interfaces');
+const SCHEMA_INPUT_DIR = path.resolve(LOCAL_DIR, "config/schemas");
+const INTERFACE_OUTPUT_DIR = path.resolve(CODEGEN_DIR, "interfaces");
 
 // Generate enums, this will use the previously generated interface output
-const ENUM_OUTPUT_DIR = path.resolve(CODEGEN_DIR, 'enums');
+const ENUM_OUTPUT_DIR = path.resolve(CODEGEN_DIR, "enums");
 
-// Client endpoint generation config
-const ENDPOINT_CONFIG_PATH = path.resolve(LOCAL_DIR, 'config/endpoint-configs');
-const CLIENT_OUTPUT_DIR = path.resolve(CODEGEN_DIR, 'apis')
+// Generate factories, this will use the previously generated interface output
+const FACTORY_OUTPUT_DIR = path.resolve(CODEGEN_DIR, "factories")
+
+// Client API endpoint generation config
+const ENDPOINT_CONFIG_PATH = path.resolve(LOCAL_DIR, "config/endpoint-configs");
+const CLIENT_OUTPUT_DIR = path.resolve(CODEGEN_DIR, "apis")
+
+// Client API sequence generation config
+const SEQUENCE_CONFIG_PATH = path.resolve(LOCAL_DIR, "config/sequence-configs");
 
 // Webhook server generation config
-const WEBHOOK_CONFIG_PATH = path.resolve(LOCAL_DIR, 'config/webhook-configs');
-const WEBHOOK_OUTPUT_DIR = path.resolve(CODEGEN_DIR, 'webhooks');
+const WEBHOOK_CONFIG_PATH = path.resolve(LOCAL_DIR, "config/webhook-configs");
+const WEBHOOK_OUTPUT_DIR = path.resolve(CODEGEN_DIR, "webhooks");
 
 // Env accessor config
-const ENV_FILE = path.resolve(ROOT_DIR, '.env');
-const ENV_OUTPUT_DIR = path.resolve(CODEGEN_DIR, 'config');
-const ENV_OUTPUT_FILE = 'env-config.ts';
+const ENV_FILE = path.resolve(ROOT_DIR, ".env");
+const ENV_OUTPUT_DIR = path.resolve(CODEGEN_DIR, "config");
+const ENV_OUTPUT_FILE = "env-config.ts";
 
 async function build() {
 	// using the env accessor
@@ -570,149 +96,82 @@ async function build() {
 	generateEnvLoader(ENV_FILE, ENV_OUTPUT_DIR, ENV_OUTPUT_FILE);
 
 	// using the interface generator
-	await generateInterfacesFromPath(SCHEMA_INPUT_DIR, INTERFACE_OUTPUT_DIR)
+	await generateInterfacesFromPath(SCHEMA_INPUT_DIR, INTERFACE_OUTPUT_DIR);
 
 	// use the enum generator from the output of the interface generator
 	await generateEnumsFromPath(INTERFACE_OUTPUT_DIR, ENUM_OUTPUT_DIR);
+
+	// use the factory generator from the output of the interface generator
+	await generateFactoriesFromPath(INTERFACE_OUTPUT_DIR, FACTORY_OUTPUT_DIR);
 
 	// Generates an object-centric axios api client based on a config file
 	await generateApiClientsFromPath(ENDPOINT_CONFIG_PATH, INTERFACE_OUTPUT_DIR, CLIENT_OUTPUT_DIR);
 
 	// Generate the api registry to access the generated client functions
 	await generateApiRegistry(CLIENT_OUTPUT_DIR);
-	
+
 	// Generates a command sequence file based on the generated client-api registry
 	await generateSequencesFromPath(SEQUENCE_CONFIG_PATH, CLIENT_OUTPUT_DIR);
 
 	// Generate an express webhook application
-	await generateWebhookAppFromPath(WEBHOOK_CONFIG_PATH, INTERFACE_OUTPUT_DIR, WEBHOOK_OUTPUT_DIR)
+	await generateWebhookAppFromPath(WEBHOOK_CONFIG_PATH, INTERFACE_OUTPUT_DIR, WEBHOOK_OUTPUT_DIR);
 }
 
 build();
 ```
 
-## CLI Usage Examples
-
-Below are example commands to run each of the CLI subcommands available in `typescript-scaffolder`.
-
-### Generate Interfaces
-
-Generate TypeScript interfaces from JSON schema files:
+## Quickstart CLI Example
 
 ```bash
-typescript-scaffolder interfaces \
-  --input ./schemas \
-  --output ./codegen/interfaces
-```
-
-### Generate Enums
-
-Generate TypeScript enums from interface files:
-
-```bash
-typescript-scaffolder enums \
-  --input ./codegen/interfaces \
-  --output ./codegen/enums \
-  --ext .ts
-```
-
-### Generate Environment Loader
-
-Generate a typed environment variable accessor from a `.env` file:
-
-```bash
-typescript-scaffolder envloader \
-  --env-file .env \
-  --output-dir ./codegen/config \
-  --output-file env-config.ts \
-  --class-name EnvConfig \
-  --enum-name EnvKeys
-```
-
-### Generate Factories
-
-Generate TypeScript factory classes from interface files:
-
-```bash
-typescript-scaffolder factories \
-  --input ./codegen/interfaces \
-  --output ./codegen/factories \
-  --faker
-```
-
-**Options:**
-- `--faker` (optional): Use faker-based mock values instead of static deterministic defaults
-
-This command will walk through your input directory, create corresponding factory files for each interface, and preserve directory structure. Factories can be used to generate mock instances for testing or prototyping.
-
-### Generate API Client From Single Config File
-
-Generate an API client from a single JSON config file:
-
-```bash
-typescript-scaffolder apiclient-file \
-  --config ./config/api.json \
-  --interfaces ./codegen/interfaces \
-  --output ./codegen/apis
-```
-
-### Generate API Clients From Config Directory
-
-Generate API clients from multiple JSON config files in a directory:
-
-```bash
-typescript-scaffolder apiclient-dir \
-  --config-dir ./config/api-configs \
-  --interfaces-root ./codegen/interfaces \
-  --output-root ./codegen/apis
-```
-
-### Generate API Client Registry
-
-Generate a consolidated API client registry file from generated clients:
-
-```bash
-typescript-scaffolder apiclient-registry \
-  --api-root ./codegen/apis \
-  --registry-file registry.ts
-```
-
-### Generate Sequence Runner
-
-Generate command functions to call certain API points in sequence
-
-```bash
-typescript-scaffolder sequences \
-  --config-dir ./config/sequences \
-  --output ./src/codegen/apis/sequences
-```
-
-### Generate Webhook App
-
-Generate an Express webhook app and registry from a config file:
-
-```bash
-typescript-scaffolder webhooks \
-  --config ./config/source-bravo.json \
-  --interfaces ./codegen/interfaces \
-  --output ./codegen/webhooks
+typescript-scaffolder full \
+  --json ./config/schemas \
+  --env .env \
+  --output ./src/codegen
 ```
 
 ---
 
-To see all available commands and options, run:
+## Full Documentation
 
-```bash
-typescript-scaffolder help
+👉 **Visit the full docs** at  
+https://eric-famanas.super.site/the-typescript-scaffolder
+
+---
+
+## ⚙️ CLI Commands (Cheat Sheet)
+
+| Command               | Description                               |
+|-----------------------|-------------------------------------------|
+| `interfaces`          | Generate TypeScript interfaces from JSON  |
+| `enums`               | Create enums from interface keys          |
+| `factories`           | Generate mock data factories              |
+| `envloader`           | Generate typed `.env` accessor            |
+| `apiclient-file`      | Generate 1 API client from a config file  |
+| `apiclient-dir`       | Generate multiple API clients from dir    |
+| `apiclient-registry`  | Create central API client registry        |
+| `sequences`           | Generate workflow runner from steps       |
+| `webhooks`            | Generate Express webhook apps/handlers    |
+| `full`                | Run the entire pipeline from scratch      |
+
+📔 Use `typescript-scaffolder <command> --help` for options.
+
+---
+
+## 🛠 Programmatic Usage (API)
+
+```ts
+import {
+  generateInterfacesFromPath,
+  generateApiClientsFromPath,
+  generateApiRegistry,
+  generateSequencesFromPath,
+  generateWebhookAppFromPath
+} from 'typescript-scaffolder';
+
+await generateInterfacesFromPath("config/schemas", "src/codegen/interfaces");
 ```
 
-or
-
-```bash
-typescript-scaffolder --help
-```
-
-
+---
 ## Roadmap
 - [x] Generate TypeScript interfaces from schema definitions
 - [x] Generate TypeScript enums to assert key names
