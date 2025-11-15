@@ -1,11 +1,13 @@
+import { Method } from "models/api-definitions";
+
 /**
  * Metadata about the request being executed, useful for logging or debugging.
  */
 export interface RequestContext {
     /** The endpoint path (e.g., "/users/:id"). */
-    endpoint: string;
+    endpointPath: string;
     /** The HTTP method used (e.g., "GET", "POST"). */
-    method?: string;
+    method?: Method;
     /** Optional query or path parameters for the request. */
     params?: Record<string, unknown>;
 }
