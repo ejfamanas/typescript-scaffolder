@@ -1,5 +1,5 @@
 import { SourceFile } from "ts-morph";
-import { Endpoint, EndpointMeta } from "models/api-definitions";
+import { Endpoint } from "models/api-definitions";
 
 /**
  * Adds the necessary imports for Axios and shared types to the generated source file.
@@ -37,7 +37,7 @@ export function addErrorHandlerImportsToSourceFile(
  */
 export function buildErrorHandlerImplSource(): string {
     return `
-function handleErrorsImpl<T>(
+async function handleErrorsImpl<T>(
   fn: () => Promise<T>,
   options: WrapRequestOptions = {}
 ): Promise<T | undefined> {
@@ -49,7 +49,7 @@ function handleErrorsImpl<T>(
   } = options;
 
   try {
-    return fn();
+    return await fn();
   } catch (err) {
     const safeError = sanitizeFn ? sanitizeFn(err) : err;
     logFn(safeError, context);
@@ -75,7 +75,7 @@ export function handleErrors_${functionName}(
 ): Promise<AxiosResponse<${responseType}> | undefined> {
   return handleErrorsImpl(fn, {
     context: {
-      endpoint: "${endpoint.path}",
+      endpointPath: "${endpoint.path}",
       method: "${method.toUpperCase()}"
     }
   });
