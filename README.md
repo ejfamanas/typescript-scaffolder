@@ -1,7 +1,7 @@
 # TypeScript Scaffolder
 
 ![npm version](https://img.shields.io/npm/v/typescript-scaffolder)
-![coverage](https://img.shields.io/badge/coverage-97.38%25-green)
+![coverage](https://img.shields.io/badge/coverage-97.48%25-green)
 
 A CLI and programmatic toolchain for generating fully-typed TypeScript code from raw JSON, schemas, and declarative configs.
 
