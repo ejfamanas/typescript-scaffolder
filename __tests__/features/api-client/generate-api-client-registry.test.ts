@@ -54,10 +54,10 @@ describe('generateApiRegistry', () => {
         );
 
         const content = writeFileSpy.mock.calls[0][1];
-        expect(content).toContain("import * as User_api from './source-alpha/User_api'");
-        expect(content).toContain("import * as Token_api from './source-beta/Token_api'");
-        expect(content).toContain("'source-alpha': {\n    ...User_api");
-        expect(content).toContain("'source-beta': {\n    ...Token_api");
+        expect(content).toContain("import * as source_alpha_User_api from './source-alpha/User_api'");
+        expect(content).toContain("import * as source_beta_Token_api from './source-beta/Token_api'");
+        expect(content).toContain("'source-alpha': {\n    ...source_alpha_User_api");
+        expect(content).toContain("'source-beta': {\n    ...source_beta_Token_api");
     });
 });
 

@@ -171,7 +171,8 @@ export function buildImportMapAndRegistryEntries(importMap: Map<string, string[]
 
 		for (const file of files) {
 			const fileName = path.basename(file, '.ts');
-			const importVar = `${fileName.replace(/[^a-zA-Z0-9_$]/g, '_')}`;
+			const safeSubDir = subDir.replace(/[^a-zA-Z0-9_$]/g, '_');
+			const importVar = `${safeSubDir}_${fileName.replace(/[^a-zA-Z0-9_$]/g, '_')}`;
 			const relativePath = `./${path.join(subDir, fileName).replace(/\\/g, '/')}`;
 			importStatements.push(`import * as ${importVar} from '${relativePath}';`);
 			entryLines.push(`...${importVar}`);
