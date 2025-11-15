@@ -155,7 +155,8 @@ export function generateApiClientFunction(
   `}
 
   ${useErrorHandler
-            ? `return await handleErrors_${method.toUpperCase()}_${fileName}(() => Promise.resolve(response));`
+            ? `const result = await handleErrors_${method.toUpperCase()}_${fileName}(request);
+  return result?.data;`
             : `return response.data;`}
 `,
     });

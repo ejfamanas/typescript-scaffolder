@@ -50,7 +50,8 @@ describe('generate-api-client', () => {
 
             const writtenContent = spy.mock.calls[0][1] as string;
             expect(writtenContent).toContain(`import { handleErrors_GET_user_api } from "./user_api.errorHandler"`);
-            expect(writtenContent).toContain(`return await handleErrors_GET_user_api(() => Promise.resolve(response));`);
+            expect(writtenContent).toContain(`const result = await handleErrors_GET_user_api(request);`);
+            expect(writtenContent).toContain(`return result?.data;`);
         });
         describe('auth header generation', () => {
             const baseArgs: [
