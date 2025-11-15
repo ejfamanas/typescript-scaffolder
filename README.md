@@ -1,7 +1,7 @@
 # TypeScript Scaffolder
 
 ![npm version](https://img.shields.io/npm/v/typescript-scaffolder)
-![coverage](https://img.shields.io/badge/coverage-97.38%25-green)
+![coverage](https://img.shields.io/badge/coverage-97.48%25-green)
 
 A CLI and programmatic toolchain for generating fully-typed TypeScript code from raw JSON, schemas, and declarative configs.
 
@@ -159,7 +159,7 @@ https://eric-famanas.super.site/the-typescript-scaffolder
 
 ## 🛠 Programmatic Usage (API)
 
-```ts
+```typescript
 import {
   generateInterfacesFromPath,
   generateApiClientsFromPath,
@@ -173,15 +173,16 @@ await generateInterfacesFromPath("config/schemas", "src/codegen/interfaces");
 
 ---
 ## Roadmap
-- [x] Generate TypeScript interfaces from schema definitions
-- [x] Generate TypeScript enums to assert key names
-- [x] Generate TypeScript accessor for environment variables
-- [x] Generate TypeScript axios REST api client from interfaces
-- [x] Generate Typescript command sequences for REST api calls
-- [x] Generate Typescript axios client webhook apps
-- [x] Generate Typescript helper functions for REST api calls
-- [x] Generate Typescript webhook test routes and fixtures
-- [x] Generate Typescript express server webhook apps
+- [x] Generate interfaces from schema definitions
+- [x] Generate enums to assert key names
+- [x] Generate accessor for environment variables
+- [x] Generate axios REST api client from interfaces
+- [x] Generate command sequences for REST api calls
+- [x] Generate axios client webhook apps
+- [x] Generate helper functions for REST api calls
+- [x] Generate wrapper functions for auth, retries, and error handling
+- [x] Generate webhook test routes and fixtures
+- [x] Generate express server webhook apps
 - [x] Command line interface access
 - [x] Factory classes based on interfaces
 - [ ] Scaffolding for service mocking (GET, POST, PUT, DELETE)

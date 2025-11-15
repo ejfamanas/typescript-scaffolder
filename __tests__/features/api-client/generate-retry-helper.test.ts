@@ -1,10 +1,10 @@
 import * as fs from 'fs';
 import * as os from 'os';
 import * as path from 'path';
-import { generateRetryHelperForApiFile } from "../../../src";
+import { Endpoint, generateRetryHelperForApiFile } from "../../../src";
 import { Logger } from "../../../src/utils/logger";
 import * as FsUtils from "../../../src/utils/file-system"
-import { RetryEndpointMeta } from "../../../src";
+import { EndpointMeta } from "../../../src";
 
 describe('generateRetryHelperForApiFile', () => {
     let tmpDir: string;
@@ -46,8 +46,8 @@ describe('generateRetryHelperForApiFile', () => {
 
     it('ensures the directory exists and writes the helper file', () => {
         const base = 'person_api';
-        const endpoints: RetryEndpointMeta[] = [
-            {functionName: 'GET_person', responseType: 'Person', responseModule: '../interfaces/Person'},
+        const endpoints: EndpointMeta[] = [
+            {functionName: 'GET_person', responseType: 'Person', responseModule: '../interfaces/Person', endpoint: {} as Endpoint},
         ];
 
         generateRetryHelperForApiFile(tmpDir, base, endpoints, true);
@@ -58,10 +58,10 @@ describe('generateRetryHelperForApiFile', () => {
 
     it('embeds the generic retry implementation and adds type-only imports', () => {
         const base = 'person_api';
-        const endpoints: RetryEndpointMeta[] = [
-            {functionName: 'GET_person', responseType: 'Person', responseModule: '../interfaces/Person'},
-            {functionName: 'GET_ALL_person', responseType: 'PersonList', responseModule: '../interfaces/PersonList'},
-            {functionName: 'HEAD_person_meta', responseType: 'Person', responseModule: '../interfaces/Person'}, // duplicate type to dedupe
+        const endpoints: EndpointMeta[] = [
+            {functionName: 'GET_person', responseType: 'Person', responseModule: '../interfaces/Person', endpoint: {} as Endpoint},
+            {functionName: 'GET_ALL_person', responseType: 'PersonList', responseModule: '../interfaces/PersonList', endpoint: {} as Endpoint},
+            {functionName: 'HEAD_person_meta', responseType: 'Person', responseModule: '../interfaces/Person', endpoint: {} as Endpoint}, // duplicate type to dedupe
         ];
 
         generateRetryHelperForApiFile(tmpDir, base, endpoints, true);
@@ -84,10 +84,10 @@ describe('generateRetryHelperForApiFile', () => {
 
     it('exports one typed wrapper per endpoint and sorts wrappers by function name', () => {
         const base = 'person_api';
-        const endpoints: RetryEndpointMeta[] = [
-            {functionName: 'GET_person', responseType: 'Person', responseModule: '../interfaces/Person'},
-            {functionName: 'GET_ALL_person', responseType: 'PersonList', responseModule: '../interfaces/PersonList'},
-            {functionName: 'HEAD_person_meta', responseType: 'PersonMeta', responseModule: '../interfaces/PersonMeta'},
+        const endpoints: EndpointMeta[] = [
+            {functionName: 'GET_person', responseType: 'Person', responseModule: '../interfaces/Person', endpoint: {} as Endpoint},
+            {functionName: 'GET_ALL_person', responseType: 'PersonList', responseModule: '../interfaces/PersonList', endpoint: {} as Endpoint},
+            {functionName: 'HEAD_person_meta', responseType: 'PersonMeta', responseModule: '../interfaces/PersonMeta', endpoint: {} as Endpoint},
         ];
 
         generateRetryHelperForApiFile(tmpDir, base, endpoints, true);
@@ -121,8 +121,8 @@ describe('generateRetryHelperForApiFile', () => {
 
     it('honors overwrite flag', () => {
         const base = 'person_api';
-        const endpoints: RetryEndpointMeta[] = [
-            {functionName: 'GET_person', responseType: 'Person', responseModule: '../interfaces/Person'},
+        const endpoints: EndpointMeta[] = [
+            {functionName: 'GET_person', responseType: 'Person', responseModule: '../interfaces/Person', endpoint: {} as Endpoint},
         ];
 
         // First write
@@ -145,9 +145,9 @@ describe('generateRetryHelperForApiFile', () => {
 
     it('is idempotent when run twice with same inputs (no duplicate imports or wrappers)', () => {
         const base = 'person_api';
-        const endpoints: RetryEndpointMeta[] = [
-            {functionName: 'GET_person', responseType: 'Person', responseModule: '../interfaces/Person'},
-            {functionName: 'GET_ALL_person', responseType: 'PersonList', responseModule: '../interfaces/PersonList'},
+        const endpoints: EndpointMeta[] = [
+            {functionName: 'GET_person', responseType: 'Person', responseModule: '../interfaces/Person', endpoint: {} as Endpoint},
+            {functionName: 'GET_ALL_person', responseType: 'PersonList', responseModule: '../interfaces/PersonList', endpoint: {} as Endpoint},
         ];
 
         generateRetryHelperForApiFile(tmpDir, base, endpoints, true);

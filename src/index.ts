@@ -75,6 +75,7 @@ export {
     Method,
     AuthType,
     Endpoint,
+    EndpointMeta,
     EndpointAuthConfig,
     EndpointAuthCredentials,
     EndpointClientConfigFile,
@@ -85,6 +86,10 @@ export {
     RetryOptions,
     RetryConfig
 } from "./models/retry-definitions"
+export {
+    RequestContext,
+    WrapRequestOptions
+} from "./models/request-wrapper-definitions"
 export {
     Sequence,
     SequenceStep,

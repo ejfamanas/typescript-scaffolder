@@ -1,6 +1,6 @@
 import { Project } from 'ts-morph';
 import fs from 'fs';
-import { Endpoint, EndpointAuthConfig, EndpointClientConfigFile } from 'models/api-definitions';
+import { Endpoint, EndpointAuthConfig, EndpointClientConfigFile, EndpointMeta } from 'models/api-definitions';
 import path from 'path'
 import { ensureDir, extractInterfaces, readEndpointClientConfigFile } from '../../utils/file-system';
 import {
@@ -13,16 +13,16 @@ import {
 } from '../../utils/client-constructors';
 import { Logger } from '../../utils/logger';
 import { buildRetryWrapperName } from "../../utils/retry-constructors";
-import { RetryEndpointMeta } from "models/retry-definitions";
 import { generateRetryHelperForApiFile } from "./generate-retry-helper";
 import { generateAuthHelperForApiFile } from "./generate-auth-helper";
+import { generateErrorHandlerForApiFile } from "./generate-error-handler-helper";
 
 export function generateApiClientFunction(
     baseUrl: string,
     fileName: string,
     functionName: string,
     endpoint: Endpoint,
-    config: EndpointAuthConfig,
+    config: Partial<EndpointClientConfigFile>,
     interfaceInputDir: string,
     clientOutputDir: string,
     writeMode: 'overwrite' | 'append' = 'overwrite',
@@ -32,6 +32,7 @@ export function generateApiClientFunction(
     const project = new Project();
 
     const useRetry = !!(config as any)?.retry?.enabled;
+    const useErrorHandler = !!config.includeErrorHandler;
 
     ensureDir(clientOutputDir);
 
@@ -63,7 +64,7 @@ export function generateApiClientFunction(
         const existingAuthImport = sourceFile.getImportDeclarations().find(d => d.getModuleSpecifierValue() === authHelperModule);
         if (!existingAuthImport) {
             sourceFile.addImportDeclaration({
-                namedImports: [{ name: "getAuthHeaders" }],
+                namedImports: [{name: "getAuthHeaders"}],
                 moduleSpecifier: authHelperModule,
             });
         }
@@ -81,6 +82,19 @@ export function generateApiClientFunction(
             });
         } else if (!existing.getNamedImports().some(n => n.getName() === wrapperSymbol)) {
             existing.addNamedImports([{name: wrapperSymbol}]);
+        }
+    }
+
+    if (useErrorHandler) {
+        const handlerModule = `./${fileName}.errorHandler`;
+        const existing = sourceFile.getImportDeclarations().find(d => d.getModuleSpecifierValue() === handlerModule);
+        if (!existing) {
+            sourceFile.addImportDeclaration({
+                namedImports: [{name: `handleErrors_${method.toUpperCase()}_${fileName}`}],
+                moduleSpecifier: handlerModule,
+            });
+        } else if (!existing.getNamedImports().some(n => n.getName() === `handleErrors_${method.toUpperCase()}_${fileName}`)) {
+            existing.addNamedImports([{name: `handleErrors_${method.toUpperCase()}_${fileName}`}]);
         }
     }
 
@@ -106,42 +120,36 @@ export function generateApiClientFunction(
         parameters,
         returnType: `Promise<${responseSchema}>`,
         isAsync: true,
-        statements: useRetry ? `
-      const authHeaders = ${config.authType && config.authType !== "none" ? "getAuthHeaders()" : "{}"};
-      const response = await ${buildRetryWrapperName(functionName)}(
-        () => axios.${method}(
-          \`${baseUrl}${urlPath}\`,
-          ${hasBody ? 'body,' : ''}
-          {
-            headers: {
-              ...authHeaders,
-              ...(headers ?? {}),
-            },
-          } as AxiosRequestConfig
-        ),
-        {
-          enabled: true,
-          maxAttempts: ${(config as any)?.retry?.maxAttempts ?? 3},
-          initialDelayMs: ${(config as any)?.retry?.initialDelayMs ?? 250},
-          multiplier: ${(config as any)?.retry?.multiplier ?? 2.0},
-          method: "${endpoint.method.toUpperCase()}"
-        }
-      );
-      return response.data;
-    ` : `
-      const authHeaders = ${config.authType && config.authType !== "none" ? "getAuthHeaders()" : "{}"};
-      const response = await axios.${method}(
-        \`${baseUrl}${urlPath}\`,
-        ${hasBody ? 'body,' : ''}
-        {
-          headers: {
-            ...authHeaders,
-            ...(headers ?? {}),
-          },
-        } as AxiosRequestConfig
-      );
-      return response.data;
-    `,
+        statements: `
+  const authHeaders = ${config.authType && config.authType !== "none" ? "getAuthHeaders()" : "{}"};
+
+  const request = () => axios.${method}(
+    \`${baseUrl}${urlPath}\`,
+    ${hasBody ? 'body,' : ''}
+    {
+      headers: {
+        ...authHeaders,
+        ...(headers ?? {}),
+      },
+    } as AxiosRequestConfig
+  );
+
+  const wrappedRequest = ${useRetry
+    ? `() => ${buildRetryWrapperName(functionName)}(request, {
+    enabled: true,
+    maxAttempts: ${(config as any)?.retry?.maxAttempts ?? 3},
+    initialDelayMs: ${(config as any)?.retry?.initialDelayMs ?? 250},
+    multiplier: ${(config as any)?.retry?.multiplier ?? 2.0},
+    method: "${endpoint.method.toUpperCase()}"
+  })`
+    : 'request'};
+
+  ${useErrorHandler
+    ? `const result = await handleErrors_${method.toUpperCase()}_${fileName}(wrappedRequest);
+  return result?.data;`
+    : `const response = await wrappedRequest();
+  return response.data;`}
+`,
     });
 
     // Save to disk
@@ -165,7 +173,7 @@ export async function generateApiClientFromFile(configPath: string, interfacesDi
         return;
     }
 
-    const metasByFile = new Map<string, RetryEndpointMeta[]>();
+    const metasByFile = new Map<string, EndpointMeta[]>();
 
     for (const endpoint of config.endpoints) {
         const {objectName} = endpoint;
@@ -184,9 +192,17 @@ export async function generateApiClientFromFile(configPath: string, interfacesDi
         if (!responseModule.startsWith('.')) {
             responseModule = './' + responseModule;
         }
+
         responseModule = responseModule.replace(/\.ts$/, '');
+
+        // store all the endpoints + meta in a list so they are easier to reference
         const list = metasByFile.get(fileName) ?? [];
-        list.push({functionName, responseType, responseModule});
+        list.push({
+            functionName,
+            responseType,
+            responseModule,
+            endpoint
+        });
         metasByFile.set(fileName, list);
 
         if (config.authType && config.authType !== "none") {
@@ -207,7 +223,7 @@ export async function generateApiClientFromFile(configPath: string, interfacesDi
                 authType: config.authType,
                 credentials: config.credentials,
                 retry: config.retry, // surfaced for useRetry
-            } as any,
+            } as Partial<EndpointClientConfigFile>,
             interfacesDir,
             outputDir,
             'append'
@@ -216,7 +232,23 @@ export async function generateApiClientFromFile(configPath: string, interfacesDi
 
     if (config.retry?.enabled) {
         for (const [fileBaseName, endpoints] of metasByFile.entries()) {
-            generateRetryHelperForApiFile(outputDir, fileBaseName, endpoints, /* overwrite */ true);
+            generateRetryHelperForApiFile(
+                outputDir,
+                fileBaseName,
+                endpoints,
+                /* overwrite */true
+            );
+        }
+    }
+
+    if (config.includeErrorHandler) {
+        for (const [fileBaseName, endpoints] of metasByFile.entries()) {
+            generateErrorHandlerForApiFile(
+                outputDir,
+                fileBaseName,
+                endpoints,
+                /* overwrite */ true
+            );
         }
     }
 }

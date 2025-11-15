@@ -275,9 +275,9 @@ describe('buildImportMapAndRegistryEntries', () => {
 
         const { importStatements, registryEntries } = buildImportMapAndRegistryEntries(importMap);
 
-        expect(importStatements[0]).toBe("import * as foo from './service-a/foo';");
+        expect(importStatements[0]).toBe("import * as service_a_foo from './service-a/foo';");
         expect(registryEntries[0]).toContain("'service-a':");
-        expect(registryEntries[0]).toContain('...foo');
+        expect(registryEntries[0]).toContain('...service_a_foo');
     });
 
     it('handles multiple files in one subdir', () => {
@@ -288,8 +288,8 @@ describe('buildImportMapAndRegistryEntries', () => {
         const { importStatements, registryEntries } = buildImportMapAndRegistryEntries(importMap);
 
         expect(importStatements.length).toBe(2);
-        expect(registryEntries[0]).toContain('...foo');
-        expect(registryEntries[0]).toContain('...bar');
+        expect(registryEntries[0]).toContain('service-a');
+        expect(registryEntries[0]).toContain('...service_a_bar');
     });
 
     it('handles multiple subdirectories', () => {
@@ -313,8 +313,8 @@ describe('buildImportMapAndRegistryEntries', () => {
 
         const { importStatements, registryEntries } = buildImportMapAndRegistryEntries(importMap);
 
-        expect(importStatements[0]).toContain('import * as foo_bar from');
-        expect(registryEntries[0]).toContain('...foo_bar');
+        expect(importStatements[0]).toContain('import * as service_a_foo_bar from');
+        expect(registryEntries[0]).toContain('...service_a_foo_bar');
     });
 
     it('normalizes backslashes in paths', () => {
@@ -324,7 +324,7 @@ describe('buildImportMapAndRegistryEntries', () => {
 
         const { importStatements, registryEntries } = buildImportMapAndRegistryEntries(importMap);
 
-        expect(importStatements[0]).toBe("import * as service_a_foo from './service/a/service/a/foo';");
+        expect(importStatements[0]).toBe("import * as service_a_service_a_foo from './service/a/service/a/foo';");
         expect(registryEntries[0]).toContain("'service/a':");
     });
 });

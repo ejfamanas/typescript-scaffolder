@@ -46,5 +46,6 @@
     "maxAttempts": 3,
     "initialDelayMs": 250,
     "multiplier": 2.0
-  }
+  },
+  "includeErrorHandler": true
 }

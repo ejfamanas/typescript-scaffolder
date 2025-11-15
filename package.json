@@ -1,6 +1,6 @@
 {
   "name": "typescript-scaffolder",
-  "version": "2.3.8",
+  "version": "2.3.9",
   "keywords": [
     "typescript",
     "codegen",
@@ -37,7 +37,7 @@
   "author": "Eric Famanas (The Coding Carpenter)",
   "license": "MIT",
   "dependencies": {
-    "@faker-js/faker": "^10.1.0",
+    "@faker-js/faker": "9.8.0",
     "@types/node": "^22.15.21",
     "axios": "^1.10.0",
     "commander": "^14.0.0",
