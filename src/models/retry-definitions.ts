@@ -1,4 +1,9 @@
+import { Endpoint, EndpointMeta } from "models/api-definitions";
 
+/**
+ * Facade to preserve backwards compatability
+ */
+export interface RetryEndpointMeta extends EndpointMeta {}
 /**
  * Options to control retry behavior for generated API clients.
  * These options are threaded from the generator into the endpoint-typed wrappers.

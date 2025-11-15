@@ -2,7 +2,6 @@ import * as path from 'path';
 import * as os from 'os';
 import fs from "fs";
 import {
-    AuthType,
     Endpoint,
     EndpointClientConfigFile,
     generateApiClientFromFile,
@@ -28,6 +27,31 @@ describe('generate-api-client', () => {
     };
 
     describe('generateApiClientFunction', () => {
+        it('wraps axios call in error handler when wrapWithErrorHandler is enabled', async () => {
+            const spy = jest.spyOn(fs, 'writeFileSync');
+
+            await generateApiClientFunction(
+                'https://api.example.com',
+                'user_api',
+                'GET_user_with_error_handling',
+                sampleEndpoint,
+                {
+                    authType: 'apikey',
+                    credentials: {
+                        apiKeyName: 'x-api-key',
+                        apiKeyValue: 'test-key',
+                    },
+                    wrapWithErrorHandler: true,
+                } as any,
+                '../interfaces',
+                './output',
+                'overwrite'
+            );
+
+            const writtenContent = spy.mock.calls[0][1] as string;
+            expect(writtenContent).toContain(`import { handleErrors_GET_user_api } from "./user_api.errorHandler"`);
+            expect(writtenContent).toContain(`return await handleErrors_GET_user_api(() => Promise.resolve(response));`);
+        });
         describe('auth header generation', () => {
             const baseArgs: [
                 string, // baseUrl

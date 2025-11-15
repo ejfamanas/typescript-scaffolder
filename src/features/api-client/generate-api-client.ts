@@ -32,6 +32,7 @@ export function generateApiClientFunction(
     const project = new Project();
 
     const useRetry = !!(config as any)?.retry?.enabled;
+    const useErrorHandler = !!(config as any)?.wrapWithErrorHandler;
 
     ensureDir(clientOutputDir);
 
@@ -84,6 +85,19 @@ export function generateApiClientFunction(
         }
     }
 
+    if (useErrorHandler) {
+        const handlerModule = `./${fileName}.errorHandler`;
+        const existing = sourceFile.getImportDeclarations().find(d => d.getModuleSpecifierValue() === handlerModule);
+        if (!existing) {
+            sourceFile.addImportDeclaration({
+                namedImports: [{name: `handleErrors_${method.toUpperCase()}_${fileName}`}],
+                moduleSpecifier: handlerModule,
+            });
+        } else if (!existing.getNamedImports().some(n => n.getName() === `handleErrors_${method.toUpperCase()}_${fileName}`)) {
+            existing.addNamedImports([{name: `handleErrors_${method.toUpperCase()}_${fileName}`}]);
+        }
+    }
+
     // Function parameters
     const parameters = [
         ...pathParams.map((param) => ({name: param, type: 'string'})),
@@ -106,42 +120,44 @@ export function generateApiClientFunction(
         parameters,
         returnType: `Promise<${responseSchema}>`,
         isAsync: true,
-        statements: useRetry ? `
-      const authHeaders = ${config.authType && config.authType !== "none" ? "getAuthHeaders()" : "{}"};
-      const response = await ${buildRetryWrapperName(functionName)}(
-        () => axios.${method}(
-          \`${baseUrl}${urlPath}\`,
-          ${hasBody ? 'body,' : ''}
-          {
-            headers: {
-              ...authHeaders,
-              ...(headers ?? {}),
-            },
-          } as AxiosRequestConfig
-        ),
-        {
-          enabled: true,
-          maxAttempts: ${(config as any)?.retry?.maxAttempts ?? 3},
-          initialDelayMs: ${(config as any)?.retry?.initialDelayMs ?? 250},
-          multiplier: ${(config as any)?.retry?.multiplier ?? 2.0},
-          method: "${endpoint.method.toUpperCase()}"
-        }
-      );
-      return response.data;
-    ` : `
-      const authHeaders = ${config.authType && config.authType !== "none" ? "getAuthHeaders()" : "{}"};
-      const response = await axios.${method}(
-        \`${baseUrl}${urlPath}\`,
-        ${hasBody ? 'body,' : ''}
-        {
-          headers: {
-            ...authHeaders,
-            ...(headers ?? {}),
-          },
-        } as AxiosRequestConfig
-      );
-      return response.data;
-    `,
+        statements: `
+  const authHeaders = ${config.authType && config.authType !== "none" ? "getAuthHeaders()" : "{}"};
+  ${useRetry ? `
+    const request = () => axios.${method}(
+      \`${baseUrl}${urlPath}\`,
+      ${hasBody ? 'body,' : ''}
+      {
+        headers: {
+          ...authHeaders,
+          ...(headers ?? {}),
+        },
+      } as AxiosRequestConfig
+    );
+    const response = await ${buildRetryWrapperName(functionName)}(request, {
+      enabled: true,
+      maxAttempts: ${(config as any)?.retry?.maxAttempts ?? 3},
+      initialDelayMs: ${(config as any)?.retry?.initialDelayMs ?? 250},
+      multiplier: ${(config as any)?.retry?.multiplier ?? 2.0},
+      method: "${endpoint.method.toUpperCase()}"
+    });
+  ` : `
+    const request = () => axios.${method}(
+      \`${baseUrl}${urlPath}\`,
+      ${hasBody ? 'body,' : ''}
+      {
+        headers: {
+          ...authHeaders,
+          ...(headers ?? {}),
+        },
+      } as AxiosRequestConfig
+    );
+    const response = await request();
+  `}
+
+  ${useErrorHandler
+            ? `return await handleErrors_${method.toUpperCase()}_${fileName}(() => Promise.resolve(response));`
+            : `return response.data;`}
+`,
     });
 
     // Save to disk

@@ -82,6 +82,7 @@ export {
     EndpointConfigType,
 } from "./models/api-definitions"
 export {
+    RetryEndpointMeta,
     RetryOptions,
     RetryConfig
 } from "./models/retry-definitions"

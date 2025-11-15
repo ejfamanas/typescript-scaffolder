@@ -19,7 +19,7 @@ describe('error-handling-constructors', () => {
 
             expect(output).toContain('export function handleErrors_GET_user');
             expect(output).toContain('AxiosResponse<User>');
-            expect(output).toContain('endpoint: "/users/:id"');
+            expect(output).toContain('endpointPath: "/users/:id"');
             expect(output).toContain('method: "GET"');
         });
     });
