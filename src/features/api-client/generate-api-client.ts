@@ -1,6 +1,6 @@
 import { Project } from 'ts-morph';
 import fs from 'fs';
-import { Endpoint, EndpointAuthConfig, EndpointClientConfigFile } from 'models/api-definitions';
+import { Endpoint, EndpointAuthConfig, EndpointClientConfigFile, EndpointMeta } from 'models/api-definitions';
 import path from 'path'
 import { ensureDir, extractInterfaces, readEndpointClientConfigFile } from '../../utils/file-system';
 import {
@@ -13,9 +13,9 @@ import {
 } from '../../utils/client-constructors';
 import { Logger } from '../../utils/logger';
 import { buildRetryWrapperName } from "../../utils/retry-constructors";
-import { RetryEndpointMeta } from "models/retry-definitions";
 import { generateRetryHelperForApiFile } from "./generate-retry-helper";
 import { generateAuthHelperForApiFile } from "./generate-auth-helper";
+import { generateErrorHandlerForApiFile } from "./generate-error-handler-helper";
 
 export function generateApiClientFunction(
     baseUrl: string,
@@ -63,7 +63,7 @@ export function generateApiClientFunction(
         const existingAuthImport = sourceFile.getImportDeclarations().find(d => d.getModuleSpecifierValue() === authHelperModule);
         if (!existingAuthImport) {
             sourceFile.addImportDeclaration({
-                namedImports: [{ name: "getAuthHeaders" }],
+                namedImports: [{name: "getAuthHeaders"}],
                 moduleSpecifier: authHelperModule,
             });
         }
@@ -165,7 +165,7 @@ export async function generateApiClientFromFile(configPath: string, interfacesDi
         return;
     }
 
-    const metasByFile = new Map<string, RetryEndpointMeta[]>();
+    const metasByFile = new Map<string, EndpointMeta[]>();
 
     for (const endpoint of config.endpoints) {
         const {objectName} = endpoint;
@@ -184,9 +184,17 @@ export async function generateApiClientFromFile(configPath: string, interfacesDi
         if (!responseModule.startsWith('.')) {
             responseModule = './' + responseModule;
         }
+
         responseModule = responseModule.replace(/\.ts$/, '');
+
+        // store all the endpoints + meta in a list so they are easier to reference
         const list = metasByFile.get(fileName) ?? [];
-        list.push({functionName, responseType, responseModule});
+        list.push({
+            functionName,
+            responseType,
+            responseModule,
+            endpoint
+        });
         metasByFile.set(fileName, list);
 
         if (config.authType && config.authType !== "none") {
@@ -216,7 +224,23 @@ export async function generateApiClientFromFile(configPath: string, interfacesDi
 
     if (config.retry?.enabled) {
         for (const [fileBaseName, endpoints] of metasByFile.entries()) {
-            generateRetryHelperForApiFile(outputDir, fileBaseName, endpoints, /* overwrite */ true);
+            generateRetryHelperForApiFile(
+                outputDir,
+                fileBaseName,
+                endpoints,
+                /* overwrite */true
+            );
+        }
+    }
+
+    if (config.wrapWithErrorHandler) {
+        for (const [fileBaseName, endpoints] of metasByFile.entries()) {
+            generateErrorHandlerForApiFile(
+                outputDir,
+                fileBaseName,
+                endpoints,
+                /* overwrite */ true
+            );
         }
     }
 }

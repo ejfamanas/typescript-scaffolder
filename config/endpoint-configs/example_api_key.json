@@ -44,5 +44,6 @@
   "credentials": {
     "apiKeyName": "x-api-key",
     "apiKeyValue": "test-1234"
-  }
+  },
+  "wrapWithErrorHandler": true
 }

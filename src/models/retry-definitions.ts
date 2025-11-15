@@ -33,15 +33,3 @@ export interface RetryConfig {
     /** Exponential backoff multiplier applied per attempt. Default: 2.0. */
     multiplier?: number;
 }
-
-/**
- * used by the retry helper to define the shape of an endpoint
- */
-export interface RetryEndpointMeta {
-    /** The generated endpoint function name, e.g. "GET_person". */
-    functionName: string;
-    /** The concrete response type name, e.g. "Person" or "PersonList". */
-    responseType: string;
-    /** The module specifier to import the response type from, e.g. "../interfaces/Person". */
-    responseModule: string;
-}

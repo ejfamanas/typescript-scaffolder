@@ -2,14 +2,13 @@ import path from 'path';
 import fs from 'fs';
 import { Project } from 'ts-morph';
 import { Logger } from "../../utils/logger";
-
+import { EndpointMeta } from "models/api-definitions";
 import { ensureDir } from "../../utils/file-system";
 import {
     addRetryHelperImportsToSourceFile,
     buildEndpointRetryWrapperExport,
     buildRetryHelperImplSource
 } from "../../utils/retry-constructors";
-import { RetryEndpointMeta } from "models/retry-definitions";
 
 /**
  * Generates a per-API retry helper file (e.g., "<fileBase>.requestWithRetry.ts"),
@@ -28,7 +27,7 @@ import { RetryEndpointMeta } from "models/retry-definitions";
 export function generateRetryHelperForApiFile(
     outputDir: string,
     fileBaseName: string,
-    endpoints: RetryEndpointMeta[],
+    endpoints: EndpointMeta[],
     overwrite: boolean = true
 ): void {
     const funcName = 'generateRetryHelperForApiFile';
