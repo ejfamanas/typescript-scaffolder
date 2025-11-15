@@ -22,7 +22,7 @@ export function generateApiClientFunction(
     fileName: string,
     functionName: string,
     endpoint: Endpoint,
-    config: EndpointAuthConfig,
+    config: Partial<EndpointClientConfigFile>,
     interfaceInputDir: string,
     clientOutputDir: string,
     writeMode: 'overwrite' | 'append' = 'overwrite',
@@ -32,7 +32,7 @@ export function generateApiClientFunction(
     const project = new Project();
 
     const useRetry = !!(config as any)?.retry?.enabled;
-    const useErrorHandler = !!(config as any)?.wrapWithErrorHandler;
+    const useErrorHandler = !!config.includeErrorHandler;
 
     ensureDir(clientOutputDir);
 
@@ -122,42 +122,33 @@ export function generateApiClientFunction(
         isAsync: true,
         statements: `
   const authHeaders = ${config.authType && config.authType !== "none" ? "getAuthHeaders()" : "{}"};
-  ${useRetry ? `
-    const request = () => axios.${method}(
-      \`${baseUrl}${urlPath}\`,
-      ${hasBody ? 'body,' : ''}
-      {
-        headers: {
-          ...authHeaders,
-          ...(headers ?? {}),
-        },
-      } as AxiosRequestConfig
-    );
-    const response = await ${buildRetryWrapperName(functionName)}(request, {
-      enabled: true,
-      maxAttempts: ${(config as any)?.retry?.maxAttempts ?? 3},
-      initialDelayMs: ${(config as any)?.retry?.initialDelayMs ?? 250},
-      multiplier: ${(config as any)?.retry?.multiplier ?? 2.0},
-      method: "${endpoint.method.toUpperCase()}"
-    });
-  ` : `
-    const request = () => axios.${method}(
-      \`${baseUrl}${urlPath}\`,
-      ${hasBody ? 'body,' : ''}
-      {
-        headers: {
-          ...authHeaders,
-          ...(headers ?? {}),
-        },
-      } as AxiosRequestConfig
-    );
-    const response = await request();
-  `}
+
+  const request = () => axios.${method}(
+    \`${baseUrl}${urlPath}\`,
+    ${hasBody ? 'body,' : ''}
+    {
+      headers: {
+        ...authHeaders,
+        ...(headers ?? {}),
+      },
+    } as AxiosRequestConfig
+  );
+
+  const wrappedRequest = ${useRetry
+    ? `() => ${buildRetryWrapperName(functionName)}(request, {
+    enabled: true,
+    maxAttempts: ${(config as any)?.retry?.maxAttempts ?? 3},
+    initialDelayMs: ${(config as any)?.retry?.initialDelayMs ?? 250},
+    multiplier: ${(config as any)?.retry?.multiplier ?? 2.0},
+    method: "${endpoint.method.toUpperCase()}"
+  })`
+    : 'request'};
 
   ${useErrorHandler
-            ? `const result = await handleErrors_${method.toUpperCase()}_${fileName}(request);
+    ? `const result = await handleErrors_${method.toUpperCase()}_${fileName}(wrappedRequest);
   return result?.data;`
-            : `return response.data;`}
+    : `const response = await wrappedRequest();
+  return response.data;`}
 `,
     });
 
@@ -232,7 +223,7 @@ export async function generateApiClientFromFile(configPath: string, interfacesDi
                 authType: config.authType,
                 credentials: config.credentials,
                 retry: config.retry, // surfaced for useRetry
-            } as any,
+            } as Partial<EndpointClientConfigFile>,
             interfacesDir,
             outputDir,
             'append'
@@ -250,7 +241,7 @@ export async function generateApiClientFromFile(configPath: string, interfacesDi
         }
     }
 
-    if (config.wrapWithErrorHandler) {
+    if (config.includeErrorHandler) {
         for (const [fileBaseName, endpoints] of metasByFile.entries()) {
             generateErrorHandlerForApiFile(
                 outputDir,

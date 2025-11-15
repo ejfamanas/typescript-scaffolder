@@ -5,19 +5,20 @@ import { AxiosRequestConfig } from "axios";
 export async function GET_user(id: string, headers?: Record<string, string>): Promise<GET_RES_user> {
 
       const authHeaders = {};
-      
-        const request = () => axios.get(
-          `https://api.example.com/users/${id}`,
-          
-          {
-            headers: {
-              ...authHeaders,
-              ...(headers ?? {}),
-            },
-          } as AxiosRequestConfig
-        );
-        const response = await request();
-      
 
+      const request = () => axios.get(
+        `https://api.example.com/users/${id}`,
+        
+        {
+          headers: {
+            ...authHeaders,
+            ...(headers ?? {}),
+          },
+        } as AxiosRequestConfig
+      );
+
+      const wrappedRequest = request;
+
+      const response = await wrappedRequest();
       return response.data;
 }

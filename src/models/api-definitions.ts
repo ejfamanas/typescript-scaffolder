@@ -101,5 +101,5 @@ export interface EndpointClientConfigFile extends EndpointConfigType, EndpointAu
     /** Optional retry configuration applied to all endpoints in this client. */
     retry?: RetryConfig;
     /** If true, generated endpoints will be wrapped with error handling logic. */
-    wrapWithErrorHandler?: boolean;
+    includeErrorHandler?: boolean;
 }

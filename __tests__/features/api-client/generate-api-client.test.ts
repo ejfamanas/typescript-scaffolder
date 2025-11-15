@@ -41,7 +41,7 @@ describe('generate-api-client', () => {
                         apiKeyName: 'x-api-key',
                         apiKeyValue: 'test-key',
                     },
-                    wrapWithErrorHandler: true,
+                    includeErrorHandler: true,
                 } as any,
                 '../interfaces',
                 './output',
@@ -50,7 +50,7 @@ describe('generate-api-client', () => {
 
             const writtenContent = spy.mock.calls[0][1] as string;
             expect(writtenContent).toContain(`import { handleErrors_GET_user_api } from "./user_api.errorHandler"`);
-            expect(writtenContent).toContain(`const result = await handleErrors_GET_user_api(request);`);
+            expect(writtenContent).toContain(`const result = await handleErrors_GET_user_api(wrappedRequest);`);
             expect(writtenContent).toContain(`return result?.data;`);
         });
         describe('auth header generation', () => {
@@ -200,8 +200,9 @@ describe('generate-api-client', () => {
             const writtenContent = spy.mock.calls[0][1] as string;
             // imports the helper module with the wrapper name
             expect(writtenContent).toContain(`import { requestWithRetry_GET_user } from "./user_api.requestWithRetry";`);
-            // wraps the axios call with the typed wrapper
-            expect(writtenContent).toContain('const response = await requestWithRetry_GET_user(');
+            // wraps the axios call with the typed wrapper, using a wrappedRequest function
+            expect(writtenContent).toContain('const wrappedRequest = () => requestWithRetry_GET_user(request,');
+            expect(writtenContent).toContain('const response = await wrappedRequest();');
             // and still returns response.data
             expect(writtenContent).toContain('return response.data');
         });
@@ -260,8 +261,10 @@ describe('generate-api-client', () => {
                 `import { requestWithRetry_GET_user, requestWithRetry_GET_userByEmail } from "./user_api.requestWithRetry";`
             );
             // Both functions should wrap their axios calls
-            expect(writtenContent).toContain('const response = await requestWithRetry_GET_user(');
-            expect(writtenContent).toContain('const response = await requestWithRetry_GET_userByEmail(');
+            expect(writtenContent).toContain('const wrappedRequest = () => requestWithRetry_GET_user(request,');
+            expect(writtenContent).toContain('const response = await wrappedRequest();');
+            expect(writtenContent).toContain('const wrappedRequest = () => requestWithRetry_GET_userByEmail(request,');
+            expect(writtenContent).toContain('const response = await wrappedRequest();');
         });
     });
 
