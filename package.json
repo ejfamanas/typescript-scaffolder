@@ -16,7 +16,8 @@
     "express",
     "json parser",
     "interface generator",
-    "factory generator"
+    "factory generator",
+    "code generator"
   ],
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
