@@ -147,3 +147,5 @@ dist
 /src/codegen/
 /output/
 /node_modules/
+/.idea/
+

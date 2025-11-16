@@ -157,21 +157,6 @@ https://eric-famanas.super.site/the-typescript-scaffolder
 
 ---
 
-## 🛠 Programmatic Usage (API)
-
-```typescript
-import {
-  generateInterfacesFromPath,
-  generateApiClientsFromPath,
-  generateApiRegistry,
-  generateSequencesFromPath,
-  generateWebhookAppFromPath
-} from 'typescript-scaffolder';
-
-await generateInterfacesFromPath("config/schemas", "src/codegen/interfaces");
-```
-
----
 ## Roadmap
 - [x] Generate interfaces from schema definitions
 - [x] Generate enums to assert key names
