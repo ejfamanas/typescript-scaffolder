@@ -11,8 +11,12 @@ import { generateApiRegistry } from "./features/api-client/generate-api-client-r
 import { generateWebhookAppFromPath } from "./features/webhooks/generate-webhook-app";
 import { generateWebhookAppRegistry } from "./features/webhooks/generate-webhook-app-registry";
 import { generateSequencesFromPath } from "./features/api-client/generate-sequence-runner";
+import { loadConfig } from "./config/loader";
 
 const program = new Command();
+
+// Global CLI flags
+program.option("--with-validation", "Enable runtime validation (override config)");
 
 program
     .command("interfaces")
@@ -83,6 +87,14 @@ program
     .requiredOption("-i, --interfaces <dir>", "Path to interfaces directory")
     .requiredOption("-o, --output <dir>", "Output directory")
     .action(async (options) => {
+        // Merge config and CLI overrides (global flag)
+        const cliOpts = program.opts();
+        const cliOverrides = cliOpts.withValidation ? { runtime: { includeValidationHelpers: true } } : {};
+        const { runtime } = await loadConfig(process.cwd(), cliOverrides);
+        if (runtime.includeValidationHelpers) {
+            Logger.info("cli", `Validation enabled — validators will be emitted to "${runtime.validatorOutDir}". Ensure 'zod' is installed (npm i zod).`);
+        }
+
         Logger.info("cli", `Generating API client from file "${options.config}"`);
         await generateApiClientFromFile(
             path.resolve(options.config),
@@ -98,6 +110,13 @@ program
     .requiredOption("-i, --interfaces-root <dir>", "Root interfaces directory")
     .requiredOption("-o, --output-root <dir>", "Root output directory")
     .action(async (options) => {
+        const cliOpts = program.opts();
+        const cliOverrides = cliOpts.withValidation ? { runtime: { includeValidationHelpers: true } } : {};
+        const { runtime } = await loadConfig(process.cwd(), cliOverrides);
+        if (runtime.includeValidationHelpers) {
+            Logger.info("cli", `Validation enabled — validators will be emitted to "${runtime.validatorOutDir}". Ensure 'zod' is installed (npm i zod).`);
+        }
+
         Logger.info("cli", `Generating API clients from directory "${options.configDir}"`);
         await generateApiClientsFromPath(
             path.resolve(options.configDir),
@@ -126,6 +145,13 @@ program
     .requiredOption("-i, --interfaces <dir>", "path to interfaces directory")
     .requiredOption("-o, --output <dir>", "output directory")
     .action(async (options) => {
+        const cliOpts = program.opts();
+        const cliOverrides = cliOpts.withValidation ? { runtime: { includeValidationHelpers: true } } : {};
+        const { runtime } = await loadConfig(process.cwd(), cliOverrides);
+        if (runtime.includeValidationHelpers) {
+            Logger.info("cli", `Validation enabled — validators will be emitted to "${runtime.validatorOutDir}". Ensure 'zod' is installed (npm i zod).`);
+        }
+
         Logger.info("cli", `Generating webhook app and registry from config "${options.config}", interfaces "${options.interfaces}", output "${options.output}"`);
         await generateWebhookAppRegistry(path.resolve(options.output));
         await generateWebhookAppFromPath(
@@ -169,6 +195,14 @@ program
     const endpointConfig = path.resolve("config/endpoint-configs");
     const sequenceConfig = path.resolve("config/sequence-configs");
     const webhookConfig = path.resolve("config/webhook-configs");
+
+    // Load and respect runtime config before running the pipeline
+    const cliOpts = program.opts();
+    const cliOverrides = cliOpts.withValidation ? { runtime: { includeValidationHelpers: true } } : {};
+    const { runtime } = await loadConfig(process.cwd(), cliOverrides);
+    if (runtime.includeValidationHelpers) {
+      Logger.info("cli", `Validation enabled — validators will be emitted to "${runtime.validatorOutDir}". Ensure 'zod' is installed (npm i zod).`);
+    }
 
     Logger.info("cli", `🔁 Starting full scaffold pipeline from "${jsonDir}" → "${outputRoot}"`);
 
