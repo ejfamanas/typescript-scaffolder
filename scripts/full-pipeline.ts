@@ -7,10 +7,10 @@ import {
 	generateEnvLoader,
 	generateInterfacesFromPath,
 	generateWebhookAppFromPath, generateFactoriesFromPath,
-} from "./src";
+} from "../src";
 
-const ROOT_DIR = process.cwd();                // Base dir where the script is run
-const LOCAL_DIR = __dirname;                   // Base dir where this file lives
+const ROOT_DIR = process.cwd()                // Base dir where the script is run
+const LOCAL_DIR = path.join(__dirname, "..");                   // Base dir where this file lives
 const CODEGEN_DIR = path.resolve(LOCAL_DIR, "src/codegen")
 
 // Interface generation config

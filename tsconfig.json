@@ -124,7 +124,7 @@
     "__tests__",
     "__tests__/**/*",
     "output",
-    "index.dev.ts"
+    "scripts/full-pipeline.ts"
   ],
   "include": [
     "src"

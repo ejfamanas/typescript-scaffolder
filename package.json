@@ -28,7 +28,8 @@
     "typescript-codegen": "dist/cli.js"
   },
   "scripts": {
-    "dev": "ts-node index.dev.ts",
+    "dev:full": "ts-node scripts/full-pipeline.ts",
+    "dev:config": "ts-node scripts/show-config.ts",
     "test:all": "jest --all",
     "test:coverage": "jest --coverage",
     "test:failures": "jest --onlyFailures",
@@ -46,7 +47,8 @@
     "express": "^5.1.0",
     "fs-extra": "^11.3.0",
     "quicktype-core": "^23.2.5",
-    "ts-morph": "^26.0.0"
+    "ts-morph": "^26.0.0",
+    "zod": "^4.1.13"
   },
   "devDependencies": {
     "@types/express": "^5.0.2",
