@@ -1,6 +1,6 @@
 import { Project } from 'ts-morph';
 import fs from 'fs';
-import { Endpoint, EndpointAuthConfig, EndpointClientConfigFile, EndpointMeta } from 'models/api-definitions';
+import { Endpoint, EndpointClientConfigFile, EndpointMeta } from 'models/api-definitions';
 import path from 'path'
 import { ensureDir, extractInterfaces, readEndpointClientConfigFile } from '../../utils/file-system';
 import {
@@ -16,6 +16,7 @@ import { buildRetryWrapperName } from "../../utils/retry-constructors";
 import { generateRetryHelperForApiFile } from "./generate-retry-helper";
 import { generateAuthHelperForApiFile } from "./generate-auth-helper";
 import { generateErrorHandlerForApiFile } from "./generate-error-handler-helper";
+import { renderApiClientFunctionBody } from "./strings/api-client-strings";
 
 export function generateApiClientFunction(
     baseUrl: string,
@@ -120,36 +121,19 @@ export function generateApiClientFunction(
         parameters,
         returnType: `Promise<${responseSchema}>`,
         isAsync: true,
-        statements: `
-  const authHeaders = ${config.authType && config.authType !== "none" ? "getAuthHeaders()" : "{}"};
-
-  const request = () => axios.${method}(
-    \`${baseUrl}${urlPath}\`,
-    ${hasBody ? 'body,' : ''}
-    {
-      headers: {
-        ...authHeaders,
-        ...(headers ?? {}),
-      },
-    } as AxiosRequestConfig
-  );
-
-  const wrappedRequest = ${useRetry
-    ? `() => ${buildRetryWrapperName(functionName)}(request, {
-    enabled: true,
-    maxAttempts: ${(config as any)?.retry?.maxAttempts ?? 3},
-    initialDelayMs: ${(config as any)?.retry?.initialDelayMs ?? 250},
-    multiplier: ${(config as any)?.retry?.multiplier ?? 2.0},
-    method: "${endpoint.method.toUpperCase()}"
-  })`
-    : 'request'};
-
-  ${useErrorHandler
-    ? `const result = await handleErrors_${method.toUpperCase()}_${fileName}(wrappedRequest);
-  return result?.data;`
-    : `const response = await wrappedRequest();
-  return response.data;`}
-`,
+        statements: renderApiClientFunctionBody({
+            baseUrl,
+            urlPath,
+            method,
+            fileName,
+            functionName,
+            hasBody,
+            endpointMethod: endpoint.method,
+            authEnabled: !!(config.authType && config.authType !== 'none'),
+            useRetry,
+            retryConfig: (config as any)?.retry,
+            useErrorHandler,
+        }),
     });
 
     // Save to disk
@@ -195,7 +179,7 @@ export async function generateApiClientFromFile(configPath: string, interfacesDi
 
         responseModule = responseModule.replace(/\.ts$/, '');
 
-        // store all the endpoints + meta in a list so they are easier to reference
+        // store all the endpoints + meta in a list, so they are easier to reference
         const list = metasByFile.get(fileName) ?? [];
         list.push({
             functionName,

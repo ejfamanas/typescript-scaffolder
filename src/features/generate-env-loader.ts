@@ -1,9 +1,9 @@
-import {Project} from 'ts-morph';
+import { Project } from 'ts-morph';
 import * as fs from 'fs';
 import dotenv from 'dotenv';
-import {ensureDir} from "../utils/file-system";
-import {inferPrimitiveType} from "../utils/object-helpers";
-import {Logger} from "../utils/logger";
+import { ensureDir } from "../utils/file-system";
+import { inferPrimitiveType } from "../utils/object-helpers";
+import { Logger } from "../utils/logger";
 import path from "path";
 
 dotenv.config();
@@ -21,7 +21,7 @@ export function generateEnvLoader(
     envFile: string,
     outputDir: string,
     outputFile: string,
-    envClassName ='EnvConfig',
+    envClassName = 'EnvConfig',
     envEnumName = 'EnvKeys'
 ): void {
     const funcName = "generateEnvLoader";
@@ -74,7 +74,7 @@ export function generateEnvLoader(
 
     // test duplicate keys
     const seenKeys = new Set<string>();
-    for (const { key } of envVars) {
+    for (const {key} of envVars) {
         if (seenKeys.has(key)) {
             Logger.error(funcName, `Duplicate env key detected: ${key}`);
             throw new Error(funcName);

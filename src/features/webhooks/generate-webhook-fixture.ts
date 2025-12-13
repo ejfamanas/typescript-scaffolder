@@ -76,7 +76,7 @@ export function generateWebhookFixture(
     ]);
 }
 
-function fakerExprFor(name: string, type: Type, depth = 1, indent = 0): string {
+export function fakerExprFor(name: string, type: Type, depth = 1, indent = 0): string {
     // Handle unions of string literals: pick the first literal value
     if (type.isUnion()) {
         const parts = type.getUnionTypes();
@@ -136,7 +136,7 @@ function fakerExprFor(name: string, type: Type, depth = 1, indent = 0): string {
     return buildObjectLiteralForType(type, depth, indent);
 }
 
-function buildObjectLiteralForType(type: Type, depth: number, indent: number): string {
+export function buildObjectLiteralForType(type: Type, depth: number, indent: number): string {
     if (depth <= 0) {
         return '{} as any';
     }
@@ -161,7 +161,7 @@ function buildObjectLiteralForType(type: Type, depth: number, indent: number): s
     return lines.join('\n');
 }
 
-function fakerStringByName(name: string): string {
+export function fakerStringByName(name: string): string {
     const lower = name.toLowerCase();
     if (/(^|_)id$/.test(lower) || lower.endsWith('id')) return 'faker.string.uuid()';
     if (lower.includes('email')) return 'faker.internet.email()';

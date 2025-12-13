@@ -1,8 +1,8 @@
-import { walkDirectory, ensureDir } from '../utils/file-system';
+import { ensureDir, walkDirectory } from '../utils/file-system';
 import fs from 'fs';
 import path from 'node:path';
 import { Logger } from '../utils/logger';
-import { Project, InterfaceDeclaration } from 'ts-morph';
+import { InterfaceDeclaration, Project } from 'ts-morph';
 
 /**
  * Extracts interface names and keys from a TypeScript file using ts-morph.
@@ -24,7 +24,7 @@ export function extractInterfaceKeysFromFile(filePath: string): { name: string; 
                     .map(prop => stripSurroundingQuotes(prop.getName()))
             )
         );
-        interfaces.push({ name, keys });
+        interfaces.push({name, keys});
     });
 
     return interfaces;
@@ -54,6 +54,7 @@ export function generateEnum(name: string, keys: string[]): string {
         .join(',\n');
     return `export enum ${enumName} {\n${body}\n}\n`;
 }
+
 /**
  * Tests to make sure the identifier is a valid string using regex
  * @param str

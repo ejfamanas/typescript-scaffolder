@@ -53,7 +53,7 @@ export function generateSequenceRunner(sequence: Sequence, tree: TreeNode[], out
   lines.push(``);
   lines.push(`export async function run${sequence.name}() {`);
 
-  function walk(node: TreeNode, depth = 1) {
+  const walk =(node: TreeNode, depth = 1) => {
     const indent = '  '.repeat(depth);
     switch (node.type) {
       case 'fetchList': {
