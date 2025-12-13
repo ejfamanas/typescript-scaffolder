@@ -1,4 +1,4 @@
-import {AuthType, Endpoint, EndpointAuthCredentials, SchemaConsumer} from 'models/api-definitions';
+import { Endpoint, SchemaConsumer } from 'models/api-definitions';
 import { Logger } from './logger';
 import path from "path";
 
@@ -7,72 +7,72 @@ import path from "path";
  * @param endpoint
  */
 export function generateClientAction(endpoint: Endpoint): {
-	functionName: string,
-	fileName: string
+    functionName: string,
+    fileName: string
 } {
-	const funcName = 'generateClientAction';
-	const { objectName } = endpoint
-	Logger.debug(funcName, 'Generating client action...');
-	const action =
-		endpoint.method === 'GET' && endpoint.pathParams?.length
-			? 'GET'
-			: endpoint.method === 'GET'
-				? 'GET_ALL'
-				: endpoint.method.toUpperCase();
+    const funcName = 'generateClientAction';
+    const {objectName} = endpoint
+    Logger.debug(funcName, 'Generating client action...');
+    const action =
+        endpoint.method === 'GET' && endpoint.pathParams?.length
+            ? 'GET'
+            : endpoint.method === 'GET'
+                ? 'GET_ALL'
+                : endpoint.method.toUpperCase();
 
-	const functionName = `${action}_${objectName}`;
-	const fileName = `${objectName}_api`;
-	return {functionName, fileName};
+    const functionName = `${action}_${objectName}`;
+    const fileName = `${objectName}_api`;
+    return {functionName, fileName};
 }
 
 
 export function determineHasBody(method: string): boolean {
-	return ['post', 'put'].includes(method.toLowerCase());
+    return ['post', 'put'].includes(method.toLowerCase());
 }
 
 export function constructUrlPath(endpoint: Endpoint): string {
-	const pathParams = endpoint.pathParams ?? [];
-	return pathParams.reduce((p, param) => p.replace(`:${param}`, `\${${param}}`), endpoint.path);
+    const pathParams = endpoint.pathParams ?? [];
+    return pathParams.reduce((p, param) => p.replace(`:${param}`, `\${${param}}`), endpoint.path);
 }
 
 export function addClientRequiredImports(
-	sourceFile: import('ts-morph').SourceFile,
-	outputFilePath: string,
-	interfaceInputDir: string,
-	requestSchema: string | undefined,
-	responseSchema: string,
-	hasBody: boolean,
-	addAxios: boolean = true
+    sourceFile: import('ts-morph').SourceFile,
+    outputFilePath: string,
+    interfaceInputDir: string,
+    requestSchema: string | undefined,
+    responseSchema: string,
+    hasBody: boolean,
+    addAxios: boolean = true
 ) {
-	const existingImports = sourceFile.getImportDeclarations().map(decl => decl.getModuleSpecifierValue());
-	const addImportIfMissing = (specifier: string, namedImport: string, isDefault = false) => {
-		if (!namedImport?.trim()) return; // Skip if name is empty or undefined
-		if (!existingImports.includes(specifier)) {
-			sourceFile.addImportDeclaration({
-				...(isDefault ? { defaultImport: namedImport } : { namedImports: [namedImport] }),
-				moduleSpecifier: specifier,
-			});
-		}
-	};
+    const existingImports = sourceFile.getImportDeclarations().map(decl => decl.getModuleSpecifierValue());
+    const addImportIfMissing = (specifier: string, namedImport: string, isDefault = false) => {
+        if (!namedImport?.trim()) return; // Skip if name is empty or undefined
+        if (!existingImports.includes(specifier)) {
+            sourceFile.addImportDeclaration({
+                ...(isDefault ? {defaultImport: namedImport} : {namedImports: [namedImport]}),
+                moduleSpecifier: specifier,
+            });
+        }
+    };
 
-	if (requestSchema && hasBody) {
-		const requestPath = path
-			.relative(path.dirname(outputFilePath), path.join(interfaceInputDir, requestSchema))
-			.replace(/\\/g, '/')
-			.replace(/\.ts$/, '');
-		addImportIfMissing(requestPath, requestSchema); // use requestSchema verbatim
-	}
+    if (requestSchema && hasBody) {
+        const requestPath = path
+            .relative(path.dirname(outputFilePath), path.join(interfaceInputDir, requestSchema))
+            .replace(/\\/g, '/')
+            .replace(/\.ts$/, '');
+        addImportIfMissing(requestPath, requestSchema); // use requestSchema verbatim
+    }
 
-	const responsePath = path
-		.relative(path.dirname(outputFilePath), path.join(interfaceInputDir, responseSchema))
-		.replace(/\\/g, '/')
-		.replace(/\.ts$/, '');
-	addImportIfMissing(responsePath, responseSchema); // use responseSchema verbatim
+    const responsePath = path
+        .relative(path.dirname(outputFilePath), path.join(interfaceInputDir, responseSchema))
+        .replace(/\\/g, '/')
+        .replace(/\.ts$/, '');
+    addImportIfMissing(responsePath, responseSchema); // use responseSchema verbatim
 
-	if (addAxios) {
-		addImportIfMissing('axios', 'axios', true);
-		addImportIfMissing('axios', 'AxiosRequestConfig');
-	}
+    if (addAxios) {
+        addImportIfMissing('axios', 'axios', true);
+        addImportIfMissing('axios', 'AxiosRequestConfig');
+    }
 }
 
 /**
@@ -80,21 +80,21 @@ export function addClientRequiredImports(
  * @param consumers
  */
 export function collectRequiredSchemas<T extends SchemaConsumer>(consumers: T[]): Set<string> {
-	const funcName = 'collectRequiredSchemas'
-	Logger.debug(funcName, `Collecting required schemas for ${consumers.length} consumer(s)`)
-	const requiredSchemas = new Set<string>();
-	for (const consumer of consumers) {
-		if (consumer.requestSchema) {
-			requiredSchemas.add(consumer.requestSchema);
-		}
-		if (consumer.responseSchema) {
-			requiredSchemas.add(consumer.responseSchema);
-		}
-	}
-	if (requiredSchemas.size === 0) {
-		Logger.warn(funcName, `could not find any schemas for ${consumers[0]} and ${consumers.length - 1} others.`)
-	}
-	return requiredSchemas;
+    const funcName = 'collectRequiredSchemas'
+    Logger.debug(funcName, `Collecting required schemas for ${consumers.length} consumer(s)`)
+    const requiredSchemas = new Set<string>();
+    for (const consumer of consumers) {
+        if (consumer.requestSchema) {
+            requiredSchemas.add(consumer.requestSchema);
+        }
+        if (consumer.responseSchema) {
+            requiredSchemas.add(consumer.responseSchema);
+        }
+    }
+    if (requiredSchemas.size === 0) {
+        Logger.warn(funcName, `could not find any schemas for ${consumers[0]} and ${consumers.length - 1} others.`)
+    }
+    return requiredSchemas;
 }
 
 /**
@@ -106,36 +106,36 @@ export function collectRequiredSchemas<T extends SchemaConsumer>(consumers: T[])
  * @param funcName
  */
 export function findDirectoryContainingAllSchemas(
-	requiredSchemas: Set<string>,
-	interfaceNameToDirs: Map<string, Set<string>>,
-	configPath: string,
+    requiredSchemas: Set<string>,
+    interfaceNameToDirs: Map<string, Set<string>>,
+    configPath: string,
 ): string | null {
-	const funcName = 'findDirectoryContainingAllSchemas'
-	// To find a directory that contains all required schemas:
-	// We build a map from directory to count of schemas found there
-	const dirSchemaCount: Map<string, number> = new Map();
-	for (const schema of requiredSchemas) {
-		const dirs = interfaceNameToDirs.get(schema);
-		if (!dirs) {
-			const configFileName = path.basename(configPath);
-			Logger.warn(funcName,`Schema "${schema}" not found in interface files. Referenced in config: ${configFileName}`);
+    const funcName = 'findDirectoryContainingAllSchemas'
+    // To find a directory that contains all required schemas:
+    // We build a map from directory to count of schemas found there
+    const dirSchemaCount: Map<string, number> = new Map();
+    for (const schema of requiredSchemas) {
+        const dirs = interfaceNameToDirs.get(schema);
+        if (!dirs) {
+            const configFileName = path.basename(configPath);
+            Logger.warn(funcName, `Schema "${schema}" not found in interface files. Referenced in config: ${configFileName}`);
 
-			const availableSchemas = Array.from(interfaceNameToDirs.keys()).join(', ');
-			Logger.debug(funcName, `Available schemas: ${availableSchemas}`);
+            const availableSchemas = Array.from(interfaceNameToDirs.keys()).join(', ');
+            Logger.debug(funcName, `Available schemas: ${availableSchemas}`);
 
-			return null;
-		}
-		for (const dir of dirs) {
-			dirSchemaCount.set(dir, (dirSchemaCount.get(dir) ?? 0) + 1);
-		}
-	}
-	const totalSchemas = requiredSchemas.size;
-	for (const [dir, count] of dirSchemaCount.entries()) {
-		if (count === totalSchemas) {
-			return dir;
-		}
-	}
-	return null;
+            return null;
+        }
+        for (const dir of dirs) {
+            dirSchemaCount.set(dir, (dirSchemaCount.get(dir) ?? 0) + 1);
+        }
+    }
+    const totalSchemas = requiredSchemas.size;
+    for (const [dir, count] of dirSchemaCount.entries()) {
+        if (count === totalSchemas) {
+            return dir;
+        }
+    }
+    return null;
 }
 
 /**
@@ -143,43 +143,43 @@ export function findDirectoryContainingAllSchemas(
  * Use this at call sites where generation must stop when schemas are missing.
  */
 export function assertDirectoryContainingAllSchemas(
-	requiredSchemas: Set<string>,
-	interfaceNameToDirs: Map<string, Set<string>>,
-	configPath: string,
+    requiredSchemas: Set<string>,
+    interfaceNameToDirs: Map<string, Set<string>>,
+    configPath: string,
 ): string {
-	const funcName = 'assertDirectoryContainingAllSchemas';
-	const dir = findDirectoryContainingAllSchemas(requiredSchemas, interfaceNameToDirs, configPath);
-	if (!dir) {
-		const needed = Array.from(requiredSchemas).join(', ');
-		const configFileName = path.basename(configPath);
-		// A warning has already been logged by findDirectoryContainingAllSchemas
-		throw new Error(
-			`[${funcName}] Failed to locate an interfaces directory containing all required schemas: ${needed}. ` +
-			`Check your config: ${configFileName}`
-		);
-	}
-	return dir;
+    const funcName = 'assertDirectoryContainingAllSchemas';
+    const dir = findDirectoryContainingAllSchemas(requiredSchemas, interfaceNameToDirs, configPath);
+    if (!dir) {
+        const needed = Array.from(requiredSchemas).join(', ');
+        const configFileName = path.basename(configPath);
+        // A warning has already been logged by findDirectoryContainingAllSchemas
+        throw new Error(
+            `[${funcName}] Failed to locate an interfaces directory containing all required schemas: ${needed}. ` +
+            `Check your config: ${configFileName}`
+        );
+    }
+    return dir;
 }
 
 export function buildImportMapAndRegistryEntries(importMap: Map<string, string[]>): { importStatements: string[], registryEntries: string[] } {
-	const importStatements: string[] = [];
-	const registryEntries: string[] = [];
+    const importStatements: string[] = [];
+    const registryEntries: string[] = [];
 
-	for (const [subDir, files] of importMap.entries()) {
-		const registryKey = subDir.replace(/\\/g, '/'); // Normalize Windows paths
-		const entryLines: string[] = [];
+    for (const [subDir, files] of importMap.entries()) {
+        const registryKey = subDir.replace(/\\/g, '/'); // Normalize Windows paths
+        const entryLines: string[] = [];
 
-		for (const file of files) {
-			const fileName = path.basename(file, '.ts');
-			const safeSubDir = subDir.replace(/[^a-zA-Z0-9_$]/g, '_');
-			const importVar = `${safeSubDir}_${fileName.replace(/[^a-zA-Z0-9_$]/g, '_')}`;
-			const relativePath = `./${path.join(subDir, fileName).replace(/\\/g, '/')}`;
-			importStatements.push(`import * as ${importVar} from '${relativePath}';`);
-			entryLines.push(`...${importVar}`);
-		}
+        for (const file of files) {
+            const fileName = path.basename(file, '.ts');
+            const safeSubDir = subDir.replace(/[^a-zA-Z0-9_$]/g, '_');
+            const importVar = `${safeSubDir}_${fileName.replace(/[^a-zA-Z0-9_$]/g, '_')}`;
+            const relativePath = `./${path.join(subDir, fileName).replace(/\\/g, '/')}`;
+            importStatements.push(`import * as ${importVar} from '${relativePath}';`);
+            entryLines.push(`...${importVar}`);
+        }
 
-		registryEntries.push(`  '${registryKey}': {\n    ${entryLines.join(',\n    ')}\n  }`);
-	}
+        registryEntries.push(`  '${registryKey}': {\n    ${entryLines.join(',\n    ')}\n  }`);
+    }
 
-	return { importStatements, registryEntries };
+    return {importStatements, registryEntries};
 }

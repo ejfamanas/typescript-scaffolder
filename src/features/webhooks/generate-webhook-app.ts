@@ -11,6 +11,7 @@ import {
 } from "../../utils/client-constructors";
 import { generateWebhookAppRegistry } from "./generate-webhook-app-registry";
 import { WebhookConfigFile } from "models/webhook-definitions";
+import { renderCreateWebhookAppBody } from "./strings/webhook-app-strings";
 
 export async function generateWebhookApp(serviceName: string, outputDir: string) {
 	const funcName = 'generateWebhookApp';
@@ -32,18 +33,7 @@ export async function generateWebhookApp(serviceName: string, outputDir: string)
 	sourceFile.addFunction({
 		name: functionName,
 		isExported: true,
-		statements: `
-const app = express();
-app.use(express.json());
-
-const handlers = webhookAppRegistry['${serviceName}']?.handlers || {};
-
-for (const key of Object.keys(handlers)) {
-  app.post('/' + key, handlers[key]);
-}
-
-return app;
-`
+		statements: renderCreateWebhookAppBody(serviceName)
 	});
 
 	await project.save();

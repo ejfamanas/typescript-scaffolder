@@ -23,35 +23,31 @@ import { buildImportMapAndRegistryEntries } from "../../utils/client-constructor
  * @param registryFileName - the name of the registry file
  */
 export async function generateApiRegistry(apiRootDir: string, registryFileName = 'registry.ts') {
-	const funcName = 'generateApiRegistry';
-	Logger.debug(funcName, 'Generating registry...');
-	const importMap = new Map<string, string[]>(); // Map<subdirectory, filePaths>
+    const funcName = 'generateApiRegistry';
+    Logger.debug(funcName, 'Generating registry...');
+    const importMap = new Map<string, string[]>(); // Map<subdirectory, filePaths>
 
-	walkDirectory(apiRootDir, (filePath) => {
-			if (filePath.endsWith('.ts') && !filePath.endsWith(registryFileName)) {
-				const subDir = path.relative(apiRootDir, path.dirname(filePath));
-				const files = importMap.get(subDir) || [];
-				files.push(filePath);
-				importMap.set(subDir, files);
-			}
-		}, '.ts'
-	);
+    walkDirectory(apiRootDir, (filePath) => {
+            if (filePath.endsWith('.ts') && !filePath.endsWith(registryFileName)) {
+                const subDir = path.relative(apiRootDir, path.dirname(filePath));
+                const files = importMap.get(subDir) || [];
+                files.push(filePath);
+                importMap.set(subDir, files);
+            }
+        }, '.ts'
+    );
 
-	if (importMap.size === 0) {
-		Logger.warn(funcName, 'No API files found. Registry will not be generated.');
-		return;
-	}
+    if (importMap.size === 0) {
+        Logger.warn(funcName, 'No API files found. Registry will not be generated.');
+        return;
+    }
 
-	const { importStatements, registryEntries } = buildImportMapAndRegistryEntries(importMap);
+    const {importStatements, registryEntries} = buildImportMapAndRegistryEntries(importMap);
 
-	const output = `${importStatements.join('\n')}
-export const apiRegistry = {
-${registryEntries.join(',\n')}
-};
-`;
+    const output = `${importStatements.join('\n')} export const apiRegistry = { ${registryEntries.join(',\n')} };`;
 
-	const registryPath = path.join(apiRootDir, registryFileName);
-	fs.writeFileSync(registryPath, output, 'utf8');
+    const registryPath = path.join(apiRootDir, registryFileName);
+    fs.writeFileSync(registryPath, output, 'utf8');
 }
 
 
@@ -69,23 +65,23 @@ ${registryEntries.join(',\n')}
  * @throws If the function or service cannot be found in the registry.
  */
 export function getApiFunction(
-	apiRegistry: Record<string, Record<string, (...args: any[]) => Promise<any>>>,
-	service: string,
-	functionName: string
+    apiRegistry: Record<string, Record<string, (...args: any[]) => Promise<any>>>,
+    service: string,
+    functionName: string
 ): (...args: any[]) => Promise<any> {
-	const funcName = 'getApiFunction';
-	Logger.debug(funcName, 'Fetching api function...');
-	const serviceRegistry = apiRegistry?.[service];
-	if (!serviceRegistry) {
-		Logger.warn(funcName, 'No service registry found.');
-	}
+    const funcName = 'getApiFunction';
+    Logger.debug(funcName, 'Fetching api function...');
+    const serviceRegistry = apiRegistry?.[service];
+    if (!serviceRegistry) {
+        Logger.warn(funcName, 'No service registry found.');
+    }
 
-	const fn = serviceRegistry?.[functionName];
-	if (!fn || typeof fn !== 'function') {
-		const msg = `Function "${functionName}" not found in service "${service}".`
-		Logger.error(funcName, `Function "${functionName}" not found in service "${service}".`);
-		throw new Error(msg);
-	}
+    const fn = serviceRegistry?.[functionName];
+    if (!fn || typeof fn !== 'function') {
+        const msg = `Function "${functionName}" not found in service "${service}".`
+        Logger.error(funcName, `Function "${functionName}" not found in service "${service}".`);
+        throw new Error(msg);
+    }
 
-	return fn;
+    return fn;
 }
