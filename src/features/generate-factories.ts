@@ -4,6 +4,8 @@ import { Logger } from "../utils/logger";
 import { ensureDir, walkDirectory } from "../utils/file-system";
 import { extractInterfacesFromFile } from "../utils/interface-parser";
 import { getMockValueForProperty } from "../utils/mocking/mock-value-resolver";
+import { renderFactoryBlock, renderImportStatement } from "./strings/factories";
+import { DEFAULT_NEWLINE, line } from "../utils/strings/format";
 
 /**
  * Generate a factory class file from a single interface file.
@@ -35,50 +37,34 @@ export async function generateFactoriesFromFile(
             .replace(/\\/g, "/")
             .replace(/\.ts$/, "");
         const importName = interfaces.map((iface) => iface.name).join(", ");
-        const importStatement = `import { ${importName} } from "${importPath}/${interfaceName}";\n\n`;
+        const importStatement = renderImportStatement({
+            importNames: importName,
+            importPath,
+            interfaceFileName: interfaceName,
+        });
 
         const localInterfaces = new Set(interfaces.map((i) => i.name));
 
-        const factoryBlocks = interfaces.map((iface) => {
-            const defaults = iface.properties
-                .map(({
-                          name,
-                          type
-                      }) => `      ${name}: ${getMockValueForProperty(name, type, localInterfaces, useFakerDefaults)},`)
-                .join("\n");
+        const factoryBlocks = interfaces
+            .map((iface) => {
+                const defaultsLines = iface.properties.map(({ name, type }) =>
+                    line(
+                        3,
+                        `${name}: ${getMockValueForProperty(
+                            name,
+                            type,
+                            localInterfaces,
+                            useFakerDefaults
+                        )},`
+                    )
+                );
 
-            return `// Auto-generated factory for ${iface.name}
-export class ${iface.name}Factory {
-  /**
-   * Builds a new ${iface.name} object with default values and optional overrides.
-   * This method only constructs the object — it does not persist or extend behavior.
-   */
-  static build(overrides: Partial<${iface.name}> = {}): ${iface.name} {
-    return {
-${defaults}
-      ...overrides
-    };
-  }
-
-  /**
-   * Creates a new ${iface.name} instance by delegating to build().
-   * Can be extended in subclasses to introduce side effects or persistence.
-   */
-  static create(overrides: Partial<${iface.name}> = {}): ${iface.name} {
-    return this.build(overrides);
-  }
-
-  /**
-   * Generates an array of mock ${iface.name} instances.
-   * @param count - number of items to generate
-   * @param overrides - optional overrides applied to each item
-   */
-  static mockList(count = 3, overrides: Partial<${iface.name}> = {}): ${iface.name}[] {
-    return Array.from({ length: count }, () => this.create(overrides));
-  }
-}
-`;
-        }).join("\n\n");
+                return renderFactoryBlock({
+                    interfaceName: iface.name,
+                    defaultsLines,
+                });
+            })
+            .join(DEFAULT_NEWLINE);
 
         const content = importStatement + factoryBlocks;
 
