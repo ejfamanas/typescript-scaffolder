@@ -13,16 +13,14 @@ export async function generateWebhookAppRegistry(serviceDir: string, registryFil
     const hasRouter = fs.existsSync(routerPath);
     const registryPath = path.join(serviceDir, registryFileName);
 
-    if (!fs.existsSync(routesDir)) {
-        Logger.warn(funcName, `Routes directory does not exist: ${routesDir}`);
-        return;
-    }
-
-    const routeFiles = fs.readdirSync(routesDir).filter(
-        file =>
-            file.startsWith('handle_') &&
-            file.endsWith('.ts')
-    );
+    // Generate an empty registry when routes have not been scaffolded yet.
+    const routeFiles = fs.existsSync(routesDir)
+        ? fs.readdirSync(routesDir).filter(
+            file =>
+                file.startsWith('handle_') &&
+                file.endsWith('.ts')
+        )
+        : [];
 
     const importStatements: string[] = [];
     const handlerSpreads: string[] = [];
