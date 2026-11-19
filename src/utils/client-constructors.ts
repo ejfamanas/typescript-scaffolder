@@ -46,7 +46,7 @@ export function addClientRequiredImports(
 ) {
     const addImportIfMissing = (specifier: string, namedImport: string, isDefault = false) => {
         if (!namedImport?.trim()) return;
-        const normalizedSpecifier = specifier.startsWith('.') ? specifier : specifier;
+        const normalizedSpecifier = specifier;
         let existing = sourceFile.getImportDeclarations()
             .find(decl => decl.getModuleSpecifierValue() === normalizedSpecifier && !decl.isTypeOnly());
 
@@ -66,7 +66,7 @@ export function addClientRequiredImports(
         const relativePath = path.relative(
             path.dirname(outputFilePath),
             path.join(interfaceInputDir, schemaName)
-        ).replace(/\\\\/g, '/').replace(/\\.ts$/, '');
+        ).replace(/\\/g, '/').replace(/\.ts$/, '');
         return relativePath.startsWith('.') ? relativePath : './' + relativePath;
     };
 
