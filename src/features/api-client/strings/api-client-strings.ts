@@ -87,7 +87,8 @@ export function buildReturnLines(args: {
     return useErrorHandler
         ? [
             line(1, `const result = await handleErrors_${functionName}(wrappedRequest);`),
-            line(1, "return result?.data;"),
+            line(1, 'if (!result) throw new Error("API request returned no response");'),
+            line(1, "return result.data;"),
         ]
         : [line(1, "const response = await wrappedRequest();"), line(1, "return response.data;")];
 }
