@@ -61,7 +61,7 @@ describe('generateEnvLoader', () => {
     });
 
     it('generates typed accessors without embedding values from the env file', () => {
-        mockReadFileSync.mockReturnValue(`API_KEY=private-value\\nAPP_PORT=3000\\nDEBUG=true`);
+        mockReadFileSync.mockReturnValue(`API_KEY=private-value\nAPP_PORT=3000\nDEBUG=true`);
 
         generateEnvLoader(envPath, OUTPUT_PATH, OUTPUT_FILE);
 
