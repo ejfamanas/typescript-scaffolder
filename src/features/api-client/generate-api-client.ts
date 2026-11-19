@@ -91,11 +91,11 @@ export function generateApiClientFunction(
         const existing = sourceFile.getImportDeclarations().find(d => d.getModuleSpecifierValue() === handlerModule);
         if (!existing) {
             sourceFile.addImportDeclaration({
-                namedImports: [{name: `handleErrors_${method.toUpperCase()}_${fileName}`}],
+                namedImports: [{name: `handleErrors_${functionName}`}],
                 moduleSpecifier: handlerModule,
             });
-        } else if (!existing.getNamedImports().some(n => n.getName() === `handleErrors_${method.toUpperCase()}_${fileName}`)) {
-            existing.addNamedImports([{name: `handleErrors_${method.toUpperCase()}_${fileName}`}]);
+        } else if (!existing.getNamedImports().some(n => n.getName() === `handleErrors_${functionName}`)) {
+            existing.addNamedImports([{name: `handleErrors_${functionName}`}]);
         }
     }
 
