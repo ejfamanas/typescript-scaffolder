@@ -184,10 +184,16 @@ program
     await generateInterfacesFromPath(jsonDir, interfaceOutput);
     await generateEnumsFromPath(interfaceOutput, enumOutput);
     await generateFactoriesFromPath(interfaceOutput, factoryOutput);
-    await generateApiClientsFromPath(endpointConfig, interfaceOutput, clientOutput);
-    await generateApiRegistry(clientOutput);
-    await generateSequencesFromPath(sequenceConfig, clientOutput);
-    await generateWebhookAppFromPath(webhookConfig, interfaceOutput, webhookOutput);
+    if (fs.existsSync(endpointConfig)) {
+      await generateApiClientsFromPath(endpointConfig, interfaceOutput, clientOutput);
+      await generateApiRegistry(clientOutput);
+    }
+    if (fs.existsSync(sequenceConfig)) {
+      await generateSequencesFromPath(sequenceConfig, clientOutput);
+    }
+    if (fs.existsSync(webhookConfig)) {
+      await generateWebhookAppFromPath(webhookConfig, interfaceOutput, webhookOutput);
+    }
   });
 
 program
