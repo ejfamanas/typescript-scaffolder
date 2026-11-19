@@ -1,12 +1,10 @@
 import { Project } from 'ts-morph';
 import * as fs from 'fs';
-import dotenv from 'dotenv';
 import { ensureDir } from "../utils/file-system";
 import { inferPrimitiveType } from "../utils/object-helpers";
 import { Logger } from "../utils/logger";
 import path from "path";
 
-dotenv.config();
 
 /**
  * Takes in an env file and produces a typescript-safe interface of a class and enum
@@ -51,7 +49,7 @@ export function generateEnvLoader(
         const [key, rawVal] = line.split('=');
         const cleanKey = key.trim();
         const value = rawVal?.trim() ?? '';
-        const inferred = inferPrimitiveType(value);
+        const inferred = value === '' ? 'string' : inferPrimitiveType(value);
         // test proper key naming
         const keyPattern = /^[A-Z_][A-Z0-9_]*$/;
         if (!keyPattern.test(cleanKey)) {
@@ -87,13 +85,23 @@ export function generateEnvLoader(
     sourceFile.addClass({
         name: envClassName,
         isExported: true,
-        properties: envVars.map(({key, value, inferred}) => ({
-            name: key,
-            isStatic: true,
-            isReadonly: true,
-            initializer: `process.env.${key} ?? ${inferred === 'string' ? `'${value}'` : value}`,
-            type: inferred
-        })),
+        properties: envVars.map(({key, inferred}) => {
+            const rawValue = `process.env.${key}`;
+            const errorMessage = JSON.stringify(`Invalid or missing environment variable: ${key}`);
+            const expression = inferred === 'number'
+                ? `if (!value || !Number.isFinite(Number(value))) throw new Error(${errorMessage}); return Number(value);`
+                : inferred === 'boolean'
+                    ? `if (value !== "true" && value !== "false") throw new Error(${errorMessage}); return value === "true";`
+                    : `if (value === undefined) throw new Error(${errorMessage}); return value;`;
+
+            return {
+                name: key,
+                isStatic: true,
+                isReadonly: true,
+                initializer: `(() => { const value = ${rawValue}; ${expression} })()`,
+                type: inferred
+            };
+        }),
     });
 
     // Optionally generate an enum of the keys
