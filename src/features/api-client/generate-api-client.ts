@@ -207,6 +207,7 @@ export async function generateApiClientFromFile(configPath: string, interfacesDi
                 authType: config.authType,
                 credentials: config.credentials,
                 retry: config.retry, // surfaced for useRetry
+                includeErrorHandler: config.includeErrorHandler,
             } as Partial<EndpointClientConfigFile>,
             interfacesDir,
             outputDir,
