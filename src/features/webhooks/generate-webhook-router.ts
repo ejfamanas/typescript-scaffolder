@@ -29,6 +29,11 @@ export async function generateWebhookRoute(
     const funcName = `generateWebhookRoute`;
     Logger.debug(funcName, 'Starting webhook route generation...');
 
+    // Signature verification needs access to the raw request body, not the parsed payload.
+    if (webhook.secretVerificationKey) {
+        throw new Error('Webhook signature verification is not implemented; refusing to generate an unverified route.');
+    }
+
     const pascalHandlerName = toPascalCase(handlerName);
     const routeFile = path.join(outputDir, 'router.ts');
     ensureDir(outputDir);
