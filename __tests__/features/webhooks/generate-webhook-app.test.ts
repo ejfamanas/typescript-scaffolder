@@ -192,114 +192,60 @@ describe('generate-webhook-app', () => {
     expect(srcB!).toMatch(/import\s+express\s+from\s+['"]express['"]/);
   });
 
-  it('creates app even when registry entry is missing, defaulting to empty handlers', async () => {
+  it('creates an empty registry when generating an app with no routes', async () => {
     const serviceDir = path.join(outRoot, 'source-missing');
-    // NOTE: no webhookAppRegistry.ts written here
     await generateWebhookApp('source-missing', serviceDir);
 
     const appFile = findGeneratedAppFile(serviceDir);
+    const registryFile = path.join(serviceDir, 'webhookAppRegistry.ts');
     expect(appFile).toBeTruthy();
+    expect(fs.existsSync(registryFile)).toBe(true);
 
-    const src = readIfExists(appFile!);
-    expect(src).toBeTruthy();
-
-    // Minimal Express app is created
-    expect(src!).toMatch(/import\s+express\s+from\s+['"]express['"]/);
-
-    // The generator always imports the registry; when the key is missing it uses optional chaining + default {}
-    expect(src!).toMatch(/import\s*\{\s*webhookAppRegistry\s*\}\s*from\s*['"]\.\/webhookAppRegistry['"]/);
-    expect(src!).toMatch(/webhookAppRegistry\['source-missing'\]\?\.handlers\s*\|\|\s*\{\s*\}/);
-
-    // And it still iterates handlers defensively (none here)
-    expect(src!).toMatch(/for\s*\(const\s+key\s+of\s+Object\.keys\(handlers\)\)/);
-    expect(src!).toMatch(/app\.post\('\/'\s*\+\s*key,\s*handlers\[key\]\)/);
+    const src = String(readIfExists(appFile!));
+    expect(src).toContain("const router = webhookAppRegistry['source-missing']?.router;");
+    expect(src).toContain('app.use(router);');
+    expect(src).not.toContain('app.post(');
   });
 
   it('generates app when registry has router but no handlers', async () => {
     const serviceDir = path.join(outRoot, 'source-empty');
     const routesDir = path.join(serviceDir, 'routes');
-    mkdirp(routesDir);
 
-    // minimal router
-    writeFile(
-        path.join(routesDir, 'router.ts'),
-        `import express from 'express'; const router = express.Router(); export default router;`
-    );
-
-    // registry with router only; no handlers prop
-    writeFile(
-        path.join(serviceDir, 'webhookAppRegistry.ts'),
-        `import router from './routes/router';
-       export const webhookAppRegistry = { router };`
+    writeFile(path.join(routesDir, 'router.ts'),
+      `import express from 'express'; const router = express.Router(); export default router;`
     );
 
     await generateWebhookApp('source-empty', serviceDir);
 
     const appFile = findGeneratedAppFile(serviceDir);
     expect(appFile).toBeTruthy();
-
-    const src = readIfExists(appFile!);
-    expect(src).toBeTruthy();
-
-    // Should reference express and the registry
-    expect(src!).toMatch(/import\s+express\s+from\s+['"]express['"]/);
-    expect(src!).toMatch(/webhookAppRegistry/);
-
-    // With no handlers, there should be no obvious attempt to mount handler endpoints in the app file.
-    // (Router mounting is fine; handler-specific wiring should be absent.)
-
-    // No handler module imports in the file
-    expect(src!).not.toMatch(/from\s+['"]\.\/routes\/handle_/);
-
-    // Uses empty-handlers fallback from registry (no handlers present)
-    expect(src!).toMatch(/const\s+handlers\s*=\s*webhookAppRegistry\['source-empty'\]\?\.\s*handlers\s*\|\|\s*\{\s*\}/);
-
-    // The loop template can still exist (harmless when handlers is empty)
-    expect(src!).toMatch(/for\s*\(const\s+key\s+of\s+Object\.keys\(handlers\)\)/);
-    expect(src!).toMatch(/app\.post\('\/'\s*\+\s*key,\s*handlers\[key\]\)/);
+    const src = String(readIfExists(appFile!));
+    expect(src).toContain("const router = webhookAppRegistry['source-empty']?.router;");
+    expect(src).toContain('app.use(router);');
+    expect(src).not.toContain('app.post(');
   });
 
-  it('generates app when registry has handlers but no router (handlers-only mapping)', async () => {
+  it('does not mount handler exports as Express routes without a router', async () => {
     const serviceDir = path.join(outRoot, 'source-handlers-only');
     const routesDir = path.join(serviceDir, 'routes');
-    mkdirp(routesDir);
 
-    // Two handler modules, no router
-    writeFile(
-      path.join(routesDir, 'handle_alpha.ts'),
-      `export async function handleAlphaWebhook(req:any,res:any){ return; }`
+    writeFile(path.join(routesDir, 'handle_alpha.ts'),
+      `export async function handleAlphaWebhook(payload:any){ return; }`
     );
-    writeFile(
-      path.join(routesDir, 'handle_beta.ts'),
-      `export async function handleBetaWebhook(req:any,res:any){ return; }`
-    );
-
-    // Registry maps by service key, with handlers only
-    writeFile(
-      path.join(serviceDir, 'webhookAppRegistry.ts'),
-      `import * as handle_alpha from './routes/handle_alpha';\n` +
-        `import * as handle_beta from './routes/handle_beta';\n` +
-        `export const webhookAppRegistry = {\n` +
-        `  'source-handlers-only': { handlers: { ...handle_alpha, ...handle_beta } }\n` +
-        `};\n`
+    writeFile(path.join(routesDir, 'handle_beta.ts'),
+      `export async function handleBetaWebhook(payload:any){ return; }`
     );
 
     await generateWebhookApp('source-handlers-only', serviceDir);
 
     const appFile = findGeneratedAppFile(serviceDir);
     expect(appFile).toBeTruthy();
-    const src = readIfExists(appFile!);
-    expect(src).toBeTruthy();
 
-    // Express + registry import present; no router import
-    expect(src!).toMatch(/import\s+express\s+from\s+['"]express['"]/);
-    expect(src!).toMatch(/import\s*\{\s*webhookAppRegistry\s*\}\s*from\s*['"]\.\/webhookAppRegistry['"]/);
-    expect(src!).not.toMatch(/from\s+['"]\.\/routes\/router['"]/);
-
-    // Handlers wiring via dynamic loop
-    expect(src!).toMatch(/const\s+handlers\s*=\s*webhookAppRegistry\['source-handlers-only'\]\?\.handlers\s*\|\|\s*\{\s*\}/);
-    expect(src!).toMatch(/for\s*\(const\s+key\s+of\s+Object\.keys\(handlers\)\)/);
-    expect(src!).toMatch(/app\.post\('\/'\s*\+\s*key,\s*handlers\[key\]\)/);  });
+    const src = String(readIfExists(appFile!));
+    expect(src).toContain("const router = webhookAppRegistry['source-handlers-only']?.router;");
+    expect(src).toContain('app.use(router);');
+    expect(src).not.toContain('app.post(');
+  });
 
   it('is idempotent: running generateWebhookApp twice does not duplicate imports or loops', async () => {
     const serviceDir = path.join(outRoot, 'source-idempotent');
@@ -321,7 +267,7 @@ describe('generate-webhook-app', () => {
 
     // No duplicate express imports or handler loops
     expect((src!.match(/import\s+express\s+from\s+['"]express['"]/g) || []).length).toBe(1);
-    expect((src!.match(/for\s*\(const\s+key\s+of\s+Object\.keys\(handlers\)\)/g) || []).length).toBeLessThanOrEqual(1);
+    expect((src!.match(/app\.use\(router\)/g) || []).length).toBe(1);
   });
 
   it('logs warning and exits when generateWebhookAppFromFile receives invalid JSON', async () => {
