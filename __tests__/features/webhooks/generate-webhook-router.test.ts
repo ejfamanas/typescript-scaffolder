@@ -70,6 +70,22 @@ describe('generate-webhook-router', () => {
         }
     });
 
+    it('rejects signature verification config until verification is implemented', async () => {
+        const ifaceDir = path.join(tmpDir, 'interfaces', 'service-signature');
+        fs.mkdirSync(ifaceDir, {recursive: true});
+        const webhook: IncomingWebhook = {
+            direction: 'incoming',
+            name: 'signed',
+            path: '/webhooks/signed',
+            handlerName: 'Signed',
+            requestSchema: 'SignedPayload',
+            secretVerificationKey: 'SECRET_KEY'
+        };
+
+        await expect(generateWebhookRoute(webhook, ifaceDir, tmpDir))
+            .rejects.toThrow(/signature verification is not implemented/);
+    });
+
     it('creates router.ts for first webhook and appends a second without duplicates', async () => {
         // Arrange: fake interface dir (used only for relative import construction in your generator)
         const ifaceDir = path.join(tmpDir, 'interfaces', 'service-alpha');
