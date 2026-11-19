@@ -35,7 +35,6 @@ export function renderApiKeyAuth(args: {
     // Use apiKeyName from credentials or default to "x-api-key"
     const headerName = credentials?.apiKeyName ?? "x-api-key";
 
-
     const lines = [
         "/**",
         " * Returns headers containing the API key for authentication.",
@@ -90,10 +89,10 @@ export function renderBasicAuthUsingTsMorph(args: {
             writer.writeLine(
                 `const password = process.env["${serviceEnvKey}_PASSWORD"];`
             );
+            writer.writeLine(`if (!username || !password) throw new Error("Missing Basic Auth credentials for ${serviceEnvKey}");`);
             writer.writeLine(
                 `const encoded = Buffer.from(username + ":" + password).toString("base64");`
             );
-            writer.writeLine(`if (!username || !password) throw new Error("Missing Basic Auth credentials for ${serviceEnvKey}");`);
             writer.writeLine("return {");
             writer.indent(() => {
                 writer.writeLine(`Authorization: "Basic " + encoded`);
