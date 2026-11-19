@@ -107,6 +107,9 @@ describe('generate-webhook-router', () => {
         expect(src.match(/const\s+router\s*=\s*express\.Router\(\)/g)?.length).toBe(1);
         expect(src.match(/export\s+default\s+router/g)?.length).toBe(1);
 
+        // Test routes are only enabled outside production.
+        expect(src).toContain("if (process.env.NODE_ENV !== 'production')");
+
         // Both incoming routes are present
         expect(src).toContain("router.post('/webhooks/stripe_payment_succeeded'");
         expect(src).toContain("router.post('/webhooks/stripe_payment_failed'");
