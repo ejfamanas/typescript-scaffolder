@@ -24,10 +24,10 @@ export async function generateWebhookApp(serviceName: string, outputDir: string)
 
 	const project = new Project();
 	ensureDir(outputDir);
-    // Ensure standalone application generation produces a usable registry.
-    if (!fs.existsSync(path.join(outputDir, 'webhookAppRegistry.ts'))) {
-        await generateWebhookAppRegistry(outputDir);
-    }
+	// Ensure standalone application generation produces a usable registry.
+	if (!fs.existsSync(path.join(outputDir, 'webhookAppRegistry.ts'))) {
+		await generateWebhookAppRegistry(outputDir);
+	}
 	const filePath = path.join(outputDir, fileName);
 	const sourceFile = project.createSourceFile(filePath, undefined, { overwrite: true });
 
