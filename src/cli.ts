@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 import { Command } from "commander";
 import path from "path";
+import fs from "fs";
 import { Logger } from "./utils/logger";
 import { generateInterfacesFromPath } from "./features/generate-interfaces";
 import { generateEnumsFromPath } from "./features/generate-enums";
@@ -8,7 +9,7 @@ import { generateFactoriesFromPath } from "./features/generate-factories";
 import { generateEnvLoader } from "./features/generate-env-loader";
 import { generateApiClientFromFile, generateApiClientsFromPath } from "./features/api-client/generate-api-client";
 import { generateApiRegistry } from "./features/api-client/generate-api-client-registry";
-import { generateWebhookAppFromPath } from "./features/webhooks/generate-webhook-app";
+import { generateWebhookAppFromFile, generateWebhookAppFromPath } from "./features/webhooks/generate-webhook-app";
 import { generateWebhookAppRegistry } from "./features/webhooks/generate-webhook-app-registry";
 import { generateSequencesFromPath } from "./features/api-client/generate-sequence-runner";
 
@@ -53,6 +54,7 @@ program
         await generateFactoriesFromPath(
             path.resolve(options.input),
             path.resolve(options.output),
+            ".ts",
             options.faker
         );
     });
@@ -121,18 +123,21 @@ program
 
 program
     .command("webhooks")
-    .description("Generate webhook app and registry from config file")
+    .description("Generate webhook app and registry from a config file or directory")
     .requiredOption("-c, --config <file>", "path to config file")
     .requiredOption("-i, --interfaces <dir>", "path to interfaces directory")
     .requiredOption("-o, --output <dir>", "output directory")
     .action(async (options) => {
         Logger.info("cli", `Generating webhook app and registry from config "${options.config}", interfaces "${options.interfaces}", output "${options.output}"`);
-        await generateWebhookAppRegistry(path.resolve(options.output));
-        await generateWebhookAppFromPath(
-            path.resolve(options.config),
-            path.resolve(options.interfaces),
-            path.resolve(options.output)
-        );
+        const configPath = path.resolve(options.config);
+        const interfacesDir = path.resolve(options.interfaces);
+        const outputDir = path.resolve(options.output);
+
+        if (fs.statSync(configPath).isDirectory()) {
+            await generateWebhookAppFromPath(configPath, interfacesDir, outputDir);
+        } else {
+            await generateWebhookAppFromFile(configPath, interfacesDir, outputDir);
+        }
     });
 
 program
@@ -154,6 +159,9 @@ program
   .requiredOption("--json <dir>", "Directory of input JSON files for interface generation")
   .requiredOption("--env <file>", "Path to .env file")
   .requiredOption("--output <dir>", "Root output directory (e.g. src/codegen)")
+  .option("--endpoints <dir>", "Endpoint config directory", "config/endpoint-configs")
+  .option("--sequences <dir>", "Sequence config directory", "config/sequence-configs")
+  .option("--webhooks <dir>", "Webhook config directory", "config/webhook-configs")
   .action(async (options) => {
     const jsonDir = path.resolve(options.json);
     const envFile = path.resolve(options.env);
@@ -166,9 +174,9 @@ program
     const webhookOutput = path.resolve(outputRoot, "webhooks");
     const envOutputDir = path.resolve(outputRoot, "config");
     const envOutputFile = "env-config.ts";
-    const endpointConfig = path.resolve("config/endpoint-configs");
-    const sequenceConfig = path.resolve("config/sequence-configs");
-    const webhookConfig = path.resolve("config/webhook-configs");
+    const endpointConfig = path.resolve(options.endpoints);
+    const sequenceConfig = path.resolve(options.sequences);
+    const webhookConfig = path.resolve(options.webhooks);
 
     Logger.info("cli", `🔁 Starting full scaffold pipeline from "${jsonDir}" → "${outputRoot}"`);
 
@@ -176,11 +184,16 @@ program
     await generateInterfacesFromPath(jsonDir, interfaceOutput);
     await generateEnumsFromPath(interfaceOutput, enumOutput);
     await generateFactoriesFromPath(interfaceOutput, factoryOutput);
-    await generateApiClientsFromPath(endpointConfig, interfaceOutput, clientOutput);
-    await generateApiRegistry(clientOutput);
-    await generateSequencesFromPath(sequenceConfig, clientOutput);
-    await generateWebhookAppRegistry(webhookOutput);
-    await generateWebhookAppFromPath(webhookConfig, interfaceOutput, webhookOutput);
+    if (fs.existsSync(endpointConfig)) {
+      await generateApiClientsFromPath(endpointConfig, interfaceOutput, clientOutput);
+      await generateApiRegistry(clientOutput);
+    }
+    if (fs.existsSync(sequenceConfig)) {
+      await generateSequencesFromPath(sequenceConfig, clientOutput);
+    }
+    if (fs.existsSync(webhookConfig)) {
+      await generateWebhookAppFromPath(webhookConfig, interfaceOutput, webhookOutput);
+    }
   });
 
 program

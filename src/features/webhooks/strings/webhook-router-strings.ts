@@ -67,6 +67,7 @@ export function renderWebhookPostRoute(args: {
     const lines = [
         `router.post('${webhookPath}', async (req, res) => {`,
         `  try {`,
+        `    // TODO: Validate the payload at runtime before handling production traffic.`,
         `    const payload = req.body as ${requestSchema};`,
         `    await ${handlerFunctionName}(payload);`,
         `    res.status(200).json({ ok: true });`,
@@ -89,6 +90,7 @@ export function renderWebhookTestRoute(args: {
     const {testPath, handlerFunctionName, fixtureExportName, testHeadersArg} = args;
 
     const lines = [
+        "if (process.env.NODE_ENV !== 'production') {",
         `router.post('${testPath}', async (_req, res) => {`,
         `  try {`,
         `    await ${handlerFunctionName}(${fixtureExportName}${testHeadersArg});`,
@@ -98,6 +100,7 @@ export function renderWebhookTestRoute(args: {
         `    res.status(500).json({ ok: false });`,
         `  }`,
         `});`,
+        "}",
     ];
 
     return lines.join('\n');

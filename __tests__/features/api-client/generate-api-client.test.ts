@@ -49,9 +49,9 @@ describe('generate-api-client', () => {
             );
 
             const writtenContent = spy.mock.calls[0][1] as string;
-            expect(writtenContent).toContain(`import { handleErrors_GET_user_api } from "./user_api.errorHandler"`);
-            expect(writtenContent).toContain(`const result = await handleErrors_GET_user_api(wrappedRequest);`);
-            expect(writtenContent).toContain(`return result?.data;`);
+            expect(writtenContent).toContain(`import { handleErrors_GET_user_with_error_handling } from "./user_api.errorHandler"`);
+            expect(writtenContent).toContain(`const result = await handleErrors_GET_user_with_error_handling(wrappedRequest);`);
+            expect(writtenContent).toContain(`return result.data;`);
         });
         describe('auth header generation', () => {
             const baseArgs: [
@@ -291,6 +291,35 @@ describe('generate-api-client', () => {
 
             fs.unlinkSync(tempFilePath);
             spy.mockRestore();
+        });
+
+        it('wires the generated error handler when enabled in endpoint config', async () => {
+            const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'api-client-errors-'));
+            const interfacesDir = path.join(tmpDir, 'interfaces');
+            const outputDir = path.join(tmpDir, 'output');
+            const configPath = path.join(tmpDir, 'endpoint.json');
+
+            fs.mkdirSync(interfacesDir, {recursive: true});
+            fs.writeFileSync(path.join(interfacesDir, 'GET_RES_user.ts'), 'export interface GET_RES_user {}');
+            const config: EndpointClientConfigFile = {
+                baseUrl: 'https://api.example.com',
+                authType: 'none',
+                includeErrorHandler: true,
+                endpoints: [sampleEndpoint]
+            };
+            fs.writeFileSync(configPath, JSON.stringify(config), 'utf-8');
+
+            try {
+                await generateApiClientFromFile(configPath, interfacesDir, outputDir);
+
+                const client = fs.readFileSync(path.join(outputDir, 'user_api.ts'), 'utf-8');
+                const helper = fs.readFileSync(path.join(outputDir, 'user_api.errorHandler.ts'), 'utf-8');
+
+                expect(client).toContain('handleErrors_GET_user(wrappedRequest)');
+                expect(helper).toContain('export function handleErrors_GET_user(');
+            } finally {
+                fs.rmSync(tmpDir, {recursive: true, force: true});
+            }
         });
 
         it('warns and skips endpoints missing objectName', async () => {

@@ -28,7 +28,7 @@ export async function generateApiRegistry(apiRootDir: string, registryFileName =
     const importMap = new Map<string, string[]>(); // Map<subdirectory, filePaths>
 
     walkDirectory(apiRootDir, (filePath) => {
-            if (filePath.endsWith('.ts') && !filePath.endsWith(registryFileName)) {
+            if (filePath.endsWith('_api.ts') && !filePath.endsWith(registryFileName)) {
                 const subDir = path.relative(apiRootDir, path.dirname(filePath));
                 const files = importMap.get(subDir) || [];
                 files.push(filePath);

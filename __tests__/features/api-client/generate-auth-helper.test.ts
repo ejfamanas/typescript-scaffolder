@@ -14,7 +14,7 @@ describe("generateAuthHelperForApiFile", () => {
         await fs.rm(tempDir, {recursive: true, force: true});
     });
 
-    it("generates an API key helper with env and fallback", async () => {
+    it("generates an API key helper without embedding credentials", async () => {
         const baseName = "apiKey";
         await generateAuthHelperForApiFile(tempDir, baseName, "apikey", {
             apiKeyName: "X-API-KEY",
@@ -27,11 +27,12 @@ describe("generateAuthHelperForApiFile", () => {
 
         const content = await fs.readFile(outputFile, "utf-8");
         expect(content).toContain('process.env["APIKEY_APIKEY"]');
-        expect(content).toContain("hardcoded_key");
+        expect(content).not.toContain("hardcoded_key");
+        expect(content).toContain("Missing environment variable: APIKEY_APIKEY");
         expect(content).toContain("X-API-KEY");
     });
 
-    it("generates a Basic Auth helper with env and fallback", async () => {
+    it("generates a Basic Auth helper without embedding credentials", async () => {
         const baseName = "basicAuth";
         await generateAuthHelperForApiFile(tempDir, baseName, "basic", {
             username: "BASIC_AUTH_USER",
@@ -45,6 +46,8 @@ describe("generateAuthHelperForApiFile", () => {
         const content = await fs.readFile(outputFile, "utf-8");
         expect(content).toContain('process.env["BASICAUTH_USERNAME"]');
         expect(content).toContain('process.env["BASICAUTH_PASSWORD"]');
+        expect(content).not.toContain('?? "BASIC_AUTH_PASS"');
+        expect(content).toContain("Missing Basic Auth credentials");
     });
 
     it("generates empty helper for no auth", async () => {

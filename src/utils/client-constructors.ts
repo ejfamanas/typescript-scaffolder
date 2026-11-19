@@ -44,30 +44,38 @@ export function addClientRequiredImports(
     hasBody: boolean,
     addAxios: boolean = true
 ) {
-    const existingImports = sourceFile.getImportDeclarations().map(decl => decl.getModuleSpecifierValue());
     const addImportIfMissing = (specifier: string, namedImport: string, isDefault = false) => {
-        if (!namedImport?.trim()) return; // Skip if name is empty or undefined
-        if (!existingImports.includes(specifier)) {
+        if (!namedImport?.trim()) return;
+        const existing = sourceFile.getImportDeclarations()
+            .find(decl => decl.getModuleSpecifierValue() === specifier && !decl.isTypeOnly());
+
+        if (!existing) {
             sourceFile.addImportDeclaration({
                 ...(isDefault ? {defaultImport: namedImport} : {namedImports: [namedImport]}),
                 moduleSpecifier: specifier,
             });
+        } else if (isDefault && !existing.getDefaultImport()) {
+            existing.setDefaultImport(namedImport);
+        } else if (!isDefault && !existing.getNamedImports().some(item => item.getName() === namedImport)) {
+            existing.addNamedImport(namedImport);
         }
     };
 
+    const schemaImportPath = (schemaName: string) => {
+        const relativePath = path.relative(
+            path.dirname(outputFilePath),
+            path.join(interfaceInputDir, schemaName)
+        ).replace(/\\/g, '/').replace(/\.ts$/, '');
+        return relativePath.startsWith('.') ? relativePath : './' + relativePath;
+    };
+
     if (requestSchema && hasBody) {
-        const requestPath = path
-            .relative(path.dirname(outputFilePath), path.join(interfaceInputDir, requestSchema))
-            .replace(/\\/g, '/')
-            .replace(/\.ts$/, '');
-        addImportIfMissing(requestPath, requestSchema); // use requestSchema verbatim
+        addImportIfMissing(schemaImportPath(requestSchema), requestSchema);
     }
 
-    const responsePath = path
-        .relative(path.dirname(outputFilePath), path.join(interfaceInputDir, responseSchema))
-        .replace(/\\/g, '/')
-        .replace(/\.ts$/, '');
-    addImportIfMissing(responsePath, responseSchema); // use responseSchema verbatim
+    if (responseSchema) {
+        addImportIfMissing(schemaImportPath(responseSchema), responseSchema);
+    }
 
     if (addAxios) {
         addImportIfMissing('axios', 'axios', true);

@@ -11,7 +11,7 @@ import {
     assertDirectoryContainingAllSchemas
 } from '../../src/utils/client-constructors';
 import {Endpoint} from "../../src";
-import {SourceFile} from "ts-morph";
+import {Project, SourceFile} from "ts-morph";
 
 describe('generateClientAction', () => {
     it('should generate filename and functionName from GET endpoint', () => {
@@ -99,6 +99,29 @@ describe('client helper functions', () => {
                 namedImports: ['CreateUserRequest'],
                 moduleSpecifier: '../interfaces/CreateUserRequest'
             });
+        });
+
+        it('merges imports for matching schemas and axios', () => {
+            const project = new Project({useInMemoryFileSystem: true});
+            const sourceFile = project.createSourceFile('/output/user_api.ts', '');
+
+            addClientRequiredImports(
+                sourceFile,
+                '/output/user_api.ts',
+                '/interfaces',
+                'User',
+                'User',
+                true
+            );
+
+            const imports = sourceFile.getImportDeclarations();
+            const modelImports = imports.filter(decl => decl.getModuleSpecifierValue() === '../interfaces/User');
+            const axiosImports = imports.filter(decl => decl.getModuleSpecifierValue() === 'axios');
+
+            expect(modelImports).toHaveLength(1);
+            expect(axiosImports).toHaveLength(1);
+            expect(axiosImports[0].getDefaultImport()?.getText()).toBe('axios');
+            expect(axiosImports[0].getNamedImports().map(imp => imp.getName())).toContain('AxiosRequestConfig');
         });
 
         it('only supplies basic imports nothing if schemas array is empty', () => {

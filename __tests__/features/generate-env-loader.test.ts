@@ -60,6 +60,22 @@ describe('generateEnvLoader', () => {
         expect(mockSaveSync).toHaveBeenCalled();
     });
 
+    it('generates typed accessors without embedding values from the env file', () => {
+        mockReadFileSync.mockReturnValue(`API_KEY=private-value\nAPP_PORT=3000\nDEBUG=true`);
+
+        generateEnvLoader(envPath, OUTPUT_PATH, OUTPUT_FILE);
+
+        const properties = mockAddClass.mock.calls[0][0].properties;
+        const apiKey = properties.find((prop: any) => prop.name === 'API_KEY');
+        const port = properties.find((prop: any) => prop.name === 'APP_PORT');
+        const debug = properties.find((prop: any) => prop.name === 'DEBUG');
+
+        expect(apiKey.initializer).toContain('process.env.API_KEY');
+        expect(apiKey.initializer).not.toContain('private-value');
+        expect(port.initializer).toContain('Number(value)');
+        expect(debug.initializer).toContain('value === "true"');
+    });
+
     it('throws if env file does not exist', () => {
         mockExistsSync.mockReturnValue(false);
         expect(() => {

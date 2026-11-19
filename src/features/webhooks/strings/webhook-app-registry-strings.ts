@@ -19,7 +19,7 @@ export function renderRegistryLines(args: {
         "",
         "export const webhookAppRegistry = {",
         line(1, `'${serviceName}': {`),
-        ...(hasRouter ? [line(2, "router: Router,")] : []),
+        line(2, hasRouter ? "router," : "router: undefined,"),
         line(2, "handlers: {"),
         ...handlerLines,
         line(2, "}"),

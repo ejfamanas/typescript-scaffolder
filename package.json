@@ -25,7 +25,8 @@
     "dist"
   ],
   "bin": {
-    "typescript-codegen": "dist/cli.js"
+    "typescript-codegen": "dist/cli.js",
+    "typescript-scaffolder": "dist/cli.js"
   },
   "scripts": {
     "dev": "ts-node index.dev.ts",

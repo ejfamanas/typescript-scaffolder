@@ -8,7 +8,7 @@ A CLI and programmatic toolchain for generating fully-typed TypeScript code from
 ---
 ### 🧭 About the Project
 
-**TypeScript Scaffolder** helps engineers, integrators, and platform teams turn raw JSON or schema definitions into **fully‑typed, production‑ready TypeScript scaffolds** — without boilerplate, code generators, or SaaS lock‑in.
+**TypeScript Scaffolder** helps engineers, integrators, and platform teams turn raw JSON or schema definitions into **fully‑typed, editable TypeScript scaffolds** — without boilerplate, code generators, or SaaS lock‑in.
 
 It’s designed for:
 
@@ -128,6 +128,30 @@ typescript-scaffolder full \
   --env .env \
   --output ./src/codegen
 ```
+
+---
+
+The `full` command always generates interfaces, enums, factories, and the environment accessor.
+API clients, sequences, and webhooks are generated when their corresponding config directories exist.
+To use custom config directories, pass `--endpoints`, `--sequences`, and `--webhooks`.
+
+### Generated credentials
+
+API clients read authentication credentials from environment variables at runtime.
+For example, the `user_api` client expects `USER_API_APIKEY` for API key authentication,
+or `USER_API_USERNAME` and `USER_API_PASSWORD` for Basic Auth.
+Secret values supplied in endpoint config files are **not embedded** in generated code.
+
+The `envloader` generator uses the supplied `.env` file to infer types and variable names,
+but generated accessors read values from `process.env`. Applications must load their
+environment variables before importing generated accessors.
+
+### Generated webhooks
+
+Generated webhook handlers and routes are starting points for customization.
+The incoming route currently uses a TypeScript assertion rather than runtime payload validation.
+Signature verification is not yet implemented, and configurations requesting it are rejected.
+Generated `/test/` simulation routes are disabled when `NODE_ENV=production`.
 
 ---
 
