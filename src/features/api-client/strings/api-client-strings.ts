@@ -80,14 +80,13 @@ export function buildWrappedRequestLines(wrappedRequestExpr: string): string[] {
 
 export function buildReturnLines(args: {
     useErrorHandler: boolean;
-    method: string;
-    fileName: string;
+    functionName: string;
 }): string[] {
-    const {useErrorHandler, method, fileName} = args;
+    const {useErrorHandler, functionName} = args;
 
     return useErrorHandler
         ? [
-            line(1, `const result = await handleErrors_${method.toUpperCase()}_${fileName}(wrappedRequest);`),
+            line(1, `const result = await handleErrors_${functionName}(wrappedRequest);`),
             line(1, "return result?.data;"),
         ]
         : [line(1, "const response = await wrappedRequest();"), line(1, "return response.data;")];
@@ -116,7 +115,7 @@ export function renderApiClientFunctionBody(params: ApiClientBodyParams): string
 
     const wrappedRequestLines = buildWrappedRequestLines(wrappedRequestExpr);
 
-    const returnLines = buildReturnLines({useErrorHandler, method, fileName});
+    const returnLines = buildReturnLines({useErrorHandler, functionName});
 
     return joinLines([...requestLines, ...wrappedRequestLines, ...returnLines, ""]);
 }
