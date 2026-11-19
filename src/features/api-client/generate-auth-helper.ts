@@ -10,7 +10,7 @@ import { renderAuthHelperContent } from "./strings/auth-helper-strings";
  * @param outputDir - The directory where the auth helper file will be created.
  * @param fileBaseName - The base name of the API client file.
  * @param authType - The type of authentication ('apikey' | 'basic' | 'none').
- * @param credentials - Optional credentials needed for 'apikey' or 'basic' auth.
+ * @param credentials - Optional auth header configuration; secret values are read from env at runtime.
  */
 export async function generateAuthHelperForApiFile(
     outputDir: string,
