@@ -126,6 +126,18 @@ describe('generate-webhook-app-registry', () => {
         expect(txt).toMatch(/handlers/);
     });
 
+    it('excludes generated webhook fixtures from the handlers registry', async () => {
+        const svc = path.join(outRoot, 'source-fixtures');
+        writeFile(path.join(svc, 'routes/handle_alpha.ts'), 'export function handleAlpha() {}');
+        writeFile(path.join(svc, 'routes/Alpha.fixture.ts'), 'export const mockAlpha = {};');
+
+        await generateWebhookAppRegistry(svc);
+
+        const txt = read(findRegistryFile(svc)!);
+        expect(txt).toContain('./routes/handle_alpha');
+        expect(txt).not.toContain('Alpha.fixture');
+    });
+
     it('scans multiple services and writes a registry for each', async () => {
         const svcA = path.join(outRoot, 'source-alpha');
         const svcB = path.join(outRoot, 'source-beta');
@@ -231,13 +243,16 @@ describe('generateWebhookAppRegistry', () => {
         expect(txt).toMatch(/handlers:\s*\{[\s\S]*\.\.\.handle_one[\s\S]*\}/);
     });
 
-    it('does not write a registry when routes directory is missing', async () => {
+    it('writes an empty registry when routes directory is missing', async () => {
         const serviceDir = path.join(outRoot, 'source-kappa');
         // do NOT create routes dir
 
         await generateWebhookAppRegistry(serviceDir);
 
         const registryPath = findRegistryFileRecursive(serviceDir);
-        expect(registryPath).toBeNull();
+        expect(registryPath).toBeTruthy();
+        const txt = fs.readFileSync(registryPath!, 'utf8');
+        expect(txt).toContain('router: undefined');
+        expect(txt).toContain('handlers: {');
     });
 });
