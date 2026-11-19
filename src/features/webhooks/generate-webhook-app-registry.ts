@@ -7,6 +7,7 @@ export async function generateWebhookAppRegistry(serviceDir: string, registryFil
     const funcName = 'generateWebhookAppRegistry';
     Logger.debug(funcName, `Generating registry in ${serviceDir}`);
 
+    fs.mkdirSync(serviceDir, {recursive: true});
     const serviceName = path.basename(serviceDir);
     const routesDir = path.join(serviceDir, 'routes');
     const routerPath = path.join(routesDir, 'router.ts');
