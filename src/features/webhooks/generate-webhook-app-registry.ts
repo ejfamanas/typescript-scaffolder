@@ -20,9 +20,8 @@ export async function generateWebhookAppRegistry(serviceDir: string, registryFil
 
     const routeFiles = fs.readdirSync(routesDir).filter(
         file =>
-            file.endsWith('.ts') &&
-            file !== 'router.ts' &&
-            file !== registryFileName
+            file.startsWith('handle_') &&
+            file.endsWith('.ts')
     );
 
     const importStatements: string[] = [];
