@@ -67,6 +67,7 @@ export function renderWebhookPostRoute(args: {
     const lines = [
         `router.post('${webhookPath}', async (req, res) => {`,
         `  try {`,
+        `    // TODO: Validate the payload at runtime before handling production traffic.`,
         `    const payload = req.body as ${requestSchema};`,
         `    await ${handlerFunctionName}(payload);`,
         `    res.status(200).json({ ok: true });`,
