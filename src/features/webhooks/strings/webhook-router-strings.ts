@@ -89,6 +89,7 @@ export function renderWebhookTestRoute(args: {
     const {testPath, handlerFunctionName, fixtureExportName, testHeadersArg} = args;
 
     const lines = [
+        "if (process.env.NODE_ENV !== 'production') {",
         `router.post('${testPath}', async (_req, res) => {`,
         `  try {`,
         `    await ${handlerFunctionName}(${fixtureExportName}${testHeadersArg});`,
@@ -98,6 +99,7 @@ export function renderWebhookTestRoute(args: {
         `    res.status(500).json({ ok: false });`,
         `  }`,
         `});`,
+        "}",
     ];
 
     return lines.join('\n');
