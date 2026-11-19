@@ -29,7 +29,7 @@ export async function generateWebhookAppRegistry(serviceDir: string, registryFil
 
     // Import router if exists
     if (hasRouter) {
-        importStatements.push(`import * as Router from './routes/router';`);
+        importStatements.push(`import router from './routes/router';`);
     }
 
     // Import handlers
