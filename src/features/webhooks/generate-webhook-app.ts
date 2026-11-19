@@ -1,5 +1,6 @@
 import { readWebhookConfigFile, extractInterfaces, ensureDir } from '../../utils/file-system';
 import * as path from 'path';
+import * as fs from 'fs';
 import { Project } from 'ts-morph';
 import { Logger } from '../../utils/logger';
 import { toPascalCase } from "../../utils/object-helpers";
@@ -22,6 +23,7 @@ export async function generateWebhookApp(serviceName: string, outputDir: string)
 	const functionName = `create${pascalName}WebhookApp`;
 
 	const project = new Project();
+	ensureDir(outputDir);
 	const filePath = path.join(outputDir, fileName);
 	const sourceFile = project.createSourceFile(filePath, undefined, { overwrite: true });
 
@@ -86,7 +88,8 @@ export async function generateWebhookAppFromPath(
 
 		// Compute relative path of foundDir to interfacesRootDir to preserve structure in outputRootDir
 		const relativeInterfaceDir = path.relative(interfacesRootDir, foundDir);
-		const outputDir = path.join(outputRootDir, relativeInterfaceDir);		await ensureDir(outputDir);
+		const outputDir = path.join(outputRootDir, relativeInterfaceDir);
+		ensureDir(outputDir);
 
 		await generateWebhookAppFromFile(configPath, foundDir, outputDir);
 	}
