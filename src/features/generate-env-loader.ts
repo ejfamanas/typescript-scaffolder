@@ -8,6 +8,7 @@ import path from "path";
 
 /**
  * Takes in an env file and produces a typescript-safe interface of a class and enum
+ * Values are read from process.env at runtime and are never embedded in the generated source.
  *
  * @param envFile
  * @param outputDir
