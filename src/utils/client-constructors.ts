@@ -46,14 +46,13 @@ export function addClientRequiredImports(
 ) {
     const addImportIfMissing = (specifier: string, namedImport: string, isDefault = false) => {
         if (!namedImport?.trim()) return;
-        const normalizedSpecifier = specifier;
-        let existing = sourceFile.getImportDeclarations()
-            .find(decl => decl.getModuleSpecifierValue() === normalizedSpecifier && !decl.isTypeOnly());
+        const existing = sourceFile.getImportDeclarations()
+            .find(decl => decl.getModuleSpecifierValue() === specifier && !decl.isTypeOnly());
 
         if (!existing) {
             sourceFile.addImportDeclaration({
                 ...(isDefault ? {defaultImport: namedImport} : {namedImports: [namedImport]}),
-                moduleSpecifier: normalizedSpecifier,
+                moduleSpecifier: specifier,
             });
         } else if (isDefault && !existing.getDefaultImport()) {
             existing.setDefaultImport(namedImport);
