@@ -57,7 +57,7 @@ export function renderBasicAuthUsingTsMorph(args: {
     serviceEnvKey: string;
     credentials?: AuthCredentials;
 }): string {
-    const {serviceEnvKey, credentials} = args;
+    const {serviceEnvKey} = args;
 
     const project = new Project({
         useInMemoryFileSystem: true,
