@@ -1,7 +1,7 @@
 # TypeScript Scaffolder
 
 ![npm version](https://img.shields.io/npm/v/typescript-scaffolder)
-![coverage](https://img.shields.io/badge/coverage-97.48%25-green)
+![line coverage](https://img.shields.io/badge/line%20coverage-95.98%25-green)
 
 A CLI and programmatic toolchain for generating fully-typed TypeScript code from raw JSON, schemas, and declarative configs.
 
@@ -201,6 +201,30 @@ https://eric-famanas.super.site/the-typescript-scaffolder
 📔 Use `typescript-codegen <command> --help` for options. Both `webhooks` and `full` preserve existing webhook implementations unless `--overwrite-webhooks` is supplied.
 
 ---
+
+## Tests and coverage
+
+Latest completed coverage run (20 November 2026): **357 tests passed across 29 suites**.
+
+| Metric | Coverage |
+|--------|----------|
+| Lines | 95.98% |
+| Statements | 95.53% |
+| Functions | 97.35% |
+| Branches | 86.71% |
+
+The badge reports line coverage. These totals cover files instrumented by Jest. CLI subprocess tests are included in the test count, but execution inside their child processes is not included in the coverage totals.
+
+Reproduce the report with:
+
+```bash
+NODE_OPTIONS=--no-experimental-webstorage npm run test:coverage -- \
+  --maxWorkers=2 \
+  --coverageReporters=text \
+  --coverageReporters=json-summary
+```
+
+The report is written to `coverage/coverage-summary.json`. An intermittent temporary-directory error can abort coverage runs; this remains tracked in [CHANGELOG.md](CHANGELOG.md).
 
 ## Roadmap
 - [x] Generate interfaces from schema definitions
