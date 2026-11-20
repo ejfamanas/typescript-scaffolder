@@ -120,6 +120,8 @@ async function build() {
 build();
 ```
 
+The generated `EnvConfig` class reads from `process.env` when you access a field. Supply runtime values through your environment or load your application's `.env` file before reading them. For example, a sample entry of `PORT=3000` generates a numeric getter, and `ENABLED=true` generates a boolean getter that accepts `true` or `false`. Accessing a missing key or an invalid typed value throws an error naming the key.
+
 ## Quickstart CLI Example
 
 ```bash

@@ -30,7 +30,7 @@ export function deriveObjectName(filePath: string): string {
  */
 export function inferPrimitiveType(value: string): 'string' | 'number' | 'boolean' {
 	if (value === 'true' || value === 'false') return 'boolean';
-	if (!isNaN(Number(value))) return 'number';
+	if (value.trim() !== '' && Number.isFinite(Number(value))) return 'number';
 	return 'string';
 }
 
