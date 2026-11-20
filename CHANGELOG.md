@@ -5,6 +5,7 @@
 ### Fixed
 
 - [x] **Read environment values at runtime and parse their types.** Generated accessors use the example file to infer keys and types. Each getter reads the current environment, converts numbers and booleans, and raises an error naming the key if a required value is missing or invalid. Regression coverage compiles the generated module in strict mode, checks that sample values stay out of its source, and exercises runtime reads. [Environment loader](src/features/generate-env-loader.ts) · [Regression tests](__tests__/features/generate-env-loader.test.ts)
+- [x] **Preserve webhook handler implementations on regeneration.** Existing incoming handler and outgoing sender files are left unchanged. Newly configured webhooks still get their own files. Regression coverage checks edited and empty files, and regenerates a webhook app after adding incoming and outgoing webhooks to its config. [Webhook generator](src/features/webhooks/generate-webhooks.ts) · [Regression tests](__tests__/features/webhooks/generate-webhooks.test.ts)
 
 ### Open items from the 2.3.20 review
 
@@ -12,7 +13,6 @@ Reviewed commit `c37cafa`. The bundled `full` example generated 62 TypeScript fi
 
 #### High priority
 
-- [ ] **Preserve webhook handler implementations on regeneration.** Running `webhooks` a second time replaces an edited handler with the original stub. Verify that adding a webhook to a config and regenerating creates the new handler and preserves the existing implementation. [Webhook generator](src/features/webhooks/generate-webhooks.ts)
 - [ ] **Mount the configured webhook routes in the generated Express app.** The payment example passes fixture objects to `app.post` as handlers and throws during app construction. Verify that the generated app compiles, starts, and dispatches a POST at `/webhooks/stripe_payment_succeeded` to the intended handler. [App template](src/features/webhooks/strings/webhook-app-strings.ts) · [Registry generator](src/features/webhooks/generate-webhook-app-registry.ts)
 - [ ] **Resolve sequence steps to the generated API clients.** The bundled runner calls `apiRegistry["populate-users"].getAll_people()`, but the client is registered as `apiRegistry["source-charlie"].GET_ALL_person`. Align the service key and method lookup. Verify that both bundled runners compile against the generated registry and call the expected client methods with mocked responses. [Sequence generator](src/features/api-client/generate-sequence-runner.ts) · [Client naming](src/utils/client-constructors.ts)
 

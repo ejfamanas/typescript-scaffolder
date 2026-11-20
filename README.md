@@ -122,6 +122,12 @@ build();
 
 The generated `EnvConfig` class reads from `process.env` when you access a field. Supply runtime values through your environment or load your application's `.env` file before reading them. For example, a sample entry of `PORT=3000` generates a numeric getter, and `ENABLED=true` generates a boolean getter that accepts `true` or `false`. Accessing a missing key or an invalid typed value throws an error naming the key.
 
+### Webhook regeneration
+
+Webhook handlers (`handle_*.ts`) and senders (`send_*_webhook.ts`) are created only when their files are missing. Running `webhooks`, `full`, or the corresponding API generators again preserves these files exactly, including your imports, comments, and implementations, while creating files for newly configured webhooks.
+
+Changes to a webhook's config do not rewrite an existing handler or sender. Update its signature or delivery logic manually when changing schemas, headers, or target URLs.
+
 ## Quickstart CLI Example
 
 ```bash

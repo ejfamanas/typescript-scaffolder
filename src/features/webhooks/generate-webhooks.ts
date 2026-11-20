@@ -19,6 +19,11 @@ export async function generateIncomingWebhook(
 
     const fileName = `handle_${handlerName}.ts`;
     const outputFilePath = path.join(outputDir, fileName);
+    // Handler files belong to the user after their initial generation.
+    if (fs.existsSync(outputFilePath)) {
+        Logger.debug(funcName, `Preserving existing webhook handler at: ${outputFilePath}`);
+        return;
+    }
     fs.mkdirSync(path.dirname(outputFilePath), {recursive: true});
 
     const project = new Project();
@@ -76,6 +81,11 @@ export async function generateOutgoingWebhook(
 
     const fileName = `send_${name}_webhook.ts`;
     const outputFilePath = path.join(outputDir, fileName);
+    // Sender files may also contain user-written delivery logic.
+    if (fs.existsSync(outputFilePath)) {
+        Logger.debug(funcName, `Preserving existing webhook sender at: ${outputFilePath}`);
+        return;
+    }
     fs.mkdirSync(path.dirname(outputFilePath), {recursive: true});
 
     const project = new Project();
