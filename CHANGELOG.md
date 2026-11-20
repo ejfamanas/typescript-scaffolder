@@ -5,7 +5,7 @@
 ### Fixed
 
 - [x] **Read environment values at runtime and parse their types.** Generated accessors use the example file to infer keys and types. Each getter reads the current environment, converts numbers and booleans, and raises an error naming the key if a required value is missing or invalid. Regression coverage compiles the generated module in strict mode, checks that sample values stay out of its source, and exercises runtime reads. [Environment loader](src/features/generate-env-loader.ts) · [Regression tests](__tests__/features/generate-env-loader.test.ts)
-- [x] **Preserve webhook handler implementations on regeneration.** Existing incoming handler and outgoing sender files are left unchanged. Newly configured webhooks still get their own files. Regression coverage checks edited and empty files, and regenerates a webhook app after adding incoming and outgoing webhooks to its config. [Webhook generator](src/features/webhooks/generate-webhooks.ts) · [Regression tests](__tests__/features/webhooks/generate-webhooks.test.ts)
+- [x] **Preserve webhook handler implementations on regeneration.** Existing incoming handler and outgoing sender files are left unchanged by default. Newly configured webhooks still get their own files. Both `webhooks` and `full` expose `--overwrite-webhooks` to explicitly replace implementations from config; programmatic generators accept `{ overwrite: true }`. The CLI help identifies the config input as a directory. Regression coverage checks preservation, explicit overwrite, new config entries, and repeatable handler and sender output through both CLI commands using raw JSON inputs. [Webhook generator](src/features/webhooks/generate-webhooks.ts) · [Generator tests](__tests__/features/webhooks/generate-webhooks.test.ts) · [CLI tests](__tests__/cli/webhook-regeneration.test.ts)
 
 ### Open items from the 2.3.20 review
 
@@ -25,3 +25,7 @@ Reviewed commit `c37cafa`. The bundled `full` example generated 62 TypeScript fi
 #### Test reliability
 
 - [ ] **Resolve the intermittent temporary-directory failure in the full Jest suite.** On Node 25.2.0, Jest required `--no-experimental-webstorage` to start. With that flag, the coverage run recorded 348 passes, one failure, and 95.96% line coverage. The affected test passed in isolation, and a second full run encountered another temporary-directory error. Verify the fix with repeated full-suite and coverage runs. [Test scripts](package.json) · [Jest configuration](jest.config.js)
+
+### Additional findings from CLI regression testing
+
+- [ ] **Allow `full` to run with an empty endpoint-config directory.** With a fresh output directory and no endpoint configs, API registry generation throws `ENOENT` while scanning the missing `<output>/apis` directory, before webhook generation starts. Verify that a webhook-only config can complete the full pipeline without manually creating that output directory. [CLI](src/cli.ts) · [API registry generator](src/features/api-client/generate-api-client-registry.ts)

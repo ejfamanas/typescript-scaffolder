@@ -121,17 +121,20 @@ program
 
 program
     .command("webhooks")
-    .description("Generate webhook app and registry from config file")
-    .requiredOption("-c, --config <file>", "path to config file")
-    .requiredOption("-i, --interfaces <dir>", "path to interfaces directory")
+    .description("Generate webhook apps and registries from JSON config files")
+    .requiredOption("-c, --config <dir>", "Directory containing webhook JSON config files")
+    .requiredOption("-i, --interfaces <dir>", "Root directory containing interfaces")
     .requiredOption("-o, --output <dir>", "output directory")
+    .option("--overwrite-webhooks", "Regenerate webhook handlers and senders from config, discarding existing edits", false)
     .action(async (options) => {
         Logger.info("cli", `Generating webhook app and registry from config "${options.config}", interfaces "${options.interfaces}", output "${options.output}"`);
+        Logger.info("cli", `Webhook implementations: ${options.overwriteWebhooks ? 'overwrite from config' : 'preserve existing files'}`);
         await generateWebhookAppRegistry(path.resolve(options.output));
         await generateWebhookAppFromPath(
             path.resolve(options.config),
             path.resolve(options.interfaces),
-            path.resolve(options.output)
+            path.resolve(options.output),
+            { overwrite: options.overwriteWebhooks }
         );
     });
 
@@ -154,6 +157,7 @@ program
   .requiredOption("--json <dir>", "Directory of input JSON files for interface generation")
   .requiredOption("--env <file>", "Path to .env file")
   .requiredOption("--output <dir>", "Root output directory (e.g. src/codegen)")
+  .option("--overwrite-webhooks", "Regenerate webhook handlers and senders from config, discarding existing edits", false)
   .action(async (options) => {
     const jsonDir = path.resolve(options.json);
     const envFile = path.resolve(options.env);
@@ -171,6 +175,7 @@ program
     const webhookConfig = path.resolve("config/webhook-configs");
 
     Logger.info("cli", `🔁 Starting full scaffold pipeline from "${jsonDir}" → "${outputRoot}"`);
+    Logger.info("cli", `Webhook implementations: ${options.overwriteWebhooks ? 'overwrite from config' : 'preserve existing files'}`);
 
     generateEnvLoader(envFile, envOutputDir, envOutputFile);
     await generateInterfacesFromPath(jsonDir, interfaceOutput);
@@ -180,7 +185,9 @@ program
     await generateApiRegistry(clientOutput);
     await generateSequencesFromPath(sequenceConfig, clientOutput);
     await generateWebhookAppRegistry(webhookOutput);
-    await generateWebhookAppFromPath(webhookConfig, interfaceOutput, webhookOutput);
+    await generateWebhookAppFromPath(webhookConfig, interfaceOutput, webhookOutput, {
+      overwrite: options.overwriteWebhooks,
+    });
   });
 
 program

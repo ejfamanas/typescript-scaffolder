@@ -7,6 +7,7 @@ import {
   generateWebhooksFromFile,
   generateWebhooksFromPath,
   generateWebhookAppFromPath,
+  WebhookGenerationOptions,
 } from '../../../src';
 
 function mkdirp(p: string) { fs.mkdirSync(p, { recursive: true }); }
@@ -277,6 +278,38 @@ describe('generate-webhooks.ts', () => {
       .toContain('export async function handlePaymentRefundedWebhook(');
     expect(fs.readFileSync(path.join(routesDir, 'send_refund_forwarded_webhook.ts'), 'utf8'))
       .toContain('export async function sendRefundForwardedWebhook(');
+  });
+
+  it('generateWebhooksFromPath: overwrites implementations only when explicitly enabled', async () => {
+    const configDir = path.join(tmpDir, 'configs');
+    const interfacesRootDir = path.join(tmpDir, 'interfaces');
+    const outputRootDir = path.join(tmpDir, 'out');
+    writeFile(path.join(interfacesRootDir, 'payments/PaymentPayload.ts'), 'export interface PaymentPayload { id: string; }\n');
+    writeFile(path.join(configDir, 'payments.json'), JSON.stringify({
+      webhooks: [
+        { direction: 'incoming', name: 'payment_received', path: '/payments', handlerName: 'paymentReceived', requestSchema: 'PaymentPayload' },
+        { direction: 'outgoing', name: 'payment_forwarded', targetUrl: 'https://example.com/payments', requestSchema: 'PaymentPayload' },
+      ],
+    }));
+
+    await generateWebhooksFromPath(configDir, interfacesRootDir, outputRootDir);
+    const handlerPath = path.join(outputRootDir, 'payments/handle_paymentReceived.ts');
+    const senderPath = path.join(outputRootDir, 'payments/send_payment_forwarded_webhook.ts');
+    const originalHandler = fs.readFileSync(handlerPath, 'utf8');
+    const originalSender = fs.readFileSync(senderPath, 'utf8');
+    const editedHandler = '// custom handler\n' + originalHandler;
+    const editedSender = '// custom sender\n' + originalSender;
+    writeFile(handlerPath, editedHandler);
+    writeFile(senderPath, editedSender);
+
+    await generateWebhooksFromPath(configDir, interfacesRootDir, outputRootDir, { overwrite: false });
+    expect(fs.readFileSync(handlerPath, 'utf8')).toBe(editedHandler);
+    expect(fs.readFileSync(senderPath, 'utf8')).toBe(editedSender);
+
+    const options: WebhookGenerationOptions = { overwrite: true };
+    await generateWebhooksFromPath(configDir, interfacesRootDir, outputRootDir, options);
+    expect(fs.readFileSync(handlerPath, 'utf8')).toBe(originalHandler);
+    expect(fs.readFileSync(senderPath, 'utf8')).toBe(originalSender);
   });
 
   it('skips invalid config file in generateWebhooksFromPath', async () => {

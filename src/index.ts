@@ -104,5 +104,6 @@ export {
     OutgoingWebhook,
     BaseWebhook,
     Webhook,
-    WebhookConfigFile
+    WebhookConfigFile,
+    WebhookGenerationOptions
 } from "./models/webhook-definitions"

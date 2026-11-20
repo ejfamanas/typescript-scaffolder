@@ -1,7 +1,7 @@
 import { addClientRequiredImports, assertDirectoryContainingAllSchemas, } from "../../utils/client-constructors";
 import { ensureDir, extractInterfaces, readWebhookConfigFile } from "../../utils/file-system";
 import { Logger } from "../../utils/logger";
-import { BaseWebhook, IncomingWebhook, OutgoingWebhook, WebhookConfigFile } from 'models/webhook-definitions';
+import { BaseWebhook, IncomingWebhook, OutgoingWebhook, WebhookConfigFile, WebhookGenerationOptions } from '../../models/webhook-definitions';
 import { OptionalKind, ParameterDeclarationStructure, Project } from 'ts-morph';
 import path from 'path';
 import fs from 'fs';
@@ -10,7 +10,8 @@ import { toPascalCase } from "../../utils/object-helpers";
 export async function generateIncomingWebhook(
     webhook: IncomingWebhook,
     interfaceInputDir: string,
-    outputDir: string
+    outputDir: string,
+    options: WebhookGenerationOptions = {}
 ): Promise<void> {
     const funcName = 'generateIncomingWebhook';
     const {name, requestSchema, handlerName, testHeaders} = webhook;
@@ -19,8 +20,8 @@ export async function generateIncomingWebhook(
 
     const fileName = `handle_${handlerName}.ts`;
     const outputFilePath = path.join(outputDir, fileName);
-    // Handler files belong to the user after their initial generation.
-    if (fs.existsSync(outputFilePath)) {
+    // Preserve user implementations unless regeneration is explicitly requested.
+    if (!options.overwrite && fs.existsSync(outputFilePath)) {
         Logger.debug(funcName, `Preserving existing webhook handler at: ${outputFilePath}`);
         return;
     }
@@ -72,7 +73,8 @@ export async function generateIncomingWebhook(
 export async function generateOutgoingWebhook(
     webhook: OutgoingWebhook,
     interfaceInputDir: string,
-    outputDir: string
+    outputDir: string,
+    options: WebhookGenerationOptions = {}
 ): Promise<void> {
     const funcName = 'generateOutgoingWebhook';
     const {name, requestSchema, responseSchema, targetUrl} = webhook;
@@ -82,7 +84,7 @@ export async function generateOutgoingWebhook(
     const fileName = `send_${name}_webhook.ts`;
     const outputFilePath = path.join(outputDir, fileName);
     // Sender files may also contain user-written delivery logic.
-    if (fs.existsSync(outputFilePath)) {
+    if (!options.overwrite && fs.existsSync(outputFilePath)) {
         Logger.debug(funcName, `Preserving existing webhook sender at: ${outputFilePath}`);
         return;
     }
@@ -128,7 +130,8 @@ export async function generateOutgoingWebhook(
 export async function generateWebhooksFromFile(
     configPath: string,
     interfaceInputDir: string,
-    outputDir: string
+    outputDir: string,
+    options: WebhookGenerationOptions = {}
 ): Promise<void> {
     const funcName = 'generateWebhooksFromFile';
     Logger.debug(funcName, 'Starting webhook handler generation...');
@@ -141,9 +144,9 @@ export async function generateWebhooksFromFile(
 
     for (const webhook of config.webhooks) {
         if (webhook.direction === 'incoming') {
-            await generateIncomingWebhook(webhook, interfaceInputDir, outputDir);
+            await generateIncomingWebhook(webhook, interfaceInputDir, outputDir, options);
         } else if (webhook.direction === 'outgoing') {
-            await generateOutgoingWebhook(webhook, interfaceInputDir, outputDir);
+            await generateOutgoingWebhook(webhook, interfaceInputDir, outputDir, options);
         } else {
             Logger.warn(funcName, `Skipping unknown webhook direction for: ${(webhook as BaseWebhook).name}`);
         }
@@ -156,11 +159,13 @@ export async function generateWebhooksFromFile(
  * @param configDir - Path to the webhook config file.
  * @param interfacesRootDir - Directory containing interface .ts files.
  * @param outputRootDir - Output directory for generated routes.
+ * @param options - Whether to overwrite existing handler and sender implementations.
  */
 export async function generateWebhooksFromPath(
     configDir: string,
     interfacesRootDir: string,
-    outputRootDir: string
+    outputRootDir: string,
+    options: WebhookGenerationOptions = {}
 ): Promise<void> {
     const funcName = 'generateWebhooksFromPath';
     Logger.debug(funcName, 'Starting webhook generation from config and interface directories...');
@@ -191,7 +196,7 @@ export async function generateWebhooksFromPath(
         const outputDir = path.join(outputRootDir, relativeInterfaceDir);
         ensureDir(outputDir);
 
-        await generateWebhooksFromFile(configPath, foundDir, outputDir);
+        await generateWebhooksFromFile(configPath, foundDir, outputDir, options);
     }
 
     Logger.info(funcName, 'Webhook generation completed.');

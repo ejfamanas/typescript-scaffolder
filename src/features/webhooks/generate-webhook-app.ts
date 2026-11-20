@@ -10,7 +10,7 @@ import {
 	collectRequiredSchemas,
 } from "../../utils/client-constructors";
 import { generateWebhookAppRegistry } from "./generate-webhook-app-registry";
-import { WebhookConfigFile } from "models/webhook-definitions";
+import { WebhookConfigFile, WebhookGenerationOptions } from "../../models/webhook-definitions";
 import { renderCreateWebhookAppBody } from "./strings/webhook-app-strings";
 
 export async function generateWebhookApp(serviceName: string, outputDir: string) {
@@ -43,7 +43,8 @@ export async function generateWebhookApp(serviceName: string, outputDir: string)
 export async function generateWebhookAppFromFile(
 	configPath: string,
 	interfacesDir: string,
-	outputDir: string
+	outputDir: string,
+	options: WebhookGenerationOptions = {}
 ) {
 	const funcName = 'generateWebhookAppFromFile';
 	Logger.debug(funcName, 'Starting webhook app generation from single config file...');
@@ -54,7 +55,7 @@ export async function generateWebhookAppFromFile(
 		return;
 	}
 
-	await generateWebhooksFromFile(configPath, interfacesDir, path.join(outputDir, 'routes'));
+	await generateWebhooksFromFile(configPath, interfacesDir, path.join(outputDir, 'routes'), options);
 	await generateWebhookRoutesFromFile(configPath, interfacesDir, path.join(outputDir, 'routes'));
 
 	const serviceName = path.basename(interfacesDir);
@@ -65,7 +66,8 @@ export async function generateWebhookAppFromFile(
 export async function generateWebhookAppFromPath(
 	configDir: string,
 	interfacesRootDir: string,
-	outputRootDir: string
+	outputRootDir: string,
+	options: WebhookGenerationOptions = {}
 ) {
 	const funcName = 'generateWebhookAppFromPath';
 	Logger.debug(funcName, 'Starting webhook app generation from config directory...');
@@ -88,7 +90,7 @@ export async function generateWebhookAppFromPath(
 		const relativeInterfaceDir = path.relative(interfacesRootDir, foundDir);
 		const outputDir = path.join(outputRootDir, relativeInterfaceDir);		await ensureDir(outputDir);
 
-		await generateWebhookAppFromFile(configPath, foundDir, outputDir);
+		await generateWebhookAppFromFile(configPath, foundDir, outputDir, options);
 	}
 
 	Logger.info(funcName, 'Webhook app generation completed.');
