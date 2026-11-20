@@ -6,6 +6,7 @@ import {
   generateOutgoingWebhook,
   generateWebhooksFromFile,
   generateWebhooksFromPath,
+  generateWebhookAppFromPath,
 } from '../../../src';
 
 function mkdirp(p: string) { fs.mkdirSync(p, { recursive: true }); }
@@ -95,6 +96,26 @@ describe('generate-webhooks.ts', () => {
     expect(src!).not.toMatch(/headers\?\s*:\s*Record<\s*string,\s*string\s*>/);
   });
 
+  it.each([
+    '',
+    '// Custom handler\n\nimport { recordPayment } from "./payments";\n\nexport async function handleHandleFooWebhook(payload: { id: string }) {\n  await recordPayment(payload.id);\n}\n',
+  ])('generateIncomingWebhook: preserves existing file contents (%#)', async (contents) => {
+    const interfacesDir = path.join(tmpDir, 'interfaces');
+    const outputDir = path.join(tmpDir, 'out');
+    const handlerPath = path.join(outputDir, 'handle_handleFoo.ts');
+    writeFile(handlerPath, contents);
+
+    await generateIncomingWebhook({
+      direction: 'incoming',
+      name: 'foo',
+      path: '/foo',
+      handlerName: 'handleFoo',
+      requestSchema: 'FooPayload',
+    }, interfacesDir, outputDir);
+
+    expect(fs.readFileSync(handlerPath, 'utf8')).toBe(contents);
+  });
+
   it('generateOutgoingWebhook: creates sender with axios.post and headers param', async () => {
     const interfacesDir = path.join(tmpDir, 'interfaces', 'source-lambda');
     const outputDir = path.join(tmpDir, 'out', 'source-lambda');
@@ -123,6 +144,25 @@ describe('generate-webhooks.ts', () => {
     expect(src!).toMatch(/headers\?\s*:\s*Record<\s*string,\s*string\s*>/);
     expect(src!).toMatch(/axios\.post\(\`https:\/\/example\.com\/webhook\`/);
     expect(src!).toMatch(/return\s+response\.data;/);
+  });
+
+  it.each([
+    '',
+    '// Custom sender\n\nimport { deliverWithRetry } from "./delivery";\n\nexport async function sendFooWebhook(body: { id: string }) {\n  return deliverWithRetry(body);\n}\n',
+  ])('generateOutgoingWebhook: preserves existing file contents (%#)', async (contents) => {
+    const interfacesDir = path.join(tmpDir, 'interfaces');
+    const outputDir = path.join(tmpDir, 'out');
+    const senderPath = path.join(outputDir, 'send_foo_webhook.ts');
+    writeFile(senderPath, contents);
+
+    await generateOutgoingWebhook({
+      direction: 'outgoing',
+      name: 'foo',
+      targetUrl: 'https://example.com/webhook',
+      requestSchema: 'FooRequest',
+    }, interfacesDir, outputDir);
+
+    expect(fs.readFileSync(senderPath, 'utf8')).toBe(contents);
   });
 
   it('generateWebhooksFromFile: processes both incoming and outgoing webhooks in a config', async () => {
@@ -177,6 +217,66 @@ describe('generate-webhooks.ts', () => {
     const outSvc = path.join(outputRootDir, 'source-omega');
     expect(findFileRecursive(outSvc, (n) => n === 'handle_handleIn.ts')).toBeTruthy();
     expect(findFileRecursive(outSvc, (n) => n === 'send_out_webhook.ts')).toBeTruthy();
+  });
+
+  it('generateWebhookAppFromPath: preserves edited implementations while creating newly configured webhooks', async () => {
+    const configDir = path.join(tmpDir, 'configs');
+    const interfacesRootDir = path.join(tmpDir, 'interfaces');
+    const outputRootDir = path.join(tmpDir, 'out');
+    const serviceDir = path.join(interfacesRootDir, 'payments');
+    const configPath = path.join(configDir, 'payments.json');
+    writeFile(path.join(serviceDir, 'PaymentPayload.ts'), 'export interface PaymentPayload { id: string; }\n');
+
+    const incoming = {
+      direction: 'incoming',
+      name: 'payment_received',
+      path: '/webhooks/payment_received',
+      handlerName: 'paymentReceived',
+      requestSchema: 'PaymentPayload',
+    };
+    const outgoing = {
+      direction: 'outgoing',
+      name: 'payment_forwarded',
+      targetUrl: 'https://example.com/payments',
+      requestSchema: 'PaymentPayload',
+    };
+    writeFile(configPath, JSON.stringify({ webhooks: [incoming, outgoing] }));
+
+    await generateWebhookAppFromPath(configDir, interfacesRootDir, outputRootDir);
+
+    const routesDir = path.join(outputRootDir, 'payments', 'routes');
+    const handlerPath = path.join(routesDir, 'handle_paymentReceived.ts');
+    const senderPath = path.join(routesDir, 'send_payment_forwarded_webhook.ts');
+    const editedHandler = fs.readFileSync(handlerPath, 'utf8').replace(
+      'console.log("Received webhook payload:", payload);',
+      'if (!payload.id) throw new Error("Missing payment ID");'
+    );
+    const editedSender = fs.readFileSync(senderPath, 'utf8').replace(
+      '{ headers }',
+      '{ headers, timeout: 5000 }'
+    );
+    expect(editedHandler).toContain('Missing payment ID');
+    expect(editedSender).toContain('timeout: 5000');
+    writeFile(handlerPath, editedHandler);
+    writeFile(senderPath, editedSender);
+
+    writeFile(configPath, JSON.stringify({
+      webhooks: [
+        incoming,
+        outgoing,
+        { ...incoming, name: 'payment_refunded', path: '/webhooks/payment_refunded', handlerName: 'paymentRefunded' },
+        { ...outgoing, name: 'refund_forwarded' },
+      ],
+    }));
+
+    await generateWebhookAppFromPath(configDir, interfacesRootDir, outputRootDir);
+
+    expect(fs.readFileSync(handlerPath, 'utf8')).toBe(editedHandler);
+    expect(fs.readFileSync(senderPath, 'utf8')).toBe(editedSender);
+    expect(fs.readFileSync(path.join(routesDir, 'handle_paymentRefunded.ts'), 'utf8'))
+      .toContain('export async function handlePaymentRefundedWebhook(');
+    expect(fs.readFileSync(path.join(routesDir, 'send_refund_forwarded_webhook.ts'), 'utf8'))
+      .toContain('export async function sendRefundForwardedWebhook(');
   });
 
   it('skips invalid config file in generateWebhooksFromPath', async () => {
