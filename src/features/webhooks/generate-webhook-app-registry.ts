@@ -3,34 +3,37 @@ import * as fs from 'fs';
 import { Logger } from '../../utils/logger';
 import { renderRegistryLines } from "./strings/webhook-app-registry-strings";
 
-export async function generateWebhookAppRegistry(serviceDir: string, registryFileName = 'webhookAppRegistry.ts') {
+export async function generateWebhookAppRegistry(
+    serviceDir: string,
+    registryFileName = 'webhookAppRegistry.ts',
+    serviceName = path.basename(serviceDir)
+) {
     const funcName = 'generateWebhookAppRegistry';
     Logger.debug(funcName, `Generating registry in ${serviceDir}`);
 
-    const serviceName = path.basename(serviceDir);
+    fs.mkdirSync(serviceDir, {recursive: true});
     const routesDir = path.join(serviceDir, 'routes');
     const routerPath = path.join(routesDir, 'router.ts');
     const hasRouter = fs.existsSync(routerPath);
     const registryPath = path.join(serviceDir, registryFileName);
 
-    if (!fs.existsSync(routesDir)) {
-        Logger.warn(funcName, `Routes directory does not exist: ${routesDir}`);
-        return;
-    }
-
-    const routeFiles = fs.readdirSync(routesDir).filter(
-        file =>
-            file.endsWith('.ts') &&
-            file !== 'router.ts' &&
-            file !== registryFileName
-    );
+    const routeFiles = fs.existsSync(routesDir)
+        ? fs.readdirSync(routesDir).filter(
+            file =>
+                file.startsWith('handle_') &&
+                file.endsWith('.ts') &&
+                !file.endsWith('.fixture.ts') &&
+                !file.endsWith('.d.ts') &&
+                file !== registryFileName
+        )
+        : [];
 
     const importStatements: string[] = [];
     const handlerSpreads: string[] = [];
 
     // Import router if exists
     if (hasRouter) {
-        importStatements.push(`import * as Router from './routes/router';`);
+        importStatements.push(`import router from './routes/router';`);
     }
 
     // Import handlers

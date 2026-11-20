@@ -91,6 +91,7 @@ describe('generate-webhook-app-registry', () => {
 
         // Must import router and handlers
         expect(txt).toMatch(/from\s+['"].\/routes\/router['"]/);
+        expect(txt).toMatch(/import\s+router\s+from\s+['"]\.\/routes\/router['"]/);
         expect(txt).toMatch(/from\s+['"].\/routes\/handle_alpha['"]/);
         expect(txt).toMatch(/from\s+['"].\/routes\/handle_beta['"]/);
 
@@ -124,6 +125,34 @@ describe('generate-webhook-app-registry', () => {
 
         // Export should still include handlers
         expect(txt).toMatch(/handlers/);
+    });
+
+    it('includes only implementation modules in the handlers registry', async () => {
+        const svc = path.join(outRoot, 'payments');
+        writeFile(path.join(svc, 'routes/handle_payment.ts'), 'export async function handlePaymentWebhook() {}');
+        writeFile(path.join(svc, 'routes/PaymentPayload.fixture.ts'), 'export const mockPaymentPayload = {};');
+        writeFile(path.join(svc, 'routes/handle_payload.fixture.ts'), 'export const mockHandlePayload = {};');
+        writeFile(path.join(svc, 'routes/handle_payment.d.ts'), 'export declare function handlePaymentWebhook(): Promise<void>;');
+        writeFile(path.join(svc, 'routes/send_payment_webhook.ts'), 'export async function sendPaymentWebhook() {}');
+
+        await generateWebhookAppRegistry(svc);
+
+        const registry = read(path.join(svc, 'webhookAppRegistry.ts'));
+        expect(registry).toContain("from './routes/handle_payment'");
+        expect(registry).not.toContain('.fixture');
+        expect(registry).not.toContain('handle_payment.d');
+        expect(registry).not.toContain('send_payment_webhook');
+    });
+
+    it('uses an explicit service name with a custom output folder and registry filename', async () => {
+        const svc = path.join(outRoot, 'custom-output');
+
+        await generateWebhookAppRegistry(svc, 'registry.ts', 'payments');
+
+        const registry = read(path.join(svc, 'registry.ts'));
+        expect(registry).toContain("'payments':");
+        expect(registry).not.toContain("'custom-output':");
+        expect(registry).toContain('router: undefined,');
     });
 
     it('scans multiple services and writes a registry for each', async () => {
@@ -231,13 +260,17 @@ describe('generateWebhookAppRegistry', () => {
         expect(txt).toMatch(/handlers:\s*\{[\s\S]*\.\.\.handle_one[\s\S]*\}/);
     });
 
-    it('does not write a registry when routes directory is missing', async () => {
+    it('writes an empty registry when the service and routes directories are missing', async () => {
         const serviceDir = path.join(outRoot, 'source-kappa');
         // do NOT create routes dir
 
         await generateWebhookAppRegistry(serviceDir);
 
         const registryPath = findRegistryFileRecursive(serviceDir);
-        expect(registryPath).toBeNull();
+        expect(registryPath).toBe(path.join(serviceDir, 'webhookAppRegistry.ts'));
+        const registry = read(registryPath!);
+        expect(registry).toContain("'source-kappa':");
+        expect(registry).toContain('router: undefined,');
+        expect(registry).toMatch(/handlers:\s*\{\s*\}/);
     });
 });

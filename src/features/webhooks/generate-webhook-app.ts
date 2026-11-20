@@ -1,5 +1,6 @@
 import { readWebhookConfigFile, extractInterfaces, ensureDir } from '../../utils/file-system';
 import * as path from 'path';
+import * as fs from 'fs';
 import { Project } from 'ts-morph';
 import { Logger } from '../../utils/logger';
 import { toPascalCase } from "../../utils/object-helpers";
@@ -20,6 +21,11 @@ export async function generateWebhookApp(serviceName: string, outputDir: string)
 	const pascalName = toPascalCase(serviceName);
 	const fileName = `create${pascalName}WebhookApp.ts`;
 	const functionName = `create${pascalName}WebhookApp`;
+
+	ensureDir(outputDir);
+	if (!fs.existsSync(path.join(outputDir, 'webhookAppRegistry.ts'))) {
+		await generateWebhookAppRegistry(outputDir, 'webhookAppRegistry.ts', serviceName);
+	}
 
 	const project = new Project();
 	const filePath = path.join(outputDir, fileName);
@@ -59,7 +65,7 @@ export async function generateWebhookAppFromFile(
 	await generateWebhookRoutesFromFile(configPath, interfacesDir, path.join(outputDir, 'routes'));
 
 	const serviceName = path.basename(interfacesDir);
-	await generateWebhookAppRegistry(outputDir);
+	await generateWebhookAppRegistry(outputDir, 'webhookAppRegistry.ts', serviceName);
 	await generateWebhookApp(serviceName, outputDir);
 }
 
