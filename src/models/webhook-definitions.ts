@@ -53,3 +53,9 @@ export type Webhook = IncomingWebhook | OutgoingWebhook;
 export interface WebhookConfigFile {
     webhooks: Webhook[];
 }
+
+/** Controls regeneration of incoming handler and outgoing sender files. */
+export interface WebhookGenerationOptions {
+    /** Replace existing implementations with generated code. Defaults to false. */
+    overwrite?: boolean;
+}

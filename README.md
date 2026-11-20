@@ -124,14 +124,51 @@ The generated `EnvConfig` class reads from `process.env` when you access a field
 
 ### Webhook regeneration
 
-Webhook handlers (`handle_*.ts`) and senders (`send_*_webhook.ts`) are created only when their files are missing. Running `webhooks`, `full`, or the corresponding API generators again preserves these files exactly, including your imports, comments, and implementations, while creating files for newly configured webhooks.
+Webhook handlers (`handle_*.ts`) and senders (`send_*_webhook.ts`) are preserved by default, including your imports, comments, and implementations. Both `webhooks` and `full` accept `--overwrite-webhooks` to explicitly rebuild these files from the current JSON configuration and interfaces.
 
-Changes to a webhook's config do not rewrite an existing handler or sender. Update its signature or delivery logic manually when changing schemas, headers, or target URLs.
+| Mode | Existing handler and sender files | Newly configured webhooks |
+|------|----------------------------------|---------------------------|
+| Default | Keep their contents unchanged | Create missing files |
+| `--overwrite-webhooks` | Replace their contents with generated code, discarding edits | Create missing files |
+
+The installed CLI executable is `typescript-codegen`. The `webhooks` command takes a **directory** of JSON config files:
+
+```bash
+typescript-codegen webhooks \
+  --config ./config/webhook-configs \
+  --interfaces ./src/codegen/interfaces \
+  --output ./src/codegen/webhooks
+```
+
+Add `--overwrite-webhooks` when you want the config to replace existing implementations. For the full pipeline:
+
+```bash
+typescript-codegen full \
+  --json ./config/schemas \
+  --env .env \
+  --output ./src/codegen \
+  --overwrite-webhooks
+```
+
+Regeneration uses fixed code-generation rules. With the same JSON configuration, interfaces, generator version, and output layout, overwrite mode produces the same handler and sender source regardless of their previous contents. With default preservation, update existing signatures or delivery logic manually when changing schemas, headers, or target URLs.
+
+The programmatic equivalents accept an optional final `WebhookGenerationOptions` argument. For example:
+
+```typescript
+await generateWebhookAppFromPath(
+    WEBHOOK_CONFIG_PATH,
+    INTERFACE_OUTPUT_DIR,
+    WEBHOOK_OUTPUT_DIR,
+    { overwrite: true }
+);
+```
+
+Omitting this argument or passing `{ overwrite: false }` preserves existing implementations.
 
 ## Quickstart CLI Example
 
 ```bash
-typescript-scaffolder full \
+typescript-codegen full \
   --json ./config/schemas \
   --env .env \
   --output ./src/codegen
@@ -159,9 +196,9 @@ https://eric-famanas.super.site/the-typescript-scaffolder
 | `apiclient-registry`  | Create central API client registry        |
 | `sequences`           | Generate workflow runner from steps       |
 | `webhooks`            | Generate Express webhook apps/handlers    |
-| `full`                | Run the entire pipeline from scratch      |
+| `full`                | Run the entire scaffold pipeline          |
 
-📔 Use `typescript-scaffolder <command> --help` for options.
+📔 Use `typescript-codegen <command> --help` for options. Both `webhooks` and `full` preserve existing webhook implementations unless `--overwrite-webhooks` is supplied.
 
 ---
 
